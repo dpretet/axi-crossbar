@@ -1,0 +1,6 @@
+[verilog]
+include_paths = ["./rtl", "./", "../../rtl", "dep/svlogger", "../../dep/svlogger"]
+defines = ["XLEN=32"]
+
+[option]
+linter = true

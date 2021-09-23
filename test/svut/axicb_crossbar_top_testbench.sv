@@ -1,0 +1,1436 @@
+// distributed under the mit license
+// https://opensource.org/licenses/mit-license.php
+
+/// Mandatory file to be able to launch SVUT flow
+`include "svut_h.sv"
+
+`timescale 1 ns / 1 ps
+
+module axicb_crossbar_top_testbench();
+
+    `SVUT_SETUP
+
+    `ifndef TIMEOUT
+    `define TIMEOUT 1000
+    `endif
+
+    `ifndef MAX_TRAFFIC
+    `define MAX_TRAFFIC 10
+    `endif
+
+    parameter AXI_ADDR_W = 8;
+    parameter AXI_ID_W = 8;
+    parameter AXI_DATA_W = 32;
+    parameter MST_NB = 4;
+    parameter SLV_NB = 4;
+    parameter MST_PIPELINE = 0;
+    parameter SLV_PIPELINE = 0;
+    parameter STRB_MODE = 1;
+    parameter AXI_SIGNALING = 0;
+    parameter USER_SUPPORT = 0;
+    parameter AUSER_W = 1;
+    parameter WUSER_W = 1;
+    parameter BUSER_W = 1;
+    parameter RUSER_W = 1;
+    parameter TIMEOUT_VALUE = 10000;
+    parameter TIMEOUT_ENABLE = 1;
+    parameter MST0_CDC = 0;
+    parameter MST0_OSTDREQ_NUM = 4;
+    parameter MST0_OSTDREQ_SIZE = 1;
+    parameter MST0_PRIORITY = 0;
+    parameter MST0_ROUTES = 4'b1_1_1_1;
+    parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00;
+    parameter MST1_CDC = 0;
+    parameter MST1_OSTDREQ_NUM = 4;
+    parameter MST1_OSTDREQ_SIZE = 1;
+    parameter MST1_PRIORITY = 0;
+    parameter MST1_ROUTES = 4'b1_1_1_1;
+    parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10;
+    parameter MST2_CDC = 0;
+    parameter MST2_OSTDREQ_NUM = 4;
+    parameter MST2_OSTDREQ_SIZE = 1;
+    parameter MST2_PRIORITY = 0;
+    parameter MST2_ROUTES = 4'b1_1_1_1;
+    parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20;
+    parameter MST3_CDC = 0;
+    parameter MST3_OSTDREQ_NUM = 4;
+    parameter MST3_OSTDREQ_SIZE = 1;
+    parameter MST3_PRIORITY = 0;
+    parameter MST3_ROUTES = 4'b1_1_1_1;
+    parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30;
+    parameter SLV0_CDC = 0;
+    parameter SLV0_START_ADDR = 0;
+    parameter SLV0_END_ADDR = 4095;
+    parameter SLV0_OSTDREQ_NUM = 4;
+    parameter SLV0_OSTDREQ_SIZE = 1;
+    parameter SLV1_CDC = 0;
+    parameter SLV1_START_ADDR = 4096;
+    parameter SLV1_END_ADDR = 8191;
+    parameter SLV1_OSTDREQ_NUM = 4;
+    parameter SLV1_OSTDREQ_SIZE = 1;
+    parameter SLV2_CDC = 0;
+    parameter SLV2_START_ADDR = 8192;
+    parameter SLV2_END_ADDR = 12287;
+    parameter SLV2_OSTDREQ_NUM = 4;
+    parameter SLV2_OSTDREQ_SIZE = 1;
+    parameter SLV3_CDC = 0;
+    parameter SLV3_START_ADDR = 12288;
+    parameter SLV3_END_ADDR = 16383;
+    parameter SLV3_OSTDREQ_NUM = 4;
+    parameter SLV3_OSTDREQ_SIZE = 1;
+    parameter CHECK_REPORT = 1;
+
+    logic [4             -1:0] mst_en;
+    logic                      aclk;
+    logic                      aresetn;
+    logic                      srst;
+    logic [8             -1:0] error;
+    logic                      mst0_aclk;
+    logic                      mst0_aresetn;
+    logic                      mst0_srst;
+    logic                      mst0_awvalid;
+    logic                      mst0_awready;
+    logic [AXI_ADDR_W    -1:0] mst0_awaddr;
+    logic [8             -1:0] mst0_awlen;
+    logic [3             -1:0] mst0_awsize;
+    logic [2             -1:0] mst0_awburst;
+    logic [2             -1:0] mst0_awlock;
+    logic [4             -1:0] mst0_awcache;
+    logic [3             -1:0] mst0_awprot;
+    logic [4             -1:0] mst0_awqos;
+    logic [4             -1:0] mst0_awregion;
+    logic [AXI_ID_W      -1:0] mst0_awid;
+    logic                      mst0_wvalid;
+    logic                      mst0_wready;
+    logic                      mst0_wlast;
+    logic [AXI_DATA_W    -1:0] mst0_wdata;
+    logic [AXI_DATA_W/8  -1:0] mst0_wstrb;
+    logic                      mst0_bvalid;
+    logic                      mst0_bready;
+    logic [AXI_ID_W      -1:0] mst0_bid;
+    logic [2             -1:0] mst0_bresp;
+    logic                      mst0_arvalid;
+    logic                      mst0_arready;
+    logic [AXI_ADDR_W    -1:0] mst0_araddr;
+    logic [8             -1:0] mst0_arlen;
+    logic [3             -1:0] mst0_arsize;
+    logic [2             -1:0] mst0_arburst;
+    logic [2             -1:0] mst0_arlock;
+    logic [4             -1:0] mst0_arcache;
+    logic [3             -1:0] mst0_arprot;
+    logic [4             -1:0] mst0_arqos;
+    logic [4             -1:0] mst0_arregion;
+    logic [AXI_ID_W      -1:0] mst0_arid;
+    logic                      mst0_rvalid;
+    logic                      mst0_rready;
+    logic [AXI_ID_W      -1:0] mst0_rid;
+    logic [2             -1:0] mst0_rresp;
+    logic [AXI_DATA_W    -1:0] mst0_rdata;
+    logic                      mst0_rlast;
+    logic                      mst1_aclk;
+    logic                      mst1_aresetn;
+    logic                      mst1_srst;
+    logic                      mst1_awvalid;
+    logic                      mst1_awready;
+    logic [AXI_ADDR_W    -1:0] mst1_awaddr;
+    logic [8             -1:0] mst1_awlen;
+    logic [3             -1:0] mst1_awsize;
+    logic [2             -1:0] mst1_awburst;
+    logic [2             -1:0] mst1_awlock;
+    logic [4             -1:0] mst1_awcache;
+    logic [3             -1:0] mst1_awprot;
+    logic [4             -1:0] mst1_awqos;
+    logic [4             -1:0] mst1_awregion;
+    logic [AXI_ID_W      -1:0] mst1_awid;
+    logic                      mst1_wvalid;
+    logic                      mst1_wready;
+    logic                      mst1_wlast;
+    logic [AXI_DATA_W    -1:0] mst1_wdata;
+    logic [AXI_DATA_W/8  -1:0] mst1_wstrb;
+    logic                      mst1_bvalid;
+    logic                      mst1_bready;
+    logic [AXI_ID_W      -1:0] mst1_bid;
+    logic [2             -1:0] mst1_bresp;
+    logic                      mst1_arvalid;
+    logic                      mst1_arready;
+    logic [AXI_ADDR_W    -1:0] mst1_araddr;
+    logic [8             -1:0] mst1_arlen;
+    logic [3             -1:0] mst1_arsize;
+    logic [2             -1:0] mst1_arburst;
+    logic [2             -1:0] mst1_arlock;
+    logic [4             -1:0] mst1_arcache;
+    logic [3             -1:0] mst1_arprot;
+    logic [4             -1:0] mst1_arqos;
+    logic [4             -1:0] mst1_arregion;
+    logic [AXI_ID_W      -1:0] mst1_arid;
+    logic                      mst1_rvalid;
+    logic                      mst1_rready;
+    logic [AXI_ID_W      -1:0] mst1_rid;
+    logic [2             -1:0] mst1_rresp;
+    logic [AXI_DATA_W    -1:0] mst1_rdata;
+    logic                      mst1_rlast;
+    logic                      mst2_aclk;
+    logic                      mst2_aresetn;
+    logic                      mst2_srst;
+    logic                      mst2_awvalid;
+    logic                      mst2_awready;
+    logic [AXI_ADDR_W    -1:0] mst2_awaddr;
+    logic [8             -1:0] mst2_awlen;
+    logic [3             -1:0] mst2_awsize;
+    logic [2             -1:0] mst2_awburst;
+    logic [2             -1:0] mst2_awlock;
+    logic [4             -1:0] mst2_awcache;
+    logic [3             -1:0] mst2_awprot;
+    logic [4             -1:0] mst2_awqos;
+    logic [4             -1:0] mst2_awregion;
+    logic [AXI_ID_W      -1:0] mst2_awid;
+    logic                      mst2_wvalid;
+    logic                      mst2_wready;
+    logic                      mst2_wlast;
+    logic [AXI_DATA_W    -1:0] mst2_wdata;
+    logic [AXI_DATA_W/8  -1:0] mst2_wstrb;
+    logic                      mst2_bvalid;
+    logic                      mst2_bready;
+    logic [AXI_ID_W      -1:0] mst2_bid;
+    logic [2             -1:0] mst2_bresp;
+    logic                      mst2_arvalid;
+    logic                      mst2_arready;
+    logic [AXI_ADDR_W    -1:0] mst2_araddr;
+    logic [8             -1:0] mst2_arlen;
+    logic [3             -1:0] mst2_arsize;
+    logic [2             -1:0] mst2_arburst;
+    logic [2             -1:0] mst2_arlock;
+    logic [4             -1:0] mst2_arcache;
+    logic [3             -1:0] mst2_arprot;
+    logic [4             -1:0] mst2_arqos;
+    logic [4             -1:0] mst2_arregion;
+    logic [AXI_ID_W      -1:0] mst2_arid;
+    logic                      mst2_rvalid;
+    logic                      mst2_rready;
+    logic [AXI_ID_W      -1:0] mst2_rid;
+    logic [2             -1:0] mst2_rresp;
+    logic [AXI_DATA_W    -1:0] mst2_rdata;
+    logic                      mst2_rlast;
+    logic                      mst3_aclk;
+    logic                      mst3_aresetn;
+    logic                      mst3_srst;
+    logic                      mst3_awvalid;
+    logic                      mst3_awready;
+    logic [AXI_ADDR_W    -1:0] mst3_awaddr;
+    logic [8             -1:0] mst3_awlen;
+    logic [3             -1:0] mst3_awsize;
+    logic [2             -1:0] mst3_awburst;
+    logic [2             -1:0] mst3_awlock;
+    logic [4             -1:0] mst3_awcache;
+    logic [3             -1:0] mst3_awprot;
+    logic [4             -1:0] mst3_awqos;
+    logic [4             -1:0] mst3_awregion;
+    logic [AXI_ID_W      -1:0] mst3_awid;
+    logic                      mst3_wvalid;
+    logic                      mst3_wready;
+    logic                      mst3_wlast;
+    logic [AXI_DATA_W    -1:0] mst3_wdata;
+    logic [AXI_DATA_W/8  -1:0] mst3_wstrb;
+    logic                      mst3_bvalid;
+    logic                      mst3_bready;
+    logic [AXI_ID_W      -1:0] mst3_bid;
+    logic [2             -1:0] mst3_bresp;
+    logic                      mst3_arvalid;
+    logic                      mst3_arready;
+    logic [AXI_ADDR_W    -1:0] mst3_araddr;
+    logic [8             -1:0] mst3_arlen;
+    logic [3             -1:0] mst3_arsize;
+    logic [2             -1:0] mst3_arburst;
+    logic [2             -1:0] mst3_arlock;
+    logic [4             -1:0] mst3_arcache;
+    logic [3             -1:0] mst3_arprot;
+    logic [4             -1:0] mst3_arqos;
+    logic [4             -1:0] mst3_arregion;
+    logic [AXI_ID_W      -1:0] mst3_arid;
+    logic                      mst3_rvalid;
+    logic                      mst3_rready;
+    logic [AXI_ID_W      -1:0] mst3_rid;
+    logic [2             -1:0] mst3_rresp;
+    logic [AXI_DATA_W    -1:0] mst3_rdata;
+    logic                      mst3_rlast;
+    logic                      slv0_aclk;
+    logic                      slv0_aresetn;
+    logic                      slv0_srst;
+    logic                      slv0_awvalid;
+    logic                      slv0_awready;
+    logic [AXI_ADDR_W    -1:0] slv0_awaddr;
+    logic [8             -1:0] slv0_awlen;
+    logic [3             -1:0] slv0_awsize;
+    logic [2             -1:0] slv0_awburst;
+    logic [2             -1:0] slv0_awlock;
+    logic [4             -1:0] slv0_awcache;
+    logic [3             -1:0] slv0_awprot;
+    logic [4             -1:0] slv0_awqos;
+    logic [4             -1:0] slv0_awregion;
+    logic [AXI_ID_W      -1:0] slv0_awid;
+    logic                      slv0_wvalid;
+    logic                      slv0_wready;
+    logic                      slv0_wlast;
+    logic [AXI_DATA_W    -1:0] slv0_wdata;
+    logic [AXI_DATA_W/8  -1:0] slv0_wstrb;
+    logic                      slv0_bvalid;
+    logic                      slv0_bready;
+    logic [AXI_ID_W      -1:0] slv0_bid;
+    logic [2             -1:0] slv0_bresp;
+    logic                      slv0_arvalid;
+    logic                      slv0_arready;
+    logic [AXI_ADDR_W    -1:0] slv0_araddr;
+    logic [8             -1:0] slv0_arlen;
+    logic [3             -1:0] slv0_arsize;
+    logic [2             -1:0] slv0_arburst;
+    logic [2             -1:0] slv0_arlock;
+    logic [4             -1:0] slv0_arcache;
+    logic [3             -1:0] slv0_arprot;
+    logic [4             -1:0] slv0_arqos;
+    logic [4             -1:0] slv0_arregion;
+    logic [AXI_ID_W      -1:0] slv0_arid;
+    logic                      slv0_rvalid;
+    logic                      slv0_rready;
+    logic [AXI_ID_W      -1:0] slv0_rid;
+    logic [2             -1:0] slv0_rresp;
+    logic [AXI_DATA_W    -1:0] slv0_rdata;
+    logic                      slv0_rlast;
+    logic                      slv1_aclk;
+    logic                      slv1_aresetn;
+    logic                      slv1_srst;
+    logic                      slv1_awvalid;
+    logic                      slv1_awready;
+    logic [AXI_ADDR_W    -1:0] slv1_awaddr;
+    logic [8             -1:0] slv1_awlen;
+    logic [3             -1:0] slv1_awsize;
+    logic [2             -1:0] slv1_awburst;
+    logic [2             -1:0] slv1_awlock;
+    logic [4             -1:0] slv1_awcache;
+    logic [3             -1:0] slv1_awprot;
+    logic [4             -1:0] slv1_awqos;
+    logic [4             -1:0] slv1_awregion;
+    logic [AXI_ID_W      -1:0] slv1_awid;
+    logic                      slv1_wvalid;
+    logic                      slv1_wready;
+    logic                      slv1_wlast;
+    logic [AXI_DATA_W    -1:0] slv1_wdata;
+    logic [AXI_DATA_W/8  -1:0] slv1_wstrb;
+    logic                      slv1_bvalid;
+    logic                      slv1_bready;
+    logic [AXI_ID_W      -1:0] slv1_bid;
+    logic [2             -1:0] slv1_bresp;
+    logic                      slv1_arvalid;
+    logic                      slv1_arready;
+    logic [AXI_ADDR_W    -1:0] slv1_araddr;
+    logic [8             -1:0] slv1_arlen;
+    logic [3             -1:0] slv1_arsize;
+    logic [2             -1:0] slv1_arburst;
+    logic [2             -1:0] slv1_arlock;
+    logic [4             -1:0] slv1_arcache;
+    logic [3             -1:0] slv1_arprot;
+    logic [4             -1:0] slv1_arqos;
+    logic [4             -1:0] slv1_arregion;
+    logic [AXI_ID_W      -1:0] slv1_arid;
+    logic                      slv1_rvalid;
+    logic                      slv1_rready;
+    logic [AXI_ID_W      -1:0] slv1_rid;
+    logic [2             -1:0] slv1_rresp;
+    logic [AXI_DATA_W    -1:0] slv1_rdata;
+    logic                      slv1_rlast;
+    logic                      slv2_aclk;
+    logic                      slv2_aresetn;
+    logic                      slv2_srst;
+    logic                      slv2_awvalid;
+    logic                      slv2_awready;
+    logic [AXI_ADDR_W    -1:0] slv2_awaddr;
+    logic [8             -1:0] slv2_awlen;
+    logic [3             -1:0] slv2_awsize;
+    logic [2             -1:0] slv2_awburst;
+    logic [2             -1:0] slv2_awlock;
+    logic [4             -1:0] slv2_awcache;
+    logic [3             -1:0] slv2_awprot;
+    logic [4             -1:0] slv2_awqos;
+    logic [4             -1:0] slv2_awregion;
+    logic [AXI_ID_W      -1:0] slv2_awid;
+    logic                      slv2_wvalid;
+    logic                      slv2_wready;
+    logic                      slv2_wlast;
+    logic [AXI_DATA_W    -1:0] slv2_wdata;
+    logic [AXI_DATA_W/8  -1:0] slv2_wstrb;
+    logic                      slv2_bvalid;
+    logic                      slv2_bready;
+    logic [AXI_ID_W      -1:0] slv2_bid;
+    logic [2             -1:0] slv2_bresp;
+    logic                      slv2_arvalid;
+    logic                      slv2_arready;
+    logic [AXI_ADDR_W    -1:0] slv2_araddr;
+    logic [8             -1:0] slv2_arlen;
+    logic [3             -1:0] slv2_arsize;
+    logic [2             -1:0] slv2_arburst;
+    logic [2             -1:0] slv2_arlock;
+    logic [4             -1:0] slv2_arcache;
+    logic [3             -1:0] slv2_arprot;
+    logic [4             -1:0] slv2_arqos;
+    logic [4             -1:0] slv2_arregion;
+    logic [AXI_ID_W      -1:0] slv2_arid;
+    logic                      slv2_rvalid;
+    logic                      slv2_rready;
+    logic [AXI_ID_W      -1:0] slv2_rid;
+    logic [2             -1:0] slv2_rresp;
+    logic [AXI_DATA_W    -1:0] slv2_rdata;
+    logic                      slv2_rlast;
+    logic                      slv3_aclk;
+    logic                      slv3_aresetn;
+    logic                      slv3_srst;
+    logic                      slv3_awvalid;
+    logic                      slv3_awready;
+    logic [AXI_ADDR_W    -1:0] slv3_awaddr;
+    logic [8             -1:0] slv3_awlen;
+    logic [3             -1:0] slv3_awsize;
+    logic [2             -1:0] slv3_awburst;
+    logic [2             -1:0] slv3_awlock;
+    logic [4             -1:0] slv3_awcache;
+    logic [3             -1:0] slv3_awprot;
+    logic [4             -1:0] slv3_awqos;
+    logic [4             -1:0] slv3_awregion;
+    logic [AXI_ID_W      -1:0] slv3_awid;
+    logic                      slv3_wvalid;
+    logic                      slv3_wready;
+    logic                      slv3_wlast;
+    logic [AXI_DATA_W    -1:0] slv3_wdata;
+    logic [AXI_DATA_W/8  -1:0] slv3_wstrb;
+    logic                      slv3_bvalid;
+    logic                      slv3_bready;
+    logic [AXI_ID_W      -1:0] slv3_bid;
+    logic [2             -1:0] slv3_bresp;
+    logic                      slv3_arvalid;
+    logic                      slv3_arready;
+    logic [AXI_ADDR_W    -1:0] slv3_araddr;
+    logic [8             -1:0] slv3_arlen;
+    logic [3             -1:0] slv3_arsize;
+    logic [2             -1:0] slv3_arburst;
+    logic [2             -1:0] slv3_arlock;
+    logic [4             -1:0] slv3_arcache;
+    logic [3             -1:0] slv3_arprot;
+    logic [4             -1:0] slv3_arqos;
+    logic [4             -1:0] slv3_arregion;
+    logic [AXI_ID_W      -1:0] slv3_arid;
+    logic                      slv3_rvalid;
+    logic                      slv3_rready;
+    logic [AXI_ID_W      -1:0] slv3_rid;
+    logic [2             -1:0] slv3_rresp;
+    logic [AXI_DATA_W    -1:0] slv3_rdata;
+    logic                      slv3_rlast;
+
+    integer                    nb_reqs;
+    integer                    timeout;
+    logic [AXI_ADDR_W    -1:0] addr_min;
+    logic [AXI_ADDR_W    -1:0] addr_max;
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Monitor the execution to state if the testcase is successfull or not
+    //////////////////////////////////////////////////////////////////////////
+    task wait_end_of_execution();
+
+        fork 
+        begin
+            while (timeout<`TIMEOUT) begin
+                @(posedge aclk);
+                timeout = timeout + 1;
+            end
+            `ASSERT((timeout<`TIMEOUT), "Testcase reached timeout");
+        end
+        begin
+            while (nb_reqs<`MAX_TRAFFIC) begin
+                @(posedge aclk);
+                if (mst0_bvalid && mst0_bready)
+                    nb_reqs = nb_reqs + 1;
+            end
+            `INFO("Full traffic has been injected by the drivers");
+        end
+        begin
+            while (|error===1'b0) begin
+                @(posedge aclk);
+            end
+            `ASSERT((error==0), "Error detected during execution");
+            $display("Errors: %x", error);
+        end
+        join_any
+
+    endtask
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Instances
+    //////////////////////////////////////////////////////////////////////////
+
+    axicb_crossbar_top
+    #(
+    .AXI_ADDR_W         (AXI_ADDR_W),
+    .AXI_ID_W           (AXI_ID_W),
+    .AXI_DATA_W         (AXI_DATA_W),
+    .MST_NB             (MST_NB),
+    .SLV_NB             (SLV_NB),
+    .MST_PIPELINE       (MST_PIPELINE),
+    .SLV_PIPELINE       (SLV_PIPELINE),
+    .STRB_MODE          (STRB_MODE),
+    .AXI_SIGNALING      (AXI_SIGNALING),
+    .USER_SUPPORT       (USER_SUPPORT),
+    .AUSER_W            (AUSER_W),
+    .WUSER_W            (WUSER_W),
+    .BUSER_W            (BUSER_W),
+    .RUSER_W            (RUSER_W),
+    .TIMEOUT_VALUE      (TIMEOUT_VALUE),
+    .TIMEOUT_ENABLE     (TIMEOUT_ENABLE),
+    .MST0_CDC           (MST0_CDC),
+    .MST0_OSTDREQ_NUM   (MST0_OSTDREQ_NUM),
+    .MST0_OSTDREQ_SIZE  (MST0_OSTDREQ_SIZE),
+    .MST0_PRIORITY      (MST0_PRIORITY),
+    .MST0_ROUTES        (MST0_ROUTES),
+    .MST0_ID_MASK       (MST0_ID_MASK),
+    .MST1_CDC           (MST1_CDC),
+    .MST1_OSTDREQ_NUM   (MST1_OSTDREQ_NUM),
+    .MST1_OSTDREQ_SIZE  (MST1_OSTDREQ_SIZE),
+    .MST1_PRIORITY      (MST1_PRIORITY),
+    .MST1_ROUTES        (MST1_ROUTES),
+    .MST1_ID_MASK       (MST1_ID_MASK),
+    .MST2_CDC           (MST2_CDC),
+    .MST2_OSTDREQ_NUM   (MST2_OSTDREQ_NUM),
+    .MST2_OSTDREQ_SIZE  (MST2_OSTDREQ_SIZE),
+    .MST2_PRIORITY      (MST2_PRIORITY),
+    .MST2_ROUTES        (MST2_ROUTES),
+    .MST2_ID_MASK       (MST2_ID_MASK),
+    .MST3_CDC           (MST3_CDC),
+    .MST3_OSTDREQ_NUM   (MST3_OSTDREQ_NUM),
+    .MST3_OSTDREQ_SIZE  (MST3_OSTDREQ_SIZE),
+    .MST3_PRIORITY      (MST3_PRIORITY),
+    .MST3_ROUTES        (MST3_ROUTES),
+    .MST3_ID_MASK       (MST3_ID_MASK),
+    .SLV0_CDC           (SLV0_CDC),
+    .SLV0_START_ADDR    (SLV0_START_ADDR),
+    .SLV0_END_ADDR      (SLV0_END_ADDR),
+    .SLV0_OSTDREQ_NUM   (SLV0_OSTDREQ_NUM),
+    .SLV0_OSTDREQ_SIZE  (SLV0_OSTDREQ_SIZE),
+    .SLV1_CDC           (SLV1_CDC),
+    .SLV1_START_ADDR    (SLV1_START_ADDR),
+    .SLV1_END_ADDR      (SLV1_END_ADDR),
+    .SLV1_OSTDREQ_NUM   (SLV1_OSTDREQ_NUM),
+    .SLV1_OSTDREQ_SIZE  (SLV1_OSTDREQ_SIZE),
+    .SLV2_CDC           (SLV2_CDC),
+    .SLV2_START_ADDR    (SLV2_START_ADDR),
+    .SLV2_END_ADDR      (SLV2_END_ADDR),
+    .SLV2_OSTDREQ_NUM   (SLV2_OSTDREQ_NUM),
+    .SLV2_OSTDREQ_SIZE  (SLV2_OSTDREQ_SIZE),
+    .SLV3_CDC           (SLV3_CDC),
+    .SLV3_START_ADDR    (SLV3_START_ADDR),
+    .SLV3_END_ADDR      (SLV3_END_ADDR),
+    .SLV3_OSTDREQ_NUM   (SLV3_OSTDREQ_NUM),
+    .SLV3_OSTDREQ_SIZE  (SLV3_OSTDREQ_SIZE)
+    )
+    dut
+    (
+    .aclk            (aclk),
+    .aresetn         (aresetn),
+    .srst            (srst),
+    .mst0_aclk       (mst0_aclk),
+    .mst0_aresetn    (mst0_aresetn),
+    .mst0_srst       (mst0_srst),
+    .mst0_awvalid    (mst0_awvalid),
+    .mst0_awready    (mst0_awready),
+    .mst0_awaddr     (mst0_awaddr),
+    .mst0_awlen      (mst0_awlen),
+    .mst0_awsize     (mst0_awsize),
+    .mst0_awburst    (mst0_awburst),
+    .mst0_awlock     (mst0_awlock),
+    .mst0_awcache    (mst0_awcache),
+    .mst0_awprot     (mst0_awprot),
+    .mst0_awqos      (mst0_awqos),
+    .mst0_awregion   (mst0_awregion),
+    .mst0_awid       (mst0_awid),
+    .mst0_wvalid     (mst0_wvalid),
+    .mst0_wready     (mst0_wready),
+    .mst0_wlast      (mst0_wlast),
+    .mst0_wdata      (mst0_wdata),
+    .mst0_wstrb      (mst0_wstrb),
+    .mst0_bvalid     (mst0_bvalid),
+    .mst0_bready     (mst0_bready),
+    .mst0_bid        (mst0_bid),
+    .mst0_bresp      (mst0_bresp),
+    .mst0_arvalid    (mst0_arvalid),
+    .mst0_arready    (mst0_arready),
+    .mst0_araddr     (mst0_araddr),
+    .mst0_arlen      (mst0_arlen),
+    .mst0_arsize     (mst0_arsize),
+    .mst0_arburst    (mst0_arburst),
+    .mst0_arlock     (mst0_arlock),
+    .mst0_arcache    (mst0_arcache),
+    .mst0_arprot     (mst0_arprot),
+    .mst0_arqos      (mst0_arqos),
+    .mst0_arregion   (mst0_arregion),
+    .mst0_arid       (mst0_arid),
+    .mst0_rvalid     (mst0_rvalid),
+    .mst0_rready     (mst0_rready),
+    .mst0_rid        (mst0_rid),
+    .mst0_rresp      (mst0_rresp),
+    .mst0_rdata      (mst0_rdata),
+    .mst0_rlast      (mst0_rlast),
+    .mst1_aclk       (mst1_aclk),
+    .mst1_aresetn    (mst1_aresetn),
+    .mst1_srst       (mst1_srst),
+    .mst1_awvalid    (mst1_awvalid),
+    .mst1_awready    (mst1_awready),
+    .mst1_awaddr     (mst1_awaddr),
+    .mst1_awlen      (mst1_awlen),
+    .mst1_awsize     (mst1_awsize),
+    .mst1_awburst    (mst1_awburst),
+    .mst1_awlock     (mst1_awlock),
+    .mst1_awcache    (mst1_awcache),
+    .mst1_awprot     (mst1_awprot),
+    .mst1_awqos      (mst1_awqos),
+    .mst1_awregion   (mst1_awregion),
+    .mst1_awid       (mst1_awid),
+    .mst1_wvalid     (mst1_wvalid),
+    .mst1_wready     (mst1_wready),
+    .mst1_wlast      (mst1_wlast),
+    .mst1_wdata      (mst1_wdata),
+    .mst1_wstrb      (mst1_wstrb),
+    .mst1_bvalid     (mst1_bvalid),
+    .mst1_bready     (mst1_bready),
+    .mst1_bid        (mst1_bid),
+    .mst1_bresp      (mst1_bresp),
+    .mst1_arvalid    (mst1_arvalid),
+    .mst1_arready    (mst1_arready),
+    .mst1_araddr     (mst1_araddr),
+    .mst1_arlen      (mst1_arlen),
+    .mst1_arsize     (mst1_arsize),
+    .mst1_arburst    (mst1_arburst),
+    .mst1_arlock     (mst1_arlock),
+    .mst1_arcache    (mst1_arcache),
+    .mst1_arprot     (mst1_arprot),
+    .mst1_arqos      (mst1_arqos),
+    .mst1_arregion   (mst1_arregion),
+    .mst1_arid       (mst1_arid),
+    .mst1_rvalid     (mst1_rvalid),
+    .mst1_rready     (mst1_rready),
+    .mst1_rid        (mst1_rid),
+    .mst1_rresp      (mst1_rresp),
+    .mst1_rdata      (mst1_rdata),
+    .mst1_rlast      (mst1_rlast),
+    .mst2_aclk       (mst2_aclk),
+    .mst2_aresetn    (mst2_aresetn),
+    .mst2_srst       (mst2_srst),
+    .mst2_awvalid    (mst2_awvalid),
+    .mst2_awready    (mst2_awready),
+    .mst2_awaddr     (mst2_awaddr),
+    .mst2_awlen      (mst2_awlen),
+    .mst2_awsize     (mst2_awsize),
+    .mst2_awburst    (mst2_awburst),
+    .mst2_awlock     (mst2_awlock),
+    .mst2_awcache    (mst2_awcache),
+    .mst2_awprot     (mst2_awprot),
+    .mst2_awqos      (mst2_awqos),
+    .mst2_awregion   (mst2_awregion),
+    .mst2_awid       (mst2_awid),
+    .mst2_wvalid     (mst2_wvalid),
+    .mst2_wready     (mst2_wready),
+    .mst2_wlast      (mst2_wlast),
+    .mst2_wdata      (mst2_wdata),
+    .mst2_wstrb      (mst2_wstrb),
+    .mst2_bvalid     (mst2_bvalid),
+    .mst2_bready     (mst2_bready),
+    .mst2_bid        (mst2_bid),
+    .mst2_bresp      (mst2_bresp),
+    .mst2_arvalid    (mst2_arvalid),
+    .mst2_arready    (mst2_arready),
+    .mst2_araddr     (mst2_araddr),
+    .mst2_arlen      (mst2_arlen),
+    .mst2_arsize     (mst2_arsize),
+    .mst2_arburst    (mst2_arburst),
+    .mst2_arlock     (mst2_arlock),
+    .mst2_arcache    (mst2_arcache),
+    .mst2_arprot     (mst2_arprot),
+    .mst2_arqos      (mst2_arqos),
+    .mst2_arregion   (mst2_arregion),
+    .mst2_arid       (mst2_arid),
+    .mst2_rvalid     (mst2_rvalid),
+    .mst2_rready     (mst2_rready),
+    .mst2_rid        (mst2_rid),
+    .mst2_rresp      (mst2_rresp),
+    .mst2_rdata      (mst2_rdata),
+    .mst2_rlast      (mst2_rlast),
+    .mst3_aclk       (mst3_aclk),
+    .mst3_aresetn    (mst3_aresetn),
+    .mst3_srst       (mst3_srst),
+    .mst3_awvalid    (mst3_awvalid),
+    .mst3_awready    (mst3_awready),
+    .mst3_awaddr     (mst3_awaddr),
+    .mst3_awlen      (mst3_awlen),
+    .mst3_awsize     (mst3_awsize),
+    .mst3_awburst    (mst3_awburst),
+    .mst3_awlock     (mst3_awlock),
+    .mst3_awcache    (mst3_awcache),
+    .mst3_awprot     (mst3_awprot),
+    .mst3_awqos      (mst3_awqos),
+    .mst3_awregion   (mst3_awregion),
+    .mst3_awid       (mst3_awid),
+    .mst3_wvalid     (mst3_wvalid),
+    .mst3_wready     (mst3_wready),
+    .mst3_wlast      (mst3_wlast),
+    .mst3_wdata      (mst3_wdata),
+    .mst3_wstrb      (mst3_wstrb),
+    .mst3_bvalid     (mst3_bvalid),
+    .mst3_bready     (mst3_bready),
+    .mst3_bid        (mst3_bid),
+    .mst3_bresp      (mst3_bresp),
+    .mst3_arvalid    (mst3_arvalid),
+    .mst3_arready    (mst3_arready),
+    .mst3_araddr     (mst3_araddr),
+    .mst3_arlen      (mst3_arlen),
+    .mst3_arsize     (mst3_arsize),
+    .mst3_arburst    (mst3_arburst),
+    .mst3_arlock     (mst3_arlock),
+    .mst3_arcache    (mst3_arcache),
+    .mst3_arprot     (mst3_arprot),
+    .mst3_arqos      (mst3_arqos),
+    .mst3_arregion   (mst3_arregion),
+    .mst3_arid       (mst3_arid),
+    .mst3_rvalid     (mst3_rvalid),
+    .mst3_rready     (mst3_rready),
+    .mst3_rid        (mst3_rid),
+    .mst3_rresp      (mst3_rresp),
+    .mst3_rdata      (mst3_rdata),
+    .mst3_rlast      (mst3_rlast),
+    .slv0_aclk       (slv0_aclk),
+    .slv0_aresetn    (slv0_aresetn),
+    .slv0_srst       (slv0_srst),
+    .slv0_awvalid    (slv0_awvalid),
+    .slv0_awready    (slv0_awready),
+    .slv0_awaddr     (slv0_awaddr),
+    .slv0_awlen      (slv0_awlen),
+    .slv0_awsize     (slv0_awsize),
+    .slv0_awburst    (slv0_awburst),
+    .slv0_awlock     (slv0_awlock),
+    .slv0_awcache    (slv0_awcache),
+    .slv0_awprot     (slv0_awprot),
+    .slv0_awqos      (slv0_awqos),
+    .slv0_awregion   (slv0_awregion),
+    .slv0_awid       (slv0_awid),
+    .slv0_wvalid     (slv0_wvalid),
+    .slv0_wready     (slv0_wready),
+    .slv0_wlast      (slv0_wlast),
+    .slv0_wdata      (slv0_wdata),
+    .slv0_wstrb      (slv0_wstrb),
+    .slv0_bvalid     (slv0_bvalid),
+    .slv0_bready     (slv0_bready),
+    .slv0_bid        (slv0_bid),
+    .slv0_bresp      (slv0_bresp),
+    .slv0_arvalid    (slv0_arvalid),
+    .slv0_arready    (slv0_arready),
+    .slv0_araddr     (slv0_araddr),
+    .slv0_arlen      (slv0_arlen),
+    .slv0_arsize     (slv0_arsize),
+    .slv0_arburst    (slv0_arburst),
+    .slv0_arlock     (slv0_arlock),
+    .slv0_arcache    (slv0_arcache),
+    .slv0_arprot     (slv0_arprot),
+    .slv0_arqos      (slv0_arqos),
+    .slv0_arregion   (slv0_arregion),
+    .slv0_arid       (slv0_arid),
+    .slv0_rvalid     (slv0_rvalid),
+    .slv0_rready     (slv0_rready),
+    .slv0_rid        (slv0_rid),
+    .slv0_rresp      (slv0_rresp),
+    .slv0_rdata      (slv0_rdata),
+    .slv0_rlast      (slv0_rlast),
+    .slv1_aclk       (slv1_aclk),
+    .slv1_aresetn    (slv1_aresetn),
+    .slv1_srst       (slv1_srst),
+    .slv1_awvalid    (slv1_awvalid),
+    .slv1_awready    (slv1_awready),
+    .slv1_awaddr     (slv1_awaddr),
+    .slv1_awlen      (slv1_awlen),
+    .slv1_awsize     (slv1_awsize),
+    .slv1_awburst    (slv1_awburst),
+    .slv1_awlock     (slv1_awlock),
+    .slv1_awcache    (slv1_awcache),
+    .slv1_awprot     (slv1_awprot),
+    .slv1_awqos      (slv1_awqos),
+    .slv1_awregion   (slv1_awregion),
+    .slv1_awid       (slv1_awid),
+    .slv1_wvalid     (slv1_wvalid),
+    .slv1_wready     (slv1_wready),
+    .slv1_wlast      (slv1_wlast),
+    .slv1_wdata      (slv1_wdata),
+    .slv1_wstrb      (slv1_wstrb),
+    .slv1_bvalid     (slv1_bvalid),
+    .slv1_bready     (slv1_bready),
+    .slv1_bid        (slv1_bid),
+    .slv1_bresp      (slv1_bresp),
+    .slv1_arvalid    (slv1_arvalid),
+    .slv1_arready    (slv1_arready),
+    .slv1_araddr     (slv1_araddr),
+    .slv1_arlen      (slv1_arlen),
+    .slv1_arsize     (slv1_arsize),
+    .slv1_arburst    (slv1_arburst),
+    .slv1_arlock     (slv1_arlock),
+    .slv1_arcache    (slv1_arcache),
+    .slv1_arprot     (slv1_arprot),
+    .slv1_arqos      (slv1_arqos),
+    .slv1_arregion   (slv1_arregion),
+    .slv1_arid       (slv1_arid),
+    .slv1_rvalid     (slv1_rvalid),
+    .slv1_rready     (slv1_rready),
+    .slv1_rid        (slv1_rid),
+    .slv1_rresp      (slv1_rresp),
+    .slv1_rdata      (slv1_rdata),
+    .slv1_rlast      (slv1_rlast),
+    .slv2_aclk       (slv2_aclk),
+    .slv2_aresetn    (slv2_aresetn),
+    .slv2_srst       (slv2_srst),
+    .slv2_awvalid    (slv2_awvalid),
+    .slv2_awready    (slv2_awready),
+    .slv2_awaddr     (slv2_awaddr),
+    .slv2_awlen      (slv2_awlen),
+    .slv2_awsize     (slv2_awsize),
+    .slv2_awburst    (slv2_awburst),
+    .slv2_awlock     (slv2_awlock),
+    .slv2_awcache    (slv2_awcache),
+    .slv2_awprot     (slv2_awprot),
+    .slv2_awqos      (slv2_awqos),
+    .slv2_awregion   (slv2_awregion),
+    .slv2_awid       (slv2_awid),
+    .slv2_wvalid     (slv2_wvalid),
+    .slv2_wready     (slv2_wready),
+    .slv2_wlast      (slv2_wlast),
+    .slv2_wdata      (slv2_wdata),
+    .slv2_wstrb      (slv2_wstrb),
+    .slv2_bvalid     (slv2_bvalid),
+    .slv2_bready     (slv2_bready),
+    .slv2_bid        (slv2_bid),
+    .slv2_bresp      (slv2_bresp),
+    .slv2_arvalid    (slv2_arvalid),
+    .slv2_arready    (slv2_arready),
+    .slv2_araddr     (slv2_araddr),
+    .slv2_arlen      (slv2_arlen),
+    .slv2_arsize     (slv2_arsize),
+    .slv2_arburst    (slv2_arburst),
+    .slv2_arlock     (slv2_arlock),
+    .slv2_arcache    (slv2_arcache),
+    .slv2_arprot     (slv2_arprot),
+    .slv2_arqos      (slv2_arqos),
+    .slv2_arregion   (slv2_arregion),
+    .slv2_arid       (slv2_arid),
+    .slv2_rvalid     (slv2_rvalid),
+    .slv2_rready     (slv2_rready),
+    .slv2_rid        (slv2_rid),
+    .slv2_rresp      (slv2_rresp),
+    .slv2_rdata      (slv2_rdata),
+    .slv2_rlast      (slv2_rlast),
+    .slv3_aclk       (slv3_aclk),
+    .slv3_aresetn    (slv3_aresetn),
+    .slv3_srst       (slv3_srst),
+    .slv3_awvalid    (slv3_awvalid),
+    .slv3_awready    (slv3_awready),
+    .slv3_awaddr     (slv3_awaddr),
+    .slv3_awlen      (slv3_awlen),
+    .slv3_awsize     (slv3_awsize),
+    .slv3_awburst    (slv3_awburst),
+    .slv3_awlock     (slv3_awlock),
+    .slv3_awcache    (slv3_awcache),
+    .slv3_awprot     (slv3_awprot),
+    .slv3_awqos      (slv3_awqos),
+    .slv3_awregion   (slv3_awregion),
+    .slv3_awid       (slv3_awid),
+    .slv3_wvalid     (slv3_wvalid),
+    .slv3_wready     (slv3_wready),
+    .slv3_wlast      (slv3_wlast),
+    .slv3_wdata      (slv3_wdata),
+    .slv3_wstrb      (slv3_wstrb),
+    .slv3_bvalid     (slv3_bvalid),
+    .slv3_bready     (slv3_bready),
+    .slv3_bid        (slv3_bid),
+    .slv3_bresp      (slv3_bresp),
+    .slv3_arvalid    (slv3_arvalid),
+    .slv3_arready    (slv3_arready),
+    .slv3_araddr     (slv3_araddr),
+    .slv3_arlen      (slv3_arlen),
+    .slv3_arsize     (slv3_arsize),
+    .slv3_arburst    (slv3_arburst),
+    .slv3_arlock     (slv3_arlock),
+    .slv3_arcache    (slv3_arcache),
+    .slv3_arprot     (slv3_arprot),
+    .slv3_arqos      (slv3_arqos),
+    .slv3_arregion   (slv3_arregion),
+    .slv3_arid       (slv3_arid),
+    .slv3_rvalid     (slv3_rvalid),
+    .slv3_rready     (slv3_rready),
+    .slv3_rid        (slv3_rid),
+    .slv3_rresp      (slv3_rresp),
+    .slv3_rdata      (slv3_rdata),
+    .slv3_rlast      (slv3_rlast)
+    );
+
+
+    mst_driver 
+    #(
+    .AXI_ADDR_W      (AXI_ADDR_W),
+    .AXI_ID_W        (AXI_ID_W),
+    .AXI_DATA_W      (AXI_DATA_W),
+    .MST_ID          ('h10),
+    .MST_OSTDREQ_NUM (16),
+    .AXI_SIGNALING   (AXI_SIGNALING),
+    .CHECK_REPORT    (CHECK_REPORT),
+    .KEY             ('hCCCCCCCC)
+    )
+    mst_driver0 
+    (
+    .aclk     (mst0_aclk),
+    .aresetn  (mst0_aresetn),
+    .srst     (mst0_srst),
+    .en       (mst_en[0]),
+    .addr_min (addr_min),
+    .addr_max (addr_max),
+    .error    (error[0]),
+    .awvalid  (mst0_awvalid),
+    .awready  (mst0_awready),
+    .awaddr   (mst0_awaddr),
+    .awlen    (mst0_awlen),
+    .awsize   (mst0_awsize),
+    .awburst  (mst0_awburst),
+    .awlock   (mst0_awlock),
+    .awcache  (mst0_awcache),
+    .awprot   (mst0_awprot),
+    .awqos    (mst0_awqos),
+    .awregion (mst0_awregion),
+    .awid     (mst0_awid),
+    .wvalid   (mst0_wvalid),
+    .wready   (mst0_wready),
+    .wlast    (mst0_wlast),
+    .wdata    (mst0_wdata),
+    .wstrb    (mst0_wstrb),
+    .bvalid   (mst0_bvalid),
+    .bready   (mst0_bready),
+    .bid      (mst0_bid),
+    .bresp    (mst0_bresp),
+    .arvalid  (mst0_arvalid),
+    .arready  (mst0_arready),
+    .araddr   (mst0_araddr),
+    .arlen    (mst0_arlen),
+    .arsize   (mst0_arsize),
+    .arburst  (mst0_arburst),
+    .arlock   (mst0_arlock),
+    .arcache  (mst0_arcache),
+    .arprot   (mst0_arprot),
+    .arqos    (mst0_arqos),
+    .arregion (mst0_arregion),
+    .arid     (mst0_arid),
+    .rvalid   (mst0_rvalid),
+    .rready   (mst0_rready),
+    .rid      (mst0_rid),
+    .rresp    (mst0_rresp),
+    .rdata    (mst0_rdata),
+    .rlast    (mst0_rlast)
+    );
+
+    mst_driver 
+    #(
+    .AXI_ADDR_W      (AXI_ADDR_W),
+    .AXI_ID_W        (AXI_ID_W),
+    .AXI_DATA_W      (AXI_DATA_W),
+    .MST_ID          ('h20),
+    .MST_OSTDREQ_NUM (16),
+    .AXI_SIGNALING   (AXI_SIGNALING),
+    .CHECK_REPORT    (CHECK_REPORT),
+    .KEY             ('hEEEEEEEE)
+    )
+    mst_driver1 
+    (
+    .aclk     (mst1_aclk),
+    .aresetn  (mst1_aresetn),
+    .srst     (mst1_srst),
+    .en       (mst_en[1]),
+    .addr_min (addr_min),
+    .addr_max (addr_max),
+    .error    (error[1]),
+    .awvalid  (mst1_awvalid),
+    .awready  (mst1_awready),
+    .awaddr   (mst1_awaddr),
+    .awlen    (mst1_awlen),
+    .awsize   (mst1_awsize),
+    .awburst  (mst1_awburst),
+    .awlock   (mst1_awlock),
+    .awcache  (mst1_awcache),
+    .awprot   (mst1_awprot),
+    .awqos    (mst1_awqos),
+    .awregion (mst1_awregion),
+    .awid     (mst1_awid),
+    .wvalid   (mst1_wvalid),
+    .wready   (mst1_wready),
+    .wlast    (mst1_wlast),
+    .wdata    (mst1_wdata),
+    .wstrb    (mst1_wstrb),
+    .bvalid   (mst1_bvalid),
+    .bready   (mst1_bready),
+    .bid      (mst1_bid),
+    .bresp    (mst1_bresp),
+    .arvalid  (mst1_arvalid),
+    .arready  (mst1_arready),
+    .araddr   (mst1_araddr),
+    .arlen    (mst1_arlen),
+    .arsize   (mst1_arsize),
+    .arburst  (mst1_arburst),
+    .arlock   (mst1_arlock),
+    .arcache  (mst1_arcache),
+    .arprot   (mst1_arprot),
+    .arqos    (mst1_arqos),
+    .arregion (mst1_arregion),
+    .arid     (mst1_arid),
+    .rvalid   (mst1_rvalid),
+    .rready   (mst1_rready),
+    .rid      (mst1_rid),
+    .rresp    (mst1_rresp),
+    .rdata    (mst1_rdata),
+    .rlast    (mst1_rlast)
+    );
+
+    mst_driver 
+    #(
+    .AXI_ADDR_W      (AXI_ADDR_W),
+    .AXI_ID_W        (AXI_ID_W),
+    .AXI_DATA_W      (AXI_DATA_W),
+    .MST_ID          ('h30),
+    .MST_OSTDREQ_NUM (16),
+    .AXI_SIGNALING   (AXI_SIGNALING),
+    .CHECK_REPORT    (CHECK_REPORT),
+    .KEY             ('hAAAAAAAA)
+    )
+    mst_driver2 
+    (
+    .aclk     (mst2_aclk),
+    .aresetn  (mst2_aresetn),
+    .srst     (mst2_srst),
+    .en       (mst_en[2]),
+    .addr_min (addr_min),
+    .addr_max (addr_max),
+    .error    (error[2]),
+    .awvalid  (mst2_awvalid),
+    .awready  (mst2_awready),
+    .awaddr   (mst2_awaddr),
+    .awlen    (mst2_awlen),
+    .awsize   (mst2_awsize),
+    .awburst  (mst2_awburst),
+    .awlock   (mst2_awlock),
+    .awcache  (mst2_awcache),
+    .awprot   (mst2_awprot),
+    .awqos    (mst2_awqos),
+    .awregion (mst2_awregion),
+    .awid     (mst2_awid),
+    .wvalid   (mst2_wvalid),
+    .wready   (mst2_wready),
+    .wlast    (mst2_wlast),
+    .wdata    (mst2_wdata),
+    .wstrb    (mst2_wstrb),
+    .bvalid   (mst2_bvalid),
+    .bready   (mst2_bready),
+    .bid      (mst2_bid),
+    .bresp    (mst2_bresp),
+    .arvalid  (mst2_arvalid),
+    .arready  (mst2_arready),
+    .araddr   (mst2_araddr),
+    .arlen    (mst2_arlen),
+    .arsize   (mst2_arsize),
+    .arburst  (mst2_arburst),
+    .arlock   (mst2_arlock),
+    .arcache  (mst2_arcache),
+    .arprot   (mst2_arprot),
+    .arqos    (mst2_arqos),
+    .arregion (mst2_arregion),
+    .arid     (mst2_arid),
+    .rvalid   (mst2_rvalid),
+    .rready   (mst2_rready),
+    .rid      (mst2_rid),
+    .rresp    (mst2_rresp),
+    .rdata    (mst2_rdata),
+    .rlast    (mst2_rlast)
+    );
+
+    mst_driver 
+    #(
+    .AXI_ADDR_W      (AXI_ADDR_W),
+    .AXI_ID_W        (AXI_ID_W),
+    .AXI_DATA_W      (AXI_DATA_W),
+    .MST_ID          ('h40),
+    .MST_OSTDREQ_NUM (16),
+    .AXI_SIGNALING   (AXI_SIGNALING),
+    .CHECK_REPORT    (CHECK_REPORT),
+    .KEY             ('hFFFFFFFF)
+    )
+    mst_driver3 
+    (
+    .aclk     (mst3_aclk),
+    .aresetn  (mst3_aresetn),
+    .srst     (mst3_srst),
+    .en       (mst_en[3]),
+    .addr_min (addr_min),
+    .addr_max (addr_max),
+    .error    (error[3]),
+    .awvalid  (mst3_awvalid),
+    .awready  (mst3_awready),
+    .awaddr   (mst3_awaddr),
+    .awlen    (mst3_awlen),
+    .awsize   (mst3_awsize),
+    .awburst  (mst3_awburst),
+    .awlock   (mst3_awlock),
+    .awcache  (mst3_awcache),
+    .awprot   (mst3_awprot),
+    .awqos    (mst3_awqos),
+    .awregion (mst3_awregion),
+    .awid     (mst3_awid),
+    .wvalid   (mst3_wvalid),
+    .wready   (mst3_wready),
+    .wlast    (mst3_wlast),
+    .wdata    (mst3_wdata),
+    .wstrb    (mst3_wstrb),
+    .bvalid   (mst3_bvalid),
+    .bready   (mst3_bready),
+    .bid      (mst3_bid),
+    .bresp    (mst3_bresp),
+    .arvalid  (mst3_arvalid),
+    .arready  (mst3_arready),
+    .araddr   (mst3_araddr),
+    .arlen    (mst3_arlen),
+    .arsize   (mst3_arsize),
+    .arburst  (mst3_arburst),
+    .arlock   (mst3_arlock),
+    .arcache  (mst3_arcache),
+    .arprot   (mst3_arprot),
+    .arqos    (mst3_arqos),
+    .arregion (mst3_arregion),
+    .arid     (mst3_arid),
+    .rvalid   (mst3_rvalid),
+    .rready   (mst3_rready),
+    .rid      (mst3_rid),
+    .rresp    (mst3_rresp),
+    .rdata    (mst3_rdata),
+    .rlast    (mst3_rlast)
+    );
+
+
+    slv_monitor 
+    #(
+    .AXI_ADDR_W   (AXI_ADDR_W),
+    .AXI_ID_W     (AXI_ID_W),
+    .AXI_DATA_W   (AXI_DATA_W),
+    .CHECK_REPORT (CHECK_REPORT),
+    .KEY          ('hABCDEF0)
+    )
+    slv_monitor0 
+    (
+    .aclk     (slv0_aclk),
+    .aresetn  (slv0_aresetn),
+    .srst     (slv0_srst),
+    .error    (error[4]),
+    .awvalid  (slv0_awvalid),
+    .awready  (slv0_awready),
+    .awaddr   (slv0_awaddr),
+    .awlen    (slv0_awlen),
+    .awsize   (slv0_awsize),
+    .awburst  (slv0_awburst),
+    .awlock   (slv0_awlock),
+    .awcache  (slv0_awcache),
+    .awprot   (slv0_awprot),
+    .awqos    (slv0_awqos),
+    .awregion (slv0_awregion),
+    .awid     (slv0_awid),
+    .wvalid   (slv0_wvalid),
+    .wready   (slv0_wready),
+    .wlast    (slv0_wlast),
+    .wdata    (slv0_wdata),
+    .wstrb    (slv0_wstrb),
+    .bvalid   (slv0_bvalid),
+    .bready   (slv0_bready),
+    .bid      (slv0_bid),
+    .bresp    (slv0_bresp),
+    .arvalid  (slv0_arvalid),
+    .arready  (slv0_arready),
+    .araddr   (slv0_araddr),
+    .arlen    (slv0_arlen),
+    .arsize   (slv0_arsize),
+    .arburst  (slv0_arburst),
+    .arlock   (slv0_arlock),
+    .arcache  (slv0_arcache),
+    .arprot   (slv0_arprot),
+    .arqos    (slv0_arqos),
+    .arregion (slv0_arregion),
+    .arid     (slv0_arid),
+    .rvalid   (slv0_rvalid),
+    .rready   (slv0_rready),
+    .rid      (slv0_rid),
+    .rresp    (slv0_rresp),
+    .rdata    (slv0_rdata),
+    .rlast    (slv0_rlast)
+    );
+
+    slv_monitor 
+    #(
+    .AXI_ADDR_W   (AXI_ADDR_W),
+    .AXI_ID_W     (AXI_ID_W),
+    .AXI_DATA_W   (AXI_DATA_W),
+    .CHECK_REPORT (CHECK_REPORT),
+    .KEY          ('hABCDEF0)
+    )
+    slv_monitor1 
+    (
+    .aclk     (slv1_aclk),
+    .aresetn  (slv1_aresetn),
+    .srst     (slv1_srst),
+    .error    (error[5]),
+    .awvalid  (slv1_awvalid),
+    .awready  (slv1_awready),
+    .awaddr   (slv1_awaddr),
+    .awlen    (slv1_awlen),
+    .awsize   (slv1_awsize),
+    .awburst  (slv1_awburst),
+    .awlock   (slv1_awlock),
+    .awcache  (slv1_awcache),
+    .awprot   (slv1_awprot),
+    .awqos    (slv1_awqos),
+    .awregion (slv1_awregion),
+    .awid     (slv1_awid),
+    .wvalid   (slv1_wvalid),
+    .wready   (slv1_wready),
+    .wlast    (slv1_wlast),
+    .wdata    (slv1_wdata),
+    .wstrb    (slv1_wstrb),
+    .bvalid   (slv1_bvalid),
+    .bready   (slv1_bready),
+    .bid      (slv1_bid),
+    .bresp    (slv1_bresp),
+    .arvalid  (slv1_arvalid),
+    .arready  (slv1_arready),
+    .araddr   (slv1_araddr),
+    .arlen    (slv1_arlen),
+    .arsize   (slv1_arsize),
+    .arburst  (slv1_arburst),
+    .arlock   (slv1_arlock),
+    .arcache  (slv1_arcache),
+    .arprot   (slv1_arprot),
+    .arqos    (slv1_arqos),
+    .arregion (slv1_arregion),
+    .arid     (slv1_arid),
+    .rvalid   (slv1_rvalid),
+    .rready   (slv1_rready),
+    .rid      (slv1_rid),
+    .rresp    (slv1_rresp),
+    .rdata    (slv1_rdata),
+    .rlast    (slv1_rlast)
+);
+
+    slv_monitor 
+    #(
+    .AXI_ADDR_W   (AXI_ADDR_W),
+    .AXI_ID_W     (AXI_ID_W),
+    .AXI_DATA_W   (AXI_DATA_W),
+    .CHECK_REPORT (CHECK_REPORT),
+    .KEY          ('hABCDEF5)
+    )
+    slv_monitor2 
+    (
+    .aclk     (slv2_aclk),
+    .aresetn  (slv2_aresetn),
+    .srst     (slv2_srst),
+    .error    (error[6]),
+    .awvalid  (slv2_awvalid),
+    .awready  (slv2_awready),
+    .awaddr   (slv2_awaddr),
+    .awlen    (slv2_awlen),
+    .awsize   (slv2_awsize),
+    .awburst  (slv2_awburst),
+    .awlock   (slv2_awlock),
+    .awcache  (slv2_awcache),
+    .awprot   (slv2_awprot),
+    .awqos    (slv2_awqos),
+    .awregion (slv2_awregion),
+    .awid     (slv2_awid),
+    .wvalid   (slv2_wvalid),
+    .wready   (slv2_wready),
+    .wlast    (slv2_wlast),
+    .wdata    (slv2_wdata),
+    .wstrb    (slv2_wstrb),
+    .bvalid   (slv2_bvalid),
+    .bready   (slv2_bready),
+    .bid      (slv2_bid),
+    .bresp    (slv2_bresp),
+    .arvalid  (slv2_arvalid),
+    .arready  (slv2_arready),
+    .araddr   (slv2_araddr),
+    .arlen    (slv2_arlen),
+    .arsize   (slv2_arsize),
+    .arburst  (slv2_arburst),
+    .arlock   (slv2_arlock),
+    .arcache  (slv2_arcache),
+    .arprot   (slv2_arprot),
+    .arqos    (slv2_arqos),
+    .arregion (slv2_arregion),
+    .arid     (slv2_arid),
+    .rvalid   (slv2_rvalid),
+    .rready   (slv2_rready),
+    .rid      (slv2_rid),
+    .rresp    (slv2_rresp),
+    .rdata    (slv2_rdata),
+    .rlast    (slv2_rlast)
+);
+
+    slv_monitor 
+    #(
+    .AXI_ADDR_W   (AXI_ADDR_W),
+    .AXI_ID_W     (AXI_ID_W),
+    .AXI_DATA_W   (AXI_DATA_W),
+    .CHECK_REPORT (CHECK_REPORT),
+    .KEY          ('hADCDEF0)
+    )
+    slv_monitor3 
+    (
+    .aclk     (slv3_aclk),
+    .aresetn  (slv3_aresetn),
+    .srst     (slv3_srst),
+    .error    (error[7]),
+    .awvalid  (slv3_awvalid),
+    .awready  (slv3_awready),
+    .awaddr   (slv3_awaddr),
+    .awlen    (slv3_awlen),
+    .awsize   (slv3_awsize),
+    .awburst  (slv3_awburst),
+    .awlock   (slv3_awlock),
+    .awcache  (slv3_awcache),
+    .awprot   (slv3_awprot),
+    .awqos    (slv3_awqos),
+    .awregion (slv3_awregion),
+    .awid     (slv3_awid),
+    .wvalid   (slv3_wvalid),
+    .wready   (slv3_wready),
+    .wlast    (slv3_wlast),
+    .wdata    (slv3_wdata),
+    .wstrb    (slv3_wstrb),
+    .bvalid   (slv3_bvalid),
+    .bready   (slv3_bready),
+    .bid      (slv3_bid),
+    .bresp    (slv3_bresp),
+    .arvalid  (slv3_arvalid),
+    .arready  (slv3_arready),
+    .araddr   (slv3_araddr),
+    .arlen    (slv3_arlen),
+    .arsize   (slv3_arsize),
+    .arburst  (slv3_arburst),
+    .arlock   (slv3_arlock),
+    .arcache  (slv3_arcache),
+    .arprot   (slv3_arprot),
+    .arqos    (slv3_arqos),
+    .arregion (slv3_arregion),
+    .arid     (slv3_arid),
+    .rvalid   (slv3_rvalid),
+    .rready   (slv3_rready),
+    .rid      (slv3_rid),
+    .rresp    (slv3_rresp),
+    .rdata    (slv3_rdata),
+    .rlast    (slv3_rlast)
+);
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Testbench setup
+    //////////////////////////////////////////////////////////////////////////
+
+    // To create a clock:
+    initial aclk = 0;
+    initial mst0_aclk = 0;
+    initial mst1_aclk = 0;
+    initial mst2_aclk = 0;
+    initial mst3_aclk = 0;
+    initial slv0_aclk = 0;
+    initial slv1_aclk = 0;
+    initial slv2_aclk = 0;
+    initial slv3_aclk = 0;
+    always #2 aclk = ~aclk;
+    always #2 mst0_aclk = ~mst0_aclk;
+    always #2 mst1_aclk = ~mst1_aclk;
+    always #2 mst2_aclk = ~mst2_aclk;
+    always #2 mst3_aclk = ~mst3_aclk;
+    always #2 slv0_aclk = ~slv0_aclk;
+    always #2 slv1_aclk = ~slv1_aclk;
+    always #2 slv2_aclk = ~slv2_aclk;
+    always #2 slv3_aclk = ~slv3_aclk;
+
+    // To dump data for visualization:
+    initial begin
+         $dumpfile("axicb_crossbar_top_testbench.vcd");
+         $dumpvars(0, axicb_crossbar_top_testbench);
+     end
+
+    // Setup time format when printing with $realtime
+    initial $timeformat(-9, 1, "ns", 8);
+
+    task setup(msg="");
+    begin
+        timeout = 0;
+        nb_reqs = 0;
+        addr_min = 0;
+        addr_max = 128;
+        srst = 0;
+        aresetn = 0;
+        mst0_aresetn = 0;
+        mst0_srst = 0;
+        mst1_aresetn = 0;
+        mst1_srst = 0;
+        mst2_aresetn = 0;
+        mst2_srst = 0;
+        mst3_aresetn = 0;
+        mst3_srst = 0;
+        slv0_aresetn = 0;
+        slv0_srst = 0;
+        slv1_aresetn = 0;
+        slv1_srst = 0;
+        slv2_aresetn = 0;
+        slv2_srst = 0;
+        slv3_aresetn = 0;
+        slv3_srst = 0;
+        mst_en = 4'b0;
+        #10;
+        aresetn = 1;
+        mst0_aresetn = 1;
+        mst1_aresetn = 1;
+        mst2_aresetn = 1;
+        mst3_aresetn = 1;
+        slv0_aresetn = 1;
+        slv1_aresetn = 1;
+        slv2_aresetn = 1;
+        slv3_aresetn = 1;
+        #10;
+    end
+    endtask
+
+    task teardown(msg="");
+    begin
+        /// teardown() runs when a test ends
+    end
+    endtask
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Testsuite
+    //////////////////////////////////////////////////////////////////////////
+
+    `TEST_SUITE("Random Testsuite")
+
+    `UNIT_TEST("Single Master Driver")
+
+        @(posedge aclk);
+        mst_en = 4'h1;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `TEST_SUITE_END
+
+endmodule

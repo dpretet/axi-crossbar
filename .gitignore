@@ -1,0 +1,4 @@
+obj_dir
+*.log
+*.out
+*.vcd
