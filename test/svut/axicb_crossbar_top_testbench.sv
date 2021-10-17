@@ -18,7 +18,7 @@ module axicb_crossbar_top_testbench();
     `define MAX_TRAFFIC 10
     `endif
 
-    parameter AXI_ADDR_W = 8;
+    parameter AXI_ADDR_W = 16;
     parameter AXI_ID_W = 8;
     parameter AXI_DATA_W = 32;
     parameter MST_NB = 4;
@@ -78,13 +78,15 @@ module axicb_crossbar_top_testbench();
     parameter SLV3_END_ADDR = 16383;
     parameter SLV3_OSTDREQ_NUM = 4;
     parameter SLV3_OSTDREQ_SIZE = 1;
+
     parameter CHECK_REPORT = 1;
 
-    logic [4             -1:0] mst_en;
     logic                      aclk;
     logic                      aresetn;
     logic                      srst;
+    logic [4             -1:0] mst_en;
     logic [8             -1:0] error;
+
     logic                      mst0_aclk;
     logic                      mst0_aresetn;
     logic                      mst0_srst;
@@ -1424,6 +1426,9 @@ module axicb_crossbar_top_testbench();
     `TEST_SUITE("Random Testsuite")
 
     `UNIT_TEST("Single Master Driver")
+
+        addr_min = 0;
+        addr_max = 128;
 
         @(posedge aclk);
         mst_en = 4'h1;

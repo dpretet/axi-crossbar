@@ -213,7 +213,6 @@ module axicb_switch_top
     //
     ///////////////////////////////////////////////////////////////////////////
 
-
     generate
     for (genvar i=0;i<SLV_NB;i=i+1) begin: TO_SLV_REORDERING
         for (genvar j=0;j<MST_NB;j=j+1) begin: MST_PARSING

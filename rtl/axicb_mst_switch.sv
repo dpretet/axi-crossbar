@@ -97,22 +97,30 @@ module axicb_mst_switch
     logic [SLV_NB    -1:0] rch_req;
     logic [SLV_NB    -1:0] rch_grant;
 
+    logic [AXI_ADDR_W-1:0] slv0_start_addr = SLV0_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv0_end_addr =   SLV0_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv1_start_addr = SLV1_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv1_end_addr =   SLV1_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv2_start_addr = SLV2_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv2_end_addr =   SLV2_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv3_start_addr = SLV3_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv3_end_addr =   SLV3_END_ADDR[0+:AXI_ADDR_W];
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address & Data Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign slv0_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= SLV0_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_awch[0+:AXI_ADDR_W] <= SLV0_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+    assign slv0_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign slv1_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= SLV1_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_awch[0+:AXI_ADDR_W] <= SLV1_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+    assign slv1_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign slv2_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= SLV2_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_awch[0+:AXI_ADDR_W] <= SLV2_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+    assign slv2_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign slv3_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= SLV3_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_awch[0+:AXI_ADDR_W] <= SLV3_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+    assign slv3_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
     assign o_awvalid[0] = (slv0_aw_targeted) ? i_awvalid : 1'b0;
     assign o_awvalid[1] = (slv1_aw_targeted) ? i_awvalid : 1'b0;
@@ -194,22 +202,17 @@ module axicb_mst_switch
     // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    /* verilator lint_off UNSIGNED */
-    /* verilator lint_off CMPCONST */
-    assign slv0_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= SLV0_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_arch[0+:AXI_ADDR_W] <= SLV0_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
-
-    assign slv1_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= SLV1_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_arch[0+:AXI_ADDR_W] <= SLV1_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
-
-    assign slv2_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= SLV2_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_arch[0+:AXI_ADDR_W] <= SLV2_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
-
-    assign slv3_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= SLV3_START_ADDR[0+:AXI_ADDR_W] &&
-                               i_arch[0+:AXI_ADDR_W] <= SLV3_END_ADDR[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
-    /* verilator lint_on CMPCONST */
-    /* verilator lint_on UNSIGNED */
-
+    assign slv0_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv1_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv2_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv3_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
     assign o_arvalid[0] = (slv0_ar_targeted) ? i_arvalid : 1'b0;
     assign o_arvalid[1] = (slv1_ar_targeted) ? i_arvalid : 1'b0;
