@@ -14,6 +14,10 @@ module axicb_crossbar_top_testbench();
     `define TIMEOUT 1000
     `endif
 
+    `ifndef OR_TIMEOUT
+    `define OR_TIMEOUT 100
+    `endif
+
     `ifndef MAX_TRAFFIC
     `define MAX_TRAFFIC 10
     `endif
@@ -883,6 +887,7 @@ module axicb_crossbar_top_testbench();
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
+    .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hCCCCCCCC)
     )
     mst_driver0 
@@ -944,6 +949,7 @@ module axicb_crossbar_top_testbench();
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
+    .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hEEEEEEEE)
     )
     mst_driver1 
@@ -1005,6 +1011,7 @@ module axicb_crossbar_top_testbench();
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
+    .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hAAAAAAAA)
     )
     mst_driver2 
@@ -1066,6 +1073,7 @@ module axicb_crossbar_top_testbench();
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
+    .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hFFFFFFFF)
     )
     mst_driver3 

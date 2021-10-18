@@ -217,7 +217,7 @@ module slv_monitor
         end
     end
 
-    assign arready = arready_lfsr[0];
+    assign arready = arready_lfsr[0] & ~r_full;
 
     lfsr32 
     #(

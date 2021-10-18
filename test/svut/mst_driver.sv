@@ -31,6 +31,10 @@ module mst_driver
         // Enable completion check and log
         parameter CHECK_REPORT = 1,
 
+        // Timeout value used outstanding request monitoring
+        // and channels handshakes
+        parameter TIMEOUT = 100,
+
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
     )(
@@ -101,6 +105,10 @@ module mst_driver
     logic [MST_OSTDREQ_NUM*2           -1:0] rd_orreq_rresp;
     logic                                    bresp_error;
     logic                                    rresp_error;
+    logic                                    wor_error;
+    logic                                    ror_error;
+    integer                                  wr_orreq_timeout[MST_OSTDREQ_NUM-1:0];
+    integer                                  rd_orreq_timeout[MST_OSTDREQ_NUM-1:0];
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -162,7 +170,7 @@ module mst_driver
     // Always use aligned address
     assign awaddr = (aw_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {addr_max[AXI_ADDR_W-1:2],2'b0} :
                     (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
-                    {aw_lfsr[AXI_ADDR_W-1:2], 2'h0};
+                                                         {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     assign awvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
     assign wvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
@@ -184,6 +192,10 @@ module mst_driver
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
             bresp_error <= 1'b0;
 
+            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+                wr_orreq_timeout[i] <= 0;
+            end
+
         end else if (srst) begin
 
             wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
@@ -191,16 +203,22 @@ module mst_driver
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
             bresp_error <= 1'b0;
 
+            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+                wr_orreq_timeout[i] <= 0;
+            end
+
         end else begin
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
 
+                // Store the OR request on address channel handshake
                 if (awvalid && awready && i==awid_cnt) begin
                     wr_orreq[i] <= 1'b1;
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= awid;
                     wr_orreq_resp[i*2+:2] <= gen_resp(awaddr);
                 end
 
+                // Release the OR on response handshake
                 if (bvalid && bready && wr_orreq[i] &&
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W]==bid)
                 begin
@@ -213,18 +231,31 @@ module mst_driver
                         $display("ERROR: BRESP doesn't match expected value");
                         $display("  - BID: %x", bid);
                         $display("  - BRESP: %x", bresp);
-                        $display("  - Expected: %x", wr_orreq_resp[i*2+:2]);
+                        $display("  - Expected BRESP: %x", wr_orreq_resp[i*2+:2]);
                         bresp_error <= 1'b1;
                     end
 
                 end else begin
                     bresp_error <= 1'b0;
                 end
+
+                // Manage OR timeout
+                if (wr_orreq[i]) begin
+                    if (wr_orreq_timeout[i]==TIMEOUT) begin
+                        $display("ERROR: Write OR %x reached timeout (@ %g ns)", i, $realtime);
+                        wor_error <= 1'b1;
+                    end
+                    if (wr_orreq_timeout[i]<=TIMEOUT) begin
+                        wr_orreq_timeout[i] <= wr_orreq_timeout[i] + 1;
+                    end
+                end else begin
+                    wr_orreq_timeout[i] <= 0;
+                    wor_error <= 1'b0;
+                end
             end
         end
     end
 
-    // TODO: impplement timeout for each outstanding request
     // TODO: implement timeout during a write request
 
 
@@ -325,7 +356,7 @@ module mst_driver
     // Always use aligned address
     assign araddr = (ar_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {addr_max[AXI_ADDR_W-1:2],2'b0} :
                     (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
-                                                         {ar_lfsr[AXI_ADDR_W-1:2], 2'h0};
+                                                         {ar_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
@@ -382,6 +413,9 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
+            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+                rd_orreq_timeout[i] <= 0;
+            end
 
         end else if (srst) begin
 
@@ -390,11 +424,15 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
+            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+                rd_orreq_timeout[i] <= 0;
+            end
 
         end else begin
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
 
+                // Store the OR request on address channel handshake
                 if (arvalid && arready && i==arid_cnt) begin
                     rd_orreq[i] <= 1'b1;
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= arid;
@@ -402,6 +440,7 @@ module mst_driver
                     rd_orreq_rresp[i*2+:2] <= gen_resp(araddr);
                 end
 
+                // Release the OR once read data channel hanshakes
                 if (rvalid && rready && rlast && rd_orreq[i] &&
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
                 begin
@@ -415,7 +454,7 @@ module mst_driver
                         rd_orreq_rresp[i*2+:2] != rresp &&
                         CHECK_REPORT)
                     begin
-                        $display("ERROR: RRESP doesn't match expected value");
+                        $display("ERROR: RRESP/RDATA don't match expected values");
                         $display("  - RID: %x", rid);
                         $display("  - RRESP: %x", rresp);
                         $display("  - RDATA: %x", rdata);
@@ -426,11 +465,25 @@ module mst_driver
                 end else begin
                     rresp_error <= 1'b0;
                 end
+
+                // Manage OR timeout
+                if (rd_orreq[i]) begin
+                    if (rd_orreq_timeout[i]==TIMEOUT) begin
+                        $display("ERROR: Read OR %x reached timeout (@ %g ns)", i, $realtime);
+                        ror_error <= 1'b1;
+                    end
+                    if (rd_orreq_timeout[i]<=TIMEOUT) begin
+                        rd_orreq_timeout[i] <= rd_orreq_timeout[i] + 1;
+                    end
+                end else begin
+                    rd_orreq_timeout[i] <= 0;
+                    ror_error <= 1'b0;
+                end
             end
         end
     end
 
-    assign error = bresp_error | rresp_error;
+    assign error = bresp_error | rresp_error | wor_error | ror_error;
 
 endmodule
 
