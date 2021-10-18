@@ -1428,7 +1428,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Single Master Driver")
 
         addr_min = 0;
-        addr_max = 128;
+        addr_max = 2048;
 
         @(posedge aclk);
         mst_en = 4'h1;

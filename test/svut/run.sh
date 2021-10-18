@@ -14,7 +14,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Number of rd/wr requests injected by the drivers
-MAX_TRAFFIC=100
+MAX_TRAFFIC=1000
 
 # Timeout upon which the simulation is ran
 TIMEOUT=10000

@@ -86,20 +86,25 @@ module mst_driver
     logic [AXI_ID_W                    -1:0] arid_cnt;
     logic [32                          -1:0] aw_lfsr;
     logic [32                          -1:0] ar_lfsr;
+    logic [32                          -1:0] r_lfsr;
+    logic [32                          -1:0] b_lfsr;
     logic [32                          -1:0] awvalid_lfsr;
     logic [32                          -1:0] arvalid_lfsr;
+    logic [32                          -1:0] bready_lfsr;
+    logic [32                          -1:0] rready_lfsr;
     logic [MST_OSTDREQ_NUM             -1:0] wr_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] wr_orreq_id;
     logic [MST_OSTDREQ_NUM*2           -1:0] wr_orreq_resp;
     logic [MST_OSTDREQ_NUM             -1:0] rd_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] rd_orreq_id;
-    logic [MST_OSTDREQ_NUM*AXI_DATA_W  -1:0] rd_orreq_resp;
+    logic [MST_OSTDREQ_NUM*AXI_DATA_W  -1:0] rd_orreq_rdata;
+    logic [MST_OSTDREQ_NUM*2           -1:0] rd_orreq_rresp;
     logic                                    bresp_error;
     logic                                    rresp_error;
 
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Write channels
+    // Write Address & Data Channels
     ///////////////////////////////////////////////////////////////////////////////
 
     assign awlen = 0;
@@ -159,13 +164,16 @@ module mst_driver
                     (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
                     {aw_lfsr[AXI_ADDR_W-1:2], 2'h0};
 
-    assign awvalid = awvalid_lfsr[0] & en;
-    assign wvalid = awvalid_lfsr[0] & en;
+    assign awvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
+    assign wvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
     assign wdata = aw_lfsr[0+:AXI_DATA_W];
     assign wstrb = aw_lfsr[0+:AXI_DATA_W/8];
     assign wlast = 1'b1;
 
-    assign bready = 1'b1;
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Write Oustanding Requests Management
+    ///////////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
 
@@ -220,8 +228,47 @@ module mst_driver
     // TODO: implement timeout during a write request
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Response channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            bready_lfsr <= 32'b0;
+        end else if (srst) begin
+            bready_lfsr <= 32'b0;
+        end else begin
+            // At startup init with LFSR default value
+            if (bready_lfsr==32'b0) begin
+                bready_lfsr <= b_lfsr;
+            // Use to randomly assert arready
+            end else if (~bready) begin
+                bready_lfsr <= bready_lfsr >> 1;
+            end else begin
+                bready_lfsr <= b_lfsr;
+            end
+        end
+    end
+
+    assign bready = bready_lfsr[0];
+
+    lfsr32
+    #(
+    .KEY (KEY)
+    )
+    bch_lfsr
+    (
+    .aclk    (aclk),
+    .aresetn (aresetn),
+    .srst    (srst),
+    .en      (bvalid & bready),
+    .lfsr    (b_lfsr)
+    );
+
+
     ///////////////////////////////////////////////////////////////////////////////
-    // Read channels
+    // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////////
 
     assign arlen = 0;
@@ -249,7 +296,7 @@ module mst_driver
             // Use to randomly assert arvalid/wvalid
             end else if (~arvalid) begin
                 arvalid_lfsr <= arvalid_lfsr >> 1;
-            end else begin
+            end else if (arready) begin
                 arvalid_lfsr <= ar_lfsr;
             end
 
@@ -280,9 +327,51 @@ module mst_driver
                     (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
                                                          {ar_lfsr[AXI_ADDR_W-1:2], 2'h0};
 
-    assign arvalid = arvalid_lfsr[0] & en;
+    assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
-    assign rready = 1'b1;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Response channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            rready_lfsr <= 32'b0;
+        end else if (srst) begin
+            rready_lfsr <= 32'b0;
+        end else begin
+            // At startup init with LFSR default value
+            if (rready_lfsr==32'b0) begin
+                rready_lfsr <= r_lfsr;
+            // Use to randomly assert arready
+            end else if (~rready) begin
+                rready_lfsr <= rready_lfsr >> 1;
+            end else begin
+                rready_lfsr <= r_lfsr;
+            end
+        end
+    end
+
+    assign rready = rready_lfsr[0];
+
+    lfsr32
+    #(
+    .KEY (KEY)
+    )
+    rch_lfsr
+    (
+    .aclk    (aclk),
+    .aresetn (aresetn),
+    .srst    (srst),
+    .en      (rvalid & rready),
+    .lfsr    (r_lfsr)
+    );
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Read Oustanding Requests Management
+    ///////////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
 
@@ -290,14 +379,16 @@ module mst_driver
 
             rd_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            rd_orreq_resp <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
+            rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
+            rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
 
         end else if (srst) begin
 
             rd_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            rd_orreq_resp <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
+            rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
+            rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
 
         end else begin
@@ -307,7 +398,8 @@ module mst_driver
                 if (arvalid && arready && i==arid_cnt) begin
                     rd_orreq[i] <= 1'b1;
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= arid;
-                    rd_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] <= gen_resp(araddr);
+                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= gen_resp(araddr);
+                    rd_orreq_rresp[i*2+:2] <= gen_resp(araddr);
                 end
 
                 if (rvalid && rready && rlast && rd_orreq[i] &&
@@ -315,14 +407,20 @@ module mst_driver
                 begin
 
                     rd_orreq[i] <= 1'b0;
-                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
-                    wr_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] <= {AXI_DATA_W{1'b0}};
+                    rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
+                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= {AXI_DATA_W{1'b0}};
+                    rd_orreq_rresp[i*2+:2] <= 2'b0;
 
-                    if (rd_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] != rresp && CHECK_REPORT) begin
+                    if (rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] != rdata &&
+                        rd_orreq_rresp[i*2+:2] != rresp &&
+                        CHECK_REPORT)
+                    begin
                         $display("ERROR: RRESP doesn't match expected value");
                         $display("  - RID: %x", rid);
                         $display("  - RRESP: %x", rresp);
-                        $display("  - Expected: %x", rd_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W]);
+                        $display("  - RDATA: %x", rdata);
+                        $display("  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]);
+                        $display("  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
                         rresp_error <= 1'b1;
                     end
                 end else begin

@@ -70,6 +70,7 @@ module slv_monitor
     logic [32                          -1:0] aw_lfsr;
     logic [32                          -1:0] ar_lfsr;
     logic [32                          -1:0] b_lfsr;
+    logic [32                          -1:0] r_lfsr;
     logic [32                          -1:0] awready_lfsr;
     logic [32                          -1:0] bvalid_lfsr;
     logic [32                          -1:0] arready_lfsr;
@@ -79,12 +80,19 @@ module slv_monitor
     logic [2+AXI_ID_W                  -1:0] b_fifo_i;
     logic [2+AXI_ID_W                  -1:0] b_fifo_o;
     logic [32                          -1:0] bresp_exp;
+    logic                                    r_full;
+    logic                                    r_empty;
+    logic [2+AXI_ID_W+AXI_DATA_W       -1:0] r_fifo_i;
+    logic [2+AXI_ID_W+AXI_DATA_W       -1:0] r_fifo_o;
+    logic [32                          -1:0] rdata_exp;
+    logic [32                          -1:0] rresp_exp;
 
     assign error = 1'b0;
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Write channels
-    ///////////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Address & Data channels
+    ///////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
 
@@ -120,6 +128,11 @@ module slv_monitor
 
     assign awready = awready_lfsr[0] & ~b_full;
     assign wready = awready_lfsr[0] & ~b_full;
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Response channel
+    ///////////////////////////////////////////////////////////////////////////
 
     assign bresp_exp = gen_resp(awaddr);
     assign b_fifo_i = {awid, bresp_exp[1:0]};
@@ -182,7 +195,7 @@ module slv_monitor
 
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Read channels
+    // Read Address channel
     ///////////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
@@ -218,6 +231,73 @@ module slv_monitor
     .en      (arvalid & arready),
     .lfsr    (ar_lfsr)
     );
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Response channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    assign rresp_exp = gen_resp(araddr);
+    assign rdata_exp = gen_resp(araddr);
+    assign r_fifo_i = {arid, rresp_exp[1:0], rdata_exp};
+
+    axicb_scfifo 
+    #(
+    .PASS_THRU  (0),
+    .ADDR_WIDTH (2),
+    .DATA_WIDTH (AXI_ID_W+2+AXI_DATA_W)
+    )
+    rfifo 
+    (
+    .aclk     (aclk),
+    .aresetn  (aresetn),
+    .srst     (srst),
+    .flush    (1'b0),
+    .data_in  (r_fifo_i),
+    .push     (arvalid & arready),
+    .full     (r_full),
+    .data_out (r_fifo_o),
+    .pull     (rvalid & rready),
+    .empty    (r_empty)
+    );
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            rvalid_lfsr <= 32'b0;
+        end else if (srst) begin
+            rvalid_lfsr <= 32'b0;
+        end else begin
+            // At startup init with LFSR default value 
+            if (rvalid_lfsr==32'b0) begin
+                rvalid_lfsr <= b_lfsr;
+            // Use to randomly assert bvalid/wready
+            end else if (~rvalid) begin
+                rvalid_lfsr <= rvalid_lfsr >> 1;
+            end else if (rready) begin
+                rvalid_lfsr <= r_lfsr;
+            end
+        end
+    end
+
+    lfsr32 
+    #(
+    .KEY (KEY)
+    )
+    rch_lfsr
+    (
+    .aclk    (aclk),
+    .aresetn (aresetn),
+    .srst    (srst),
+    .en      (rvalid & rready),
+    .lfsr    (r_lfsr)
+    );
+
+    assign rvalid = ~r_empty & rvalid_lfsr[0];
+    assign rdata = r_fifo_o[0+:AXI_DATA_W];
+    assign rresp = r_fifo_o[AXI_DATA_W+:2];
+    assign rid = r_fifo_o[AXI_DATA_W+2+:AXI_ID_W];
+    assign rlast = 1'b1;
 
 endmodule
 
