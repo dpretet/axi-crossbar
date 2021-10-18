@@ -214,7 +214,7 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<SLV_NB;i=i+1) begin: TO_SLV_REORDERING
+    for (genvar i=0;i<SLV_NB;i=i+1) begin: REORDERING_TO_SLV
         for (genvar j=0;j<MST_NB;j=j+1) begin: MST_PARSING
             assign sl_awvalid[i*SLV_NB+j] = ml_awvalid[j*MST_NB+i];
             assign sl_wvalid[i*SLV_NB+j] = ml_wvalid[j*MST_NB+i];
@@ -224,7 +224,7 @@ module axicb_switch_top
             assign sl_rready[i*SLV_NB+j] = ml_rready[j*MST_NB+i];
         end
     end
-    for (genvar i=0;i<MST_NB;i=i+1) begin: TO_MST_REORDERING
+    for (genvar i=0;i<MST_NB;i=i+1) begin: REORDERING_TO_MST
         for (genvar j=0;j<SLV_NB;j=j+1) begin: SLV_PARSING
             assign ml_awready[i*MST_NB+j] = sl_awready[j*SLV_NB+i];
             assign ml_wready[i*MST_NB+j] = sl_wready[j*SLV_NB+i];

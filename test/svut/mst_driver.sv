@@ -193,8 +193,14 @@ module mst_driver
                     wr_orreq_resp[i*2+:2] <= gen_resp(awaddr);
                 end
 
-                if (bvalid && bready && wr_orreq_id[i]==bid) begin
+                if (bvalid && bready && wr_orreq[i] &&
+                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W]==bid)
+                begin
+
                     wr_orreq[i] <= 1'b0;
+                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
+                    wr_orreq_resp[i*2+:2] <= 2'b0;
+
                     if (wr_orreq_resp[i*2+:2] !== bresp && CHECK_REPORT) begin
                         $display("ERROR: BRESP doesn't match expected value");
                         $display("  - BID: %x", bid);
@@ -202,6 +208,7 @@ module mst_driver
                         $display("  - Expected: %x", wr_orreq_resp[i*2+:2]);
                         bresp_error <= 1'b1;
                     end
+
                 end else begin
                     bresp_error <= 1'b0;
                 end
@@ -303,8 +310,14 @@ module mst_driver
                     rd_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] <= gen_resp(araddr);
                 end
 
-                if (rvalid && rready && rlast && rd_orreq_id[i]==rid) begin
+                if (rvalid && rready && rlast && rd_orreq[i] &&
+                    rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
+                begin
+
                     rd_orreq[i] <= 1'b0;
+                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
+                    wr_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] <= {AXI_DATA_W{1'b0}};
+
                     if (rd_orreq_resp[i*AXI_DATA_W+:AXI_DATA_W] != rresp && CHECK_REPORT) begin
                         $display("ERROR: RRESP doesn't match expected value");
                         $display("  - RID: %x", rid);

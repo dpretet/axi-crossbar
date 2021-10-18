@@ -87,10 +87,10 @@ module axicb_round_robin
     ///////////////////////////////////////////////////////////////////////////
     // Compute the requester granted based on mask state
     ///////////////////////////////////////////////////////////////////////////
-    always @ (*) begin
+    generate
+    if (REQ_NB==4) begin : GRANT_4
 
-        int i;
-        logic selected;
+    always @ (*) begin
 
         // 1. Applies the mask and init the granted output
         masked = mask & req;
@@ -99,26 +99,57 @@ module axicb_round_robin
 
         // 2.1 handles first the reqs which fall into the mask
         if (|masked) begin
-            grant[0] = masked[0];
-            selected = masked[0];
-            for (i=1;i<REQ_NB;i=i+1) begin
-                if (selected) begin
-                    grant[i] = 0;
-                end else begin
-                    grant[i] = masked[i];
-                    selected = masked[i];
-                end
-            end
+            if      (masked[0]) grant = 4'b0001;
+            else if (masked[1]) grant = 4'b0010;
+            else if (masked[2]) grant = 4'b0100;
+            else if (masked[3]) grant = 4'b1000;
+            else                grant = 4'b0000;
 
         // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
         end else begin
-            grant[0] = req[0];
-            selected = 0;
-            for (i=1;i<REQ_NB;i=i+1) begin
-                if (grant[i-1]) grant[i] = 0;
-            end
+            if      (req[0]) grant = 4'b0001;
+            else if (req[1]) grant = 4'b0010;
+            else if (req[2]) grant = 4'b0100;
+            else if (req[3]) grant = 4'b1000;
+            else             grant = 4'b0000;
         end
     end
+    end else if (REQ_NB==8) begin : REQ_8
+
+    always @ (*) begin
+
+        // 1. Applies the mask and init the granted output
+        masked = mask & req;
+
+        // 2. Zeroes the grants once found a first activated one
+
+        // 2.1 handles first the reqs which fall into the mask
+        if (|masked) begin
+            if      (masked[0]) grant = 8'b00000001;
+            else if (masked[1]) grant = 8'b00000010;
+            else if (masked[2]) grant = 8'b00000100;
+            else if (masked[3]) grant = 8'b00001000;
+            else if (masked[4]) grant = 8'b00010000;
+            else if (masked[5]) grant = 8'b00100000;
+            else if (masked[6]) grant = 8'b01000000;
+            else if (masked[7]) grant = 8'b10000000;
+            else                grant = 8'b00000000;
+
+        // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
+        end else begin
+            if      (req[0]) grant = 8'b00000001;
+            else if (req[1]) grant = 8'b00000010;
+            else if (req[2]) grant = 8'b00000100;
+            else if (req[3]) grant = 8'b00001000;
+            else if (req[4]) grant = 8'b00010000;
+            else if (req[5]) grant = 8'b00100000;
+            else if (req[6]) grant = 8'b01000000;
+            else if (req[7]) grant = 8'b10000000;
+            else             grant = 8'b00000000;
+        end
+    end
+    end
+    endgenerate
 
     ///////////////////////////////////////////////////////////////////////////
     // Generate the next mask
@@ -127,17 +158,6 @@ module axicb_round_robin
     generate
     if (REQ_NB==4) begin : REQ_4
 
-    function automatic [REQ_NB-1:0] next_mask_4req(
-        input [REQ_NB-1:0] grant
-    );
-
-        if      (grant[0]) next_mask_4req = 4'b1110;
-        else if (grant[1]) next_mask_4req = 4'b1100;
-        else if (grant[2]) next_mask_4req = 4'b1000;
-        else if (grant[3]) next_mask_4req = 4'b1111;
-
-    endfunction
-
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
@@ -146,28 +166,16 @@ module axicb_round_robin
             mask <= {REQ_NB{1'b1}};
         end else begin
             if (en && |grant) begin
-                if (REQ_NB==4) mask <= next_mask_4req(grant);
+                if      (grant[0]) mask <= 4'b1110;
+                else if (grant[1]) mask <= 4'b1100;
+                else if (grant[2]) mask <= 4'b1000;
+                else if (grant[3]) mask <= 4'b1111;
             end
         end
     end
 
     end else if (REQ_NB==8) begin : REQ_8
 
-    function automatic [REQ_NB-1:0] next_mask_8req(
-        input [REQ_NB-1:0] grant
-    );
-
-        if      (grant[0]) next_mask_8req = 8'b11111110;
-        else if (grant[1]) next_mask_8req = 8'b11111100;
-        else if (grant[2]) next_mask_8req = 8'b11111000;
-        else if (grant[3]) next_mask_8req = 8'b11110000;
-        else if (grant[4]) next_mask_8req = 8'b11100000;
-        else if (grant[5]) next_mask_8req = 8'b11000000;
-        else if (grant[6]) next_mask_8req = 8'b10000000;
-        else               next_mask_8req = 8'b11111111;
-
-    endfunction
-
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
@@ -176,7 +184,15 @@ module axicb_round_robin
             mask <= {REQ_NB{1'b1}};
         end else begin
             if (en && |grant) begin
-                if (REQ_NB==4) mask <= next_mask_8req(grant);
+                if      (grant[0]) mask <= 8'b11111110;
+                else if (grant[1]) mask <= 8'b11111100;
+                else if (grant[2]) mask <= 8'b11111000;
+                else if (grant[3]) mask <= 8'b11110000;
+                else if (grant[4]) mask <= 8'b11100000;
+                else if (grant[5]) mask <= 8'b11000000;
+                else if (grant[6]) mask <= 8'b10000000;
+                else               mask <= 8'b11111111;
+
             end
         end
     end

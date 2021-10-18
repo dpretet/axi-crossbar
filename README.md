@@ -43,7 +43,7 @@ Limitations (current dev stage)
 - LITE mode only
 - no USER signals support
 - AW & W channels need to be ready at the same cycle
-- No completion ordering management, may be chaotic
+- No completion ordering management, may be completed to masters out-of-order
 
 Inbox
 

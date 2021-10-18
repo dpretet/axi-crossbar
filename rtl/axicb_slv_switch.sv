@@ -95,15 +95,15 @@ module axicb_slv_switch
     logic [MST_NB    -1:0] arch_req;
     logic [MST_NB    -1:0] arch_grant;
 
-    logic [AXI_ID_W  -1:0] mst0_bch_targeted;
-    logic [AXI_ID_W  -1:0] mst1_bch_targeted;
-    logic [AXI_ID_W  -1:0] mst2_bch_targeted;
-    logic [AXI_ID_W  -1:0] mst3_bch_targeted;
+    logic                  mst0_bch_targeted;
+    logic                  mst1_bch_targeted;
+    logic                  mst2_bch_targeted;
+    logic                  mst3_bch_targeted;
 
-    logic [AXI_ID_W  -1:0] mst0_rch_targeted;
-    logic [AXI_ID_W  -1:0] mst1_rch_targeted;
-    logic [AXI_ID_W  -1:0] mst2_rch_targeted;
-    logic [AXI_ID_W  -1:0] mst3_rch_targeted;
+    logic                  mst0_rch_targeted;
+    logic                  mst1_rch_targeted;
+    logic                  mst2_rch_targeted;
+    logic                  mst3_rch_targeted;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -151,7 +151,8 @@ module axicb_slv_switch
     //
     // TODO: Ensure the granted write is routed from the same master. If a
     // master doesn't drive the write data channel at the same time,
-    // may lead to a data corruption
+    // may lead to a data corruption.
+    // This arbitrer should be replaced by a FIFO
     ///////////////////////////////////////////////////////////////////////////
 
     assign wch_req = i_wvalid;
@@ -202,21 +203,21 @@ module axicb_slv_switch
 
     // BCH = {RESP, ID}
 
-    assign mst0_bch_targeted = MST0_ID_MASK & o_bch[0+:AXI_ID_W];
-    assign mst1_bch_targeted = MST1_ID_MASK & o_bch[0+:AXI_ID_W];
-    assign mst2_bch_targeted = MST2_ID_MASK & o_bch[0+:AXI_ID_W];
-    assign mst3_bch_targeted = MST3_ID_MASK & o_bch[0+:AXI_ID_W];
+    assign mst0_bch_targeted = ((MST0_ID_MASK & o_bch[0+:AXI_ID_W]) == MST0_ID_MASK);
+    assign mst1_bch_targeted = ((MST1_ID_MASK & o_bch[0+:AXI_ID_W]) == MST1_ID_MASK);
+    assign mst2_bch_targeted = ((MST2_ID_MASK & o_bch[0+:AXI_ID_W]) == MST2_ID_MASK);
+    assign mst3_bch_targeted = ((MST3_ID_MASK & o_bch[0+:AXI_ID_W]) == MST3_ID_MASK);
 
-    assign i_bvalid[0] = (|mst0_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[1] = (|mst1_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[2] = (|mst2_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[3] = (|mst3_bch_targeted) ? o_bvalid : 1'b0;
+    assign i_bvalid[0] = (mst0_bch_targeted) ? o_bvalid : 1'b0;
+    assign i_bvalid[1] = (mst1_bch_targeted) ? o_bvalid : 1'b0;
+    assign i_bvalid[2] = (mst2_bch_targeted) ? o_bvalid : 1'b0;
+    assign i_bvalid[3] = (mst3_bch_targeted) ? o_bvalid : 1'b0;
 
-    assign o_bready = (|mst0_bch_targeted) ? i_bready[0] :
-                      (|mst1_bch_targeted) ? i_bready[1] :
-                      (|mst2_bch_targeted) ? i_bready[2] :
-                      (|mst3_bch_targeted) ? i_bready[3] :
-                                             1'b0;
+    assign o_bready = (mst0_bch_targeted) ? i_bready[0] :
+                      (mst1_bch_targeted) ? i_bready[1] :
+                      (mst2_bch_targeted) ? i_bready[2] :
+                      (mst3_bch_targeted) ? i_bready[3] :
+                                            1'b0;
 
     assign i_bch = o_bch;
 
@@ -267,26 +268,26 @@ module axicb_slv_switch
 
     // RCH = {RESP, ID, DATA}
 
-    assign mst0_rch_targeted = MST0_ID_MASK & o_rch[AXI_DATA_W+:AXI_ID_W];
-    assign mst1_rch_targeted = MST1_ID_MASK & o_rch[AXI_DATA_W+:AXI_ID_W];
-    assign mst2_rch_targeted = MST2_ID_MASK & o_rch[AXI_DATA_W+:AXI_ID_W];
-    assign mst3_rch_targeted = MST3_ID_MASK & o_rch[AXI_DATA_W+:AXI_ID_W];
+    assign mst0_rch_targeted = ((MST0_ID_MASK & o_rch[0+:AXI_ID_W]) == MST0_ID_MASK);
+    assign mst1_rch_targeted = ((MST1_ID_MASK & o_rch[0+:AXI_ID_W]) == MST1_ID_MASK);
+    assign mst2_rch_targeted = ((MST2_ID_MASK & o_rch[0+:AXI_ID_W]) == MST2_ID_MASK);
+    assign mst3_rch_targeted = ((MST3_ID_MASK & o_rch[0+:AXI_ID_W]) == MST3_ID_MASK);
 
-    assign i_rvalid[0] = (|mst0_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[1] = (|mst1_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[2] = (|mst2_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[3] = (|mst3_rch_targeted) ? o_rvalid : 1'b0;
+    assign i_rvalid[0] = (mst0_rch_targeted) ? o_rvalid : 1'b0;
+    assign i_rvalid[1] = (mst1_rch_targeted) ? o_rvalid : 1'b0;
+    assign i_rvalid[2] = (mst2_rch_targeted) ? o_rvalid : 1'b0;
+    assign i_rvalid[3] = (mst3_rch_targeted) ? o_rvalid : 1'b0;
 
-    assign i_rlast[0] = (|mst0_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[1] = (|mst1_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[2] = (|mst2_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[3] = (|mst3_rch_targeted) ? o_rlast : 1'b0;
+    assign i_rlast[0] = (mst0_rch_targeted) ? o_rlast : 1'b0;
+    assign i_rlast[1] = (mst1_rch_targeted) ? o_rlast : 1'b0;
+    assign i_rlast[2] = (mst2_rch_targeted) ? o_rlast : 1'b0;
+    assign i_rlast[3] = (mst3_rch_targeted) ? o_rlast : 1'b0;
 
-    assign o_rready = (|mst0_rch_targeted) ? i_rready[0] :
-                      (|mst1_rch_targeted) ? i_rready[1] :
-                      (|mst2_rch_targeted) ? i_rready[2] :
-                      (|mst3_rch_targeted) ? i_rready[3] :
-                                             1'b0;
+    assign o_rready = (mst0_rch_targeted) ? i_rready[0] :
+                      (mst1_rch_targeted) ? i_rready[1] :
+                      (mst2_rch_targeted) ? i_rready[2] :
+                      (mst3_rch_targeted) ? i_rready[3] :
+                                            1'b0;
 
     assign i_rch = o_rch;
 
