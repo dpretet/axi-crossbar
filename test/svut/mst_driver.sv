@@ -110,6 +110,12 @@ module mst_driver
     integer                                  wr_orreq_timeout[MST_OSTDREQ_NUM-1:0];
     integer                                  rd_orreq_timeout[MST_OSTDREQ_NUM-1:0];
 
+    integer                                  awtimer;
+    integer                                  wtimer;
+    integer                                  artimer;
+    logic                                    awtimeout;
+    logic                                    wtimeout;
+    logic                                    artimeout;
 
     ///////////////////////////////////////////////////////////////////////////////
     // Write Address & Data Channels
@@ -178,6 +184,39 @@ module mst_driver
     assign wstrb = aw_lfsr[0+:AXI_DATA_W/8];
     assign wlast = 1'b1;
 
+    // Monitor AW/W channel to detect timeout
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            awtimer <= 0;
+            awtimeout <= 1'b0;
+        end else if (srst) begin
+            awtimer <= 0;
+            awtimeout <= 1'b0;
+            wtimer <= 0;
+            wtimeout <= 1'b0;
+        end else begin
+            if (awvalid && ~awready) begin
+                awtimer <= awtimer + 1;
+            end else begin
+                awtimer <= 0;
+            end
+            if (awtimer >= TIMEOUT) begin
+                awtimeout <= 1'b1;
+            end else begin
+                awtimeout <= 1'b0;
+            end
+            if (wvalid && ~wready) begin
+                wtimer <= wtimer + 1;
+            end else begin
+                wtimer <= 0;
+            end
+            if (wtimer >= TIMEOUT) begin
+                wtimeout <= 1'b1;
+            end else begin
+                wtimeout <= 1'b0;
+            end
+        end
+    end
 
     ///////////////////////////////////////////////////////////////////////////////
     // Write Oustanding Requests Management
@@ -255,8 +294,6 @@ module mst_driver
             end
         end
     end
-
-    // TODO: implement timeout during a write request
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -360,6 +397,27 @@ module mst_driver
 
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
+    // Monitor AR channel to detect timeout
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            artimer <= 0;
+            artimeout <= 1'b0;
+        end else if (srst) begin
+            artimer <= 0;
+            artimeout <= 1'b0;
+        end else begin
+            if (arvalid && ~arready) begin
+                artimer <= artimer + 1;
+            end else begin
+                artimer <= 0;
+            end
+            if (artimer >= TIMEOUT) begin
+                artimeout <= 1'b1;
+            end else begin
+                artimeout <= 1'b0;
+            end
+        end
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Response channel
@@ -483,7 +541,8 @@ module mst_driver
         end
     end
 
-    assign error = bresp_error | rresp_error | wor_error | ror_error;
+    assign error = bresp_error | rresp_error | wor_error | ror_error |
+                   awtimeout | wtimeout | artimeout;
 
 endmodule
 

@@ -1133,6 +1133,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
     .CHECK_REPORT (CHECK_REPORT),
+    .TIMEOUT      (`OR_TIMEOUT),
     .KEY          ('hABCDEF0)
     )
     slv_monitor0 
@@ -1188,7 +1189,8 @@ module axicb_crossbar_top_testbench();
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
     .CHECK_REPORT (CHECK_REPORT),
-    .KEY          ('hABCDEF0)
+    .TIMEOUT      (`OR_TIMEOUT),
+    .KEY          ('hA1C5EF0)
     )
     slv_monitor1 
     (
@@ -1243,6 +1245,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
     .CHECK_REPORT (CHECK_REPORT),
+    .TIMEOUT      (`OR_TIMEOUT),
     .KEY          ('hABCDEF5)
     )
     slv_monitor2 
@@ -1298,6 +1301,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
     .CHECK_REPORT (CHECK_REPORT),
+    .TIMEOUT      (`OR_TIMEOUT),
     .KEY          ('hADCDEF0)
     )
     slv_monitor3 

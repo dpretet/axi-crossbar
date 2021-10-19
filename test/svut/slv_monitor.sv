@@ -19,6 +19,9 @@ module slv_monitor
         // Enable completion check and log
         parameter CHECK_REPORT = 1, 
 
+        // TIMEOUT value used for response channels
+        parameter TIMEOUT = 100,
+
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
     )(
@@ -87,7 +90,13 @@ module slv_monitor
     logic [32                          -1:0] rdata_exp;
     logic [32                          -1:0] rresp_exp;
 
-    assign error = 1'b0;
+    integer                                  btimer;
+    integer                                  rtimer;
+    logic                                    btimeout;
+    logic                                    rtimeout;
+
+
+    assign error = btimeout | rtimeout;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -193,6 +202,27 @@ module slv_monitor
     assign bresp = b_fifo_o[1:0];
     assign bid = b_fifo_o[2+:AXI_ID_W];
 
+    // Monitor BRESP channel to detect timeout
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            btimer <= 0;
+            btimeout <= 1'b0;
+        end else if (srst) begin
+            btimer <= 0;
+            btimeout <= 1'b0;
+        end else begin
+            if (bvalid && ~bready) begin
+                btimer <= btimer + 1;
+            end else begin
+                btimer <= 0;
+            end
+            if (btimer >= TIMEOUT) begin
+                btimeout <= 1'b1;
+            end else begin
+                btimeout <= 1'b0;
+            end
+        end
+    end
 
     ///////////////////////////////////////////////////////////////////////////////
     // Read Address channel
@@ -299,6 +329,27 @@ module slv_monitor
     assign rid = r_fifo_o[AXI_DATA_W+2+:AXI_ID_W];
     assign rlast = 1'b1;
 
+    // Monitor RRESP channel to detect timeout
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            rtimer <= 0;
+            rtimeout <= 1'b0;
+        end else if (srst) begin
+            rtimer <= 0;
+            rtimeout <= 1'b0;
+        end else begin
+            if (rvalid && ~rready) begin
+                rtimer <= rtimer + 1;
+            end else begin
+                rtimer <= 0;
+            end
+            if (rtimer >= TIMEOUT) begin
+                rtimeout <= 1'b1;
+            end else begin
+                rtimeout <= 1'b0;
+            end
+        end
+    end
 endmodule
 
 `resetall
