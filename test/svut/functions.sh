@@ -34,13 +34,11 @@ check_status() {
         exit 1
     fi
 }
-#------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------
 # Grab arguments and values
 #------------------------------------------------------------------------------
-
 get_args() {
     # First handle the arguments
     while [ "$1" != "" ]; do
@@ -63,4 +61,18 @@ get_args() {
         esac
         shift
     done
+}
+
+#------------------------------------------------------------------------------
+# Read a configuration file listing parameters and values, comma separated
+#------------------------------------------------------------------------------
+read_config() {
+
+    DEFINES=""
+
+    while IFS=, read -r name value; do
+        DEFINES="${DEFINES}${name}=${value};"
+    done < $1
+
+    echo "$DEFINES"
 }

@@ -29,21 +29,19 @@ Implementation
 - All interfaces share the same address / data width
 - Routing with address decoding from master to slave
 - Routing done by ID from slave to master
-- Use pass-thru buffering stage to optimize both latency and interconnect avaibility
 
 ## Development plan
 
 Limitations (current dev stage)
 
+- 4x4 master/slave interfaces
 - no interface buffering
 - no CDC stage
 - no master priority setup
-- 4x4 master/slave interfaces
 - Full-STRB mode only
 - LITE mode only
 - no USER signals support
 - AW & W channels need to be ready at the same cycle
-- No completion ordering management, may be completed to masters out-of-order
 
 Inbox
 

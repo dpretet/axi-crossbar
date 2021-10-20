@@ -5,6 +5,7 @@
 `default_nettype none
 
 `include "functions.sv"
+`include "svut_h.sv"
 
 module mst_driver
 
@@ -117,9 +118,11 @@ module mst_driver
     logic                                    wtimeout;
     logic                                    artimeout;
 
-    ///////////////////////////////////////////////////////////////////////////////
+    `SVUT_SETUP
+
+    ///////////////////////////////////////////////////////////////////////////
     // Write Address & Data Channels
-    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     assign awlen = 0;
     assign awsize = 0 ;
@@ -201,6 +204,7 @@ module mst_driver
                 awtimer <= 0;
             end
             if (awtimer >= TIMEOUT) begin
+                `ERROR("AW Channel reached timeout");
                 awtimeout <= 1'b1;
             end else begin
                 awtimeout <= 1'b0;
@@ -212,6 +216,7 @@ module mst_driver
             end
             if (wtimer >= TIMEOUT) begin
                 wtimeout <= 1'b1;
+                `ERROR("W Channel reached timeout");
             end else begin
                 wtimeout <= 1'b0;
             end
@@ -267,7 +272,7 @@ module mst_driver
                     wr_orreq_resp[i*2+:2] <= 2'b0;
 
                     if (wr_orreq_resp[i*2+:2] !== bresp && CHECK_REPORT) begin
-                        $display("ERROR: BRESP doesn't match expected value");
+                        `ERROR("BRESP doesn't match expected value");
                         $display("  - BID: %x", bid);
                         $display("  - BRESP: %x", bresp);
                         $display("  - Expected BRESP: %x", wr_orreq_resp[i*2+:2]);
@@ -281,7 +286,7 @@ module mst_driver
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
-                        $display("ERROR: Write OR %x reached timeout (@ %g ns)", i, $realtime);
+                        `ERROR("Write OR %x reached timeout (@ %g ns)", i, $realtime);
                         wor_error <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
@@ -413,6 +418,7 @@ module mst_driver
             end
             if (artimer >= TIMEOUT) begin
                 artimeout <= 1'b1;
+                `ERROR("AR Channel reached timeout");
             end else begin
                 artimeout <= 1'b0;
             end
@@ -512,7 +518,7 @@ module mst_driver
                         rd_orreq_rresp[i*2+:2] != rresp &&
                         CHECK_REPORT)
                     begin
-                        $display("ERROR: RRESP/RDATA don't match expected values");
+                        `ERROR("RRESP/RDATA don't match expected values");
                         $display("  - RID: %x", rid);
                         $display("  - RRESP: %x", rresp);
                         $display("  - RDATA: %x", rdata);

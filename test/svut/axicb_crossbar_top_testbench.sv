@@ -22,9 +22,9 @@ module axicb_crossbar_top_testbench();
     `define MAX_TRAFFIC 10
     `endif
 
-    parameter AXI_ADDR_W = 16;
-    parameter AXI_ID_W = 8;
-    parameter AXI_DATA_W = 32;
+    parameter AXI_ADDR_W = `AXI_ADDR_W;
+    parameter AXI_ID_W = `AXI_ID_W;
+    parameter AXI_DATA_W = `AXI_DATA_W;
     parameter MST_NB = 4;
     parameter SLV_NB = 4;
     parameter MST_PIPELINE = 0;
@@ -36,10 +36,10 @@ module axicb_crossbar_top_testbench();
     parameter WUSER_W = 1;
     parameter BUSER_W = 1;
     parameter RUSER_W = 1;
-    parameter TIMEOUT_VALUE = 10000;
+    parameter TIMEOUT_VALUE = `TIMEOUT;
     parameter TIMEOUT_ENABLE = 1;
     parameter MST0_CDC = 0;
-    parameter MST0_OSTDREQ_NUM = 4;
+    parameter MST0_OSTDREQ_NUM = 0;
     parameter MST0_OSTDREQ_SIZE = 1;
     parameter MST0_PRIORITY = 0;
     parameter MST0_ROUTES = 4'b1_1_1_1;
@@ -51,13 +51,13 @@ module axicb_crossbar_top_testbench();
     parameter MST1_ROUTES = 4'b1_1_1_1;
     parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10;
     parameter MST2_CDC = 0;
-    parameter MST2_OSTDREQ_NUM = 4;
+    parameter MST2_OSTDREQ_NUM = 0;
     parameter MST2_OSTDREQ_SIZE = 1;
     parameter MST2_PRIORITY = 0;
     parameter MST2_ROUTES = 4'b1_1_1_1;
     parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20;
     parameter MST3_CDC = 0;
-    parameter MST3_OSTDREQ_NUM = 4;
+    parameter MST3_OSTDREQ_NUM = 0;
     parameter MST3_OSTDREQ_SIZE = 1;
     parameter MST3_PRIORITY = 0;
     parameter MST3_ROUTES = 4'b1_1_1_1;
@@ -65,22 +65,22 @@ module axicb_crossbar_top_testbench();
     parameter SLV0_CDC = 0;
     parameter SLV0_START_ADDR = 0;
     parameter SLV0_END_ADDR = 4095;
-    parameter SLV0_OSTDREQ_NUM = 4;
+    parameter SLV0_OSTDREQ_NUM = 0;
     parameter SLV0_OSTDREQ_SIZE = 1;
     parameter SLV1_CDC = 0;
     parameter SLV1_START_ADDR = 4096;
     parameter SLV1_END_ADDR = 8191;
-    parameter SLV1_OSTDREQ_NUM = 4;
+    parameter SLV1_OSTDREQ_NUM = 0;
     parameter SLV1_OSTDREQ_SIZE = 1;
     parameter SLV2_CDC = 0;
     parameter SLV2_START_ADDR = 8192;
     parameter SLV2_END_ADDR = 12287;
-    parameter SLV2_OSTDREQ_NUM = 4;
+    parameter SLV2_OSTDREQ_NUM = 0;
     parameter SLV2_OSTDREQ_SIZE = 1;
     parameter SLV3_CDC = 0;
     parameter SLV3_START_ADDR = 12288;
     parameter SLV3_END_ADDR = 16383;
-    parameter SLV3_OSTDREQ_NUM = 4;
+    parameter SLV3_OSTDREQ_NUM = 0;
     parameter SLV3_OSTDREQ_SIZE = 1;
 
     parameter CHECK_REPORT = 1;
@@ -463,6 +463,8 @@ module axicb_crossbar_top_testbench();
             $display("Errors: %x", error);
         end
         join_any
+
+        disable fork;
 
     endtask
 
@@ -1410,7 +1412,7 @@ module axicb_crossbar_top_testbench();
         slv3_aresetn = 0;
         slv3_srst = 0;
         mst_en = 4'b0;
-        #10;
+        #100;
         aresetn = 1;
         mst0_aresetn = 1;
         mst1_aresetn = 1;
@@ -1420,7 +1422,7 @@ module axicb_crossbar_top_testbench();
         slv1_aresetn = 1;
         slv2_aresetn = 1;
         slv3_aresetn = 1;
-        #10;
+        #100;
     end
     endtask
 
@@ -1430,6 +1432,20 @@ module axicb_crossbar_top_testbench();
     end
     endtask
 
+    initial begin
+        $display("");
+        $display("----------------------------------------------------------");
+        $display("Testbench Configuration:");
+        $display("");
+        $display("  - Timeout: %0d cycles", `TIMEOUT);
+        $display("  - Outstanding Requests Timeout: %0d", `OR_TIMEOUT);
+        $display("  - Maximum traffic: %0d", `MAX_TRAFFIC);
+        $display("  - AXI_ADDR_W: %0d", `AXI_ADDR_W);
+        $display("  - AXI_DATA_W: %0d", `AXI_DATA_W);
+        $display("  - AXI_ID_W: %0d", `AXI_ID_W);
+        $display("----------------------------------------------------------");
+        $display("");
+    end
 
     //////////////////////////////////////////////////////////////////////////
     // Testsuite
@@ -1437,13 +1453,46 @@ module axicb_crossbar_top_testbench();
 
     `TEST_SUITE("Random Testsuite")
 
-    `UNIT_TEST("Single Master Driver")
+    `UNIT_TEST("Single Master Driver vs a Single Slave Monitor")
 
         addr_min = 0;
-        addr_max = 2048;
+        addr_max = 4095;
 
         @(posedge aclk);
         mst_en = 4'h1;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Single Master Driver vs Two Slave Monitors")
+
+        addr_min = 0;
+        addr_max = 8191;
+
+        @(posedge aclk);
+        mst_en = 4'h1;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Two Master Drivers vs a Single Slave Monitor")
+
+        addr_min = 0;
+        addr_max = 4095;
+
+        @(posedge aclk);
+        mst_en = 4'h3;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Two Master Drivers vs Two Slave Monitors")
+
+        addr_min = 0;
+        addr_max = 8191;
+
+        @(posedge aclk);
+        mst_en = 4'h3;
         wait_end_of_execution();
 
     `UNIT_TEST_END

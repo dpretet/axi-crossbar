@@ -115,16 +115,23 @@ module axicb_mst_if
         input  logic [RCH_W         -1:0] o_rch
     );
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Logic declarations
+    ///////////////////////////////////////////////////////////////////////////////
+
+    logic [AWCH_W        -1:0] awch;
+    logic [ARCH_W        -1:0] arch;
+
     generate 
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
 
-        assign o_awch = {
+        assign awch = {
             i_awid,
             i_awprot,
             i_awaddr
         };
 
-        assign o_arch = {
+        assign arch = {
             i_arid,
             i_arprot,
             i_araddr
@@ -132,14 +139,14 @@ module axicb_mst_if
 
     end else if (AXI_SIGNALING==1) begin : AXI4LITE_BURST_MODE
 
-        assign o_awch = {
+        assign awch = {
             i_awid,
             i_awprot,
             i_awlen,
             i_awaddr
         };
 
-        assign o_arch = {
+        assign arch = {
             i_arid,
             i_arprot,
             i_arlen,
@@ -148,7 +155,7 @@ module axicb_mst_if
 
     end else begin : AXI4_MODE
 
-        assign o_awch = {
+        assign awch = {
             i_awid,
             i_awregion,
             i_awqos,
@@ -161,7 +168,7 @@ module axicb_mst_if
             i_awaddr
         };
 
-        assign o_arch = {
+        assign arch = {
             i_arid,
             i_arregion,
             i_arqos,
@@ -177,7 +184,209 @@ module axicb_mst_if
     end
     endgenerate
 
+    generate 
+    
+    if (MST_CDC) begin: CDC_STAGE
+
+    logic             aw_winc;
+    logic             aw_full;
+    logic             aw_rinc;
+    logic             aw_empty;
+    logic             w_winc;
+    logic             w_full;
+    logic             w_rinc;
+    logic             w_empty;
+    logic             b_winc;
+    logic             b_full;
+    logic             b_rinc;
+    logic             b_empty;
+    logic             ar_winc;
+    logic             ar_full;
+    logic             ar_rinc;
+    logic             ar_empty;
+    logic             r_winc;
+    logic             r_full;
+    logic             r_rinc;
+    logic             r_empty;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Address Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam AW_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
+
+    async_fifo 
+    #(
+    .DSIZE       (AWCH_W),
+    .ASIZE       (AW_ASIZE),
+    .FALLTHROUGH ("TRUE")
+    )
+    aw_dcfifo 
+    (
+    .wclk    (i_aclk),
+    .wrst_n  (i_aresetn),
+    .winc    (aw_winc),
+    .wdata   (awch),
+    .wfull   (aw_full),
+    .awfull  (),
+    .rclk    (o_aclk),
+    .rrst_n  (o_aresetn),
+    .rinc    (aw_rinc),
+    .rdata   (o_awch),
+    .rempty  (aw_empty),
+    .arempty ()
+    );
+
+    assign i_awready = ~aw_full;
+    assign aw_winc = i_awvalid & ~aw_full; 
+
+    assign o_awvalid = ~aw_empty;
+    assign aw_rinc = ~aw_empty & o_awready;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Data Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam W_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
+
+    async_fifo 
+    #(
+    .DSIZE       (WCH_W+1),
+    .ASIZE       (W_ASIZE),
+    .FALLTHROUGH ("TRUE")
+    )
+    w_dcfifo 
+    (
+    .wclk    (i_aclk),
+    .wrst_n  (i_aresetn),
+    .winc    (w_winc),
+    .wdata   ({i_wlast, i_wstrb, i_wdata}),
+    .wfull   (w_full),
+    .awfull  (),
+    .rclk    (o_aclk),
+    .rrst_n  (o_aresetn),
+    .rinc    (w_rinc),
+    .rdata   ({o_wlast, o_wch}),
+    .rempty  (w_empty),
+    .arempty ()
+    );
+
+    assign i_wready = ~w_full;
+    assign w_winc = i_wvalid & ~w_full; 
+
+    assign o_wvalid = ~w_empty;
+    assign w_rinc = ~w_empty & o_wready;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Response Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam B_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
+
+    async_fifo 
+    #(
+    .DSIZE       (BCH_W),
+    .ASIZE       (B_ASIZE),
+    .FALLTHROUGH ("TRUE")
+    )
+    b_dcfifo 
+    (
+    .wclk    (i_aclk),
+    .wrst_n  (i_aresetn),
+    .winc    (b_winc),
+    .wdata   (o_bch),
+    .wfull   (b_full),
+    .awfull  (),
+    .rclk    (o_aclk),
+    .rrst_n  (o_aresetn),
+    .rinc    (b_rinc),
+    .rdata   ({i_bresp, i_bid}),
+    .rempty  (b_empty),
+    .arempty ()
+    );
+
+    assign o_bready = ~b_full;
+    assign b_winc = o_bvalid & ~b_full; 
+
+    assign i_bvalid = ~b_empty;
+    assign b_rinc = ~b_empty & i_bready;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Address Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam AR_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
+
+    async_fifo 
+    #(
+    .DSIZE       (ARCH_W),
+    .ASIZE       (AR_ASIZE),
+    .FALLTHROUGH ("TRUE")
+    )
+    ar_dcfifo 
+    (
+    .wclk    (i_aclk),
+    .wrst_n  (i_aresetn),
+    .winc    (ar_winc),
+    .wdata   (arch),
+    .wfull   (ar_full),
+    .awfull  (),
+    .rclk    (o_aclk),
+    .rrst_n  (o_aresetn),
+    .rinc    (ar_rinc),
+    .rdata   (o_arch),
+    .rempty  (ar_empty),
+    .arempty ()
+    );
+
+    assign i_arready = ~ar_full;
+    assign ar_winc = i_arvalid & ~ar_full; 
+
+    assign o_arvalid = ~ar_empty;
+    assign ar_rinc = ~ar_empty & o_arready;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Data Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam R_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
+
+    async_fifo 
+    #(
+    .DSIZE       (RCH_W+1),
+    .ASIZE       (R_ASIZE),
+    .FALLTHROUGH ("TRUE")
+    )
+    r_dcfifo 
+    (
+    .wclk    (i_aclk),
+    .wrst_n  (i_aresetn),
+    .winc    (r_winc),
+    .wdata   ({o_rlast,o_rch}),
+    .wfull   (r_full),
+    .awfull  (),
+    .rclk    (o_aclk),
+    .rrst_n  (o_aresetn),
+    .rinc    (r_rinc),
+    .rdata   ({i_rlast, i_rresp, i_rid, i_rdata}),
+    .rempty  (r_empty),
+    .arempty ()
+    );
+
+    assign o_rready = ~r_full;
+    assign r_winc = o_rvalid & ~r_full; 
+
+    assign i_rvalid = ~r_empty;
+    assign r_rinc = ~r_empty & i_rready;
+
+
+    end else if (MST_OSTDREQ_NUM>0) begin: BUFF_STAGE
+
+
+    end else begin: NO_CDC_NO_BUFFERING
+
     assign o_awvalid = i_awvalid;
+    assign o_awch = awch;
     assign i_awready = o_awready;
 
     assign o_wvalid = i_wvalid;
@@ -192,11 +401,16 @@ module axicb_mst_if
 
     assign o_arvalid = i_arvalid;
     assign i_arready = o_arready;
+    assign o_arch = arch;
 
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
     assign {i_rresp, i_rid, i_rdata} = o_rch;
+
+    end
+
+    endgenerate
 
 endmodule
 
