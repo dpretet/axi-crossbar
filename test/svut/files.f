@@ -1,4 +1,4 @@
-+incdir+../../rtl+./
++incdir+../../rtl+./src
 ../../rtl/axicb_crossbar_top.sv
 ../../rtl/axicb_mst_if.sv
 ../../rtl/axicb_mst_switch.sv
@@ -8,6 +8,6 @@
 ../../rtl/axicb_slv_if.sv
 ../../rtl/axicb_slv_switch.sv
 ../../rtl/axicb_switch_top.sv
-./mst_driver.sv
-./slv_monitor.sv
-./lfsr.sv
+./src/mst_driver.sv
+./src/slv_monitor.sv
+./src/lfsr.sv

@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 
 # Defines passed to the simulation. Read from read_config() config files
 DEFINES=""
+MAX_TRAFFIC=1000
+TIMEOUT=10000
 
 test_ret=0
 
@@ -37,12 +39,12 @@ main() {
     for config in ./tb_config/*.cfg; do
         # First read testbench configuration
         DEFINES=$(read_config $config)
+        DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC"
         # Run the simulation
-        svutRun -t ./axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+        svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+        # Grab the return code used later to determine the compliance status
+        test_ret=$((test_ret+$?))
     done
-
-    # Grab the return code used later to determine the compliance status
-    test_ret=$((test_ret+$?))
 
     # Check if errors occured and exit
     check_status

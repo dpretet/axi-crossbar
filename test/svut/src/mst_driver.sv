@@ -286,7 +286,7 @@ module mst_driver
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
-                        `ERROR("Write OR %x reached timeout (@ %g ns)", i, $realtime);
+                        $display("Write OR %x reached timeout (@ %g ns)", i, $realtime);
                         wor_error <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
