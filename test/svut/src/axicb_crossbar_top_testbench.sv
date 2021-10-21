@@ -433,6 +433,7 @@ module axicb_crossbar_top_testbench();
     logic [AXI_ADDR_W    -1:0] addr_min;
     logic [AXI_ADDR_W    -1:0] addr_max;
 
+    string                     tsname;
 
     //////////////////////////////////////////////////////////////////////////
     // Monitor the execution to state if the testcase is successfull or not
@@ -1432,17 +1433,26 @@ module axicb_crossbar_top_testbench();
     end
     endtask
 
+    // Format testsuite name to string
+    initial begin
+        $sformat(tsname, "%s", ``TSNAME);
+    end
+
     initial begin
         $display("");
         $display("----------------------------------------------------------");
-        $display("Testbench Configuration:");
         $display("");
-        $display("  - Timeout: %0d cycles", `TIMEOUT);
-        $display("  - Outstanding Requests Timeout: %0d", `OR_TIMEOUT);
+        $display("Testbench Configuration:");
+        $display("------------------------");
+        $display("");
+        $display("  - Configuration: %s", tsname);
+        $display("  - Testbench timeout: %0d cycles", `TIMEOUT);
+        $display("  - Outstanding request timeout: %0d cycles", `OR_TIMEOUT);
         $display("  - Maximum traffic: %0d", `MAX_TRAFFIC);
         $display("  - AXI_ADDR_W: %0d", `AXI_ADDR_W);
         $display("  - AXI_DATA_W: %0d", `AXI_DATA_W);
         $display("  - AXI_ID_W: %0d", `AXI_ID_W);
+        $display("");
         $display("----------------------------------------------------------");
         $display("");
     end
@@ -1451,7 +1461,7 @@ module axicb_crossbar_top_testbench();
     // Testsuite
     //////////////////////////////////////////////////////////////////////////
 
-    `TEST_SUITE("Random Testsuite")
+    `TEST_SUITE(tsname)
 
     `UNIT_TEST("Single Master Driver vs a Single Slave Monitor")
 

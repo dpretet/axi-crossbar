@@ -37,9 +37,12 @@ main() {
     get_args "$@"
 
     for config in ./tb_config/*.cfg; do
-        # First read testbench configuration
+        # Grab config name to setup testsuite name
+        config_file=$(basename $config)
+        config_name=${config_file%%.*}
+        # Read testbench configuration and add config from command line
         DEFINES=$(read_config $config)
-        DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC"
+        DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC;TSNAME=$config_name"
         # Run the simulation
         svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
         # Grab the return code used later to determine the compliance status

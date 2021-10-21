@@ -521,9 +521,9 @@ module mst_driver
                         `ERROR("RRESP/RDATA don't match expected values");
                         $display("  - RID: %x", rid);
                         $display("  - RRESP: %x", rresp);
+                        $display("  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
                         $display("  - RDATA: %x", rdata);
                         $display("  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]);
-                        $display("  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
                         rresp_error <= 1'b1;
                     end
                 end else begin
