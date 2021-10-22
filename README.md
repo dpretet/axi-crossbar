@@ -38,6 +38,7 @@ Limitations (current dev stage)
 - no interface buffering
 - no CDC stage
 - no master priority setup
+- no timeout support
 - Full-STRB mode only
 - LITE mode only
 - no USER signals support

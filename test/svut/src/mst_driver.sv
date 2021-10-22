@@ -253,6 +253,17 @@ module mst_driver
 
         end else begin
 
+            if (bvalid && bready) begin
+                if ((bid&MST_ID) != MST_ID) begin
+                    `ERROR("Received a completion not addressed to the right master");
+                    $display("  - MST_ID=%0x", MST_ID);
+                    $display("  - BID=%0x", bid);
+                    $display("  - EN=%0x", en);
+                    @(posedge aclk);
+                    $finish();
+                end
+            end
+
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
 
                 // Store the OR request on address channel handshake
@@ -286,7 +297,7 @@ module mst_driver
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
-                        $display("Write OR %x reached timeout (@ %g ns)", i, $realtime);
+                        $display("Write OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
                         wor_error <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
@@ -494,6 +505,17 @@ module mst_driver
 
         end else begin
 
+            if (rvalid && rready) begin
+                if ((rid&MST_ID) != MST_ID) begin
+                    `ERROR("Received a completion not addressed to the right master");
+                    $display("  - MST_ID: %0x", MST_ID);
+                    $display("  - RID: %0x", rid);
+                    $display("  - EN=%0x", en);
+                    @(posedge aclk);
+                    $finish();
+                end
+            end
+
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
 
                 // Store the OR request on address channel handshake
@@ -533,7 +555,7 @@ module mst_driver
                 // Manage OR timeout
                 if (rd_orreq[i]) begin
                     if (rd_orreq_timeout[i]==TIMEOUT) begin
-                        $display("ERROR: Read OR %x reached timeout (@ %g ns)", i, $realtime);
+                        $display("ERROR: Read OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
                         ror_error <= 1'b1;
                     end
                     if (rd_orreq_timeout[i]<=TIMEOUT) begin

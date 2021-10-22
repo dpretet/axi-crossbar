@@ -183,7 +183,7 @@ module axicb_slv_if
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
-    assign i_rch = {o_rresp, o_rid, o_rdata};
+    assign i_rch = {o_rresp, o_rdata, o_rid};
 
 endmodule
 

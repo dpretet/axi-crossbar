@@ -406,7 +406,7 @@ module axicb_mst_if
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
-    assign {i_rresp, i_rid, i_rdata} = o_rch;
+    assign {i_rresp, i_rdata, i_rid} = o_rch;
 
     end
 

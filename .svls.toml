@@ -1,5 +1,5 @@
 [verilog]
-include_paths = ["./rtl", "./", "../../rtl", "dep/svlogger", "../../dep/svlogger"]
+include_paths = ["./rtl", "./", "../../rtl", "dep/svlogger", "../../dep/svlogger", "./test/svut"]
 defines = ["XLEN=32"]
 
 [option]

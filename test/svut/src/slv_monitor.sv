@@ -200,7 +200,7 @@ module slv_monitor
 
     assign bvalid = ~b_empty & bvalid_lfsr[0];
     assign bresp = b_fifo_o[1:0];
-    assign bid = b_fifo_o[2+:AXI_ID_W];
+    assign bid = (bvalid) ? b_fifo_o[2+:AXI_ID_W] : {AXI_ID_W{1'b0}};
 
     // Monitor BRESP channel to detect timeout
     always @ (posedge aclk or negedge aresetn) begin

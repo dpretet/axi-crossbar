@@ -43,25 +43,25 @@ module axicb_crossbar_top_testbench();
     parameter MST0_OSTDREQ_SIZE = 1;
     parameter MST0_PRIORITY = 0;
     parameter MST0_ROUTES = 4'b1_1_1_1;
-    parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00;
+    parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h10;
     parameter MST1_CDC = 0;
     parameter MST1_OSTDREQ_NUM = 4;
     parameter MST1_OSTDREQ_SIZE = 1;
     parameter MST1_PRIORITY = 0;
     parameter MST1_ROUTES = 4'b1_1_1_1;
-    parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10;
+    parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h20;
     parameter MST2_CDC = 0;
     parameter MST2_OSTDREQ_NUM = 0;
     parameter MST2_OSTDREQ_SIZE = 1;
     parameter MST2_PRIORITY = 0;
     parameter MST2_ROUTES = 4'b1_1_1_1;
-    parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20;
+    parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h40;
     parameter MST3_CDC = 0;
     parameter MST3_OSTDREQ_NUM = 0;
     parameter MST3_OSTDREQ_SIZE = 1;
     parameter MST3_PRIORITY = 0;
     parameter MST3_ROUTES = 4'b1_1_1_1;
-    parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30;
+    parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h80;
     parameter SLV0_CDC = 0;
     parameter SLV0_START_ADDR = 0;
     parameter SLV0_END_ADDR = 4095;
@@ -886,7 +886,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
     .AXI_DATA_W      (AXI_DATA_W),
-    .MST_ID          ('h10),
+    .MST_ID          (MST0_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
@@ -948,7 +948,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
     .AXI_DATA_W      (AXI_DATA_W),
-    .MST_ID          ('h20),
+    .MST_ID          (MST1_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
@@ -1010,7 +1010,7 @@ module axicb_crossbar_top_testbench();
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
     .AXI_DATA_W      (AXI_DATA_W),
-    .MST_ID          ('h30),
+    .MST_ID          (MST2_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
@@ -1072,12 +1072,12 @@ module axicb_crossbar_top_testbench();
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
     .AXI_DATA_W      (AXI_DATA_W),
-    .MST_ID          ('h40),
+    .MST_ID          (MST3_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
-    .KEY             ('hFFFFFFFF)
+    .KEY             ('h55555555)
     )
     mst_driver3 
     (
@@ -1429,7 +1429,7 @@ module axicb_crossbar_top_testbench();
 
     task teardown(msg="");
     begin
-        /// teardown() runs when a test ends
+        repeat (20) @(posedge aclk);
     end
     endtask
 
@@ -1440,7 +1440,7 @@ module axicb_crossbar_top_testbench();
 
     initial begin
         $display("");
-        $display("----------------------------------------------------------");
+        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         $display("");
         $display("Testbench Configuration:");
         $display("------------------------");
@@ -1453,7 +1453,7 @@ module axicb_crossbar_top_testbench();
         $display("  - AXI_DATA_W: %0d", `AXI_DATA_W);
         $display("  - AXI_ID_W: %0d", `AXI_ID_W);
         $display("");
-        $display("----------------------------------------------------------");
+        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         $display("");
     end
 
@@ -1462,6 +1462,7 @@ module axicb_crossbar_top_testbench();
     //////////////////////////////////////////////////////////////////////////
 
     `TEST_SUITE(tsname)
+
 
     `UNIT_TEST("Single Master Driver vs a Single Slave Monitor")
 
@@ -1496,6 +1497,29 @@ module axicb_crossbar_top_testbench();
 
     `UNIT_TEST_END
 
+    `UNIT_TEST("Three Master Drivers vs a Single Slave Monitor")
+
+        addr_min = 0;
+        addr_max = 4095;
+
+        @(posedge aclk);
+        mst_en = 4'h7;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+
+    `UNIT_TEST("Four Master Drivers vs a Single Slave Monitor")
+
+        addr_min = 0;
+        addr_max = 4095;
+
+        @(posedge aclk);
+        mst_en = 4'hF;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
     `UNIT_TEST("Two Master Drivers vs Two Slave Monitors")
 
         addr_min = 0;
@@ -1503,6 +1527,39 @@ module axicb_crossbar_top_testbench();
 
         @(posedge aclk);
         mst_en = 4'h3;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Three Master Drivers vs Two Slave Monitors")
+
+        addr_min = 0;
+        addr_max = 8191;
+
+        @(posedge aclk);
+        mst_en = 4'h7;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Four Master Drivers vs Two Slave Monitors")
+
+        addr_min = 0;
+        addr_max = 8191;
+
+        @(posedge aclk);
+        mst_en = 4'hF;
+        wait_end_of_execution();
+
+    `UNIT_TEST_END
+
+    `UNIT_TEST("Four Master Drivers vs Four Slave Monitors")
+
+        addr_min = 0;
+        addr_max = 16383;
+
+        @(posedge aclk);
+        mst_en = 4'hF;
         wait_end_of_execution();
 
     `UNIT_TEST_END
