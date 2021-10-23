@@ -122,7 +122,7 @@ module axicb_mst_if
     logic [AWCH_W        -1:0] awch;
     logic [ARCH_W        -1:0] arch;
 
-    generate 
+    generate
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
 
         assign awch = {
@@ -184,9 +184,33 @@ module axicb_mst_if
     end
     endgenerate
 
-    generate 
-    
+    generate
+
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     if (MST_CDC) begin: CDC_STAGE
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam AW_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
+                          (MST_OSTDREQ_NUM<2)  ? 2 :
+                          $clog2(MST_OSTDREQ_NUM);
+
+    localparam W_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
+                         (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 2 :
+                         $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+
+    localparam B_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
+                         (MST_OSTDREQ_NUM<2)  ? 2 :
+                         $clog2(MST_OSTDREQ_NUM);
+
+    localparam AR_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
+                          (MST_OSTDREQ_NUM<2)  ? 2 :
+                          $clog2(MST_OSTDREQ_NUM);
+
+    localparam R_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
+                         (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 2 :
+                         $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
 
     logic             aw_winc;
     logic             aw_full;
@@ -213,15 +237,13 @@ module axicb_mst_if
     // Write Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam AW_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
-
-    async_fifo 
+    async_fifo
     #(
     .DSIZE       (AWCH_W),
     .ASIZE       (AW_ASIZE),
     .FALLTHROUGH ("TRUE")
     )
-    aw_dcfifo 
+    aw_dcfifo
     (
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
@@ -238,7 +260,7 @@ module axicb_mst_if
     );
 
     assign i_awready = ~aw_full;
-    assign aw_winc = i_awvalid & ~aw_full; 
+    assign aw_winc = i_awvalid & ~aw_full;
 
     assign o_awvalid = ~aw_empty;
     assign aw_rinc = ~aw_empty & o_awready;
@@ -247,15 +269,13 @@ module axicb_mst_if
     // Write Data Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam W_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
-
-    async_fifo 
+    async_fifo
     #(
     .DSIZE       (WCH_W+1),
     .ASIZE       (W_ASIZE),
     .FALLTHROUGH ("TRUE")
     )
-    w_dcfifo 
+    w_dcfifo
     (
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
@@ -272,7 +292,7 @@ module axicb_mst_if
     );
 
     assign i_wready = ~w_full;
-    assign w_winc = i_wvalid & ~w_full; 
+    assign w_winc = i_wvalid & ~w_full;
 
     assign o_wvalid = ~w_empty;
     assign w_rinc = ~w_empty & o_wready;
@@ -281,24 +301,22 @@ module axicb_mst_if
     // Write Response Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam B_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
-
-    async_fifo 
+    async_fifo
     #(
     .DSIZE       (BCH_W),
     .ASIZE       (B_ASIZE),
     .FALLTHROUGH ("TRUE")
     )
-    b_dcfifo 
+    b_dcfifo
     (
-    .wclk    (i_aclk),
-    .wrst_n  (i_aresetn),
+    .wclk    (o_aclk),
+    .wrst_n  (o_aresetn),
     .winc    (b_winc),
     .wdata   (o_bch),
     .wfull   (b_full),
     .awfull  (),
-    .rclk    (o_aclk),
-    .rrst_n  (o_aresetn),
+    .rclk    (i_aclk),
+    .rrst_n  (i_aresetn),
     .rinc    (b_rinc),
     .rdata   ({i_bresp, i_bid}),
     .rempty  (b_empty),
@@ -306,7 +324,7 @@ module axicb_mst_if
     );
 
     assign o_bready = ~b_full;
-    assign b_winc = o_bvalid & ~b_full; 
+    assign b_winc = o_bvalid & ~b_full;
 
     assign i_bvalid = ~b_empty;
     assign b_rinc = ~b_empty & i_bready;
@@ -315,15 +333,13 @@ module axicb_mst_if
     // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam AR_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
-
-    async_fifo 
+    async_fifo
     #(
     .DSIZE       (ARCH_W),
     .ASIZE       (AR_ASIZE),
     .FALLTHROUGH ("TRUE")
     )
-    ar_dcfifo 
+    ar_dcfifo
     (
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
@@ -340,7 +356,7 @@ module axicb_mst_if
     );
 
     assign i_arready = ~ar_full;
-    assign ar_winc = i_arvalid & ~ar_full; 
+    assign ar_winc = i_arvalid & ~ar_full;
 
     assign o_arvalid = ~ar_empty;
     assign ar_rinc = ~ar_empty & o_arready;
@@ -349,41 +365,197 @@ module axicb_mst_if
     // Read Data Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam R_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 : $clog2(MST_OSTDREQ_NUM);
-
-    async_fifo 
+    async_fifo
     #(
     .DSIZE       (RCH_W+1),
     .ASIZE       (R_ASIZE),
     .FALLTHROUGH ("TRUE")
     )
-    r_dcfifo 
+    r_dcfifo
     (
-    .wclk    (i_aclk),
-    .wrst_n  (i_aresetn),
+    .wclk    (o_aclk),
+    .wrst_n  (o_aresetn),
     .winc    (r_winc),
     .wdata   ({o_rlast,o_rch}),
     .wfull   (r_full),
     .awfull  (),
-    .rclk    (o_aclk),
-    .rrst_n  (o_aresetn),
+    .rclk    (i_aclk),
+    .rrst_n  (i_aresetn),
     .rinc    (r_rinc),
-    .rdata   ({i_rlast, i_rresp, i_rid, i_rdata}),
+    .rdata   ({i_rlast, i_rresp, i_rdata, i_rid}),
     .rempty  (r_empty),
     .arempty ()
     );
 
     assign o_rready = ~r_full;
-    assign r_winc = o_rvalid & ~r_full; 
+    assign r_winc = o_rvalid & ~r_full;
 
     assign i_rvalid = ~r_empty;
     assign r_rinc = ~r_empty & i_rready;
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     end else if (MST_OSTDREQ_NUM>0) begin: BUFF_STAGE
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    localparam PASS_THRU = 0;
+    localparam AW_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
+    localparam W_ASIZE = (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 1 : $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+    localparam B_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
+    localparam AR_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
+    localparam R_ASIZE = (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 1 : $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+
+    logic aw_full;
+    logic aw_empty;
+    logic w_full;
+    logic w_empty;
+    logic ar_full;
+    logic ar_empty;
+    logic r_full;
+    logic r_empty;
+    logic b_full;
+    logic b_empty;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Address Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    axicb_scfifo
+    #(
+    .PASS_THRU  (PASS_THRU),
+    .ADDR_WIDTH (AW_ASIZE),
+    .DATA_WIDTH (AWCH_W)
+    )
+    aw_scfifo
+    (
+    .aclk     (i_aclk),
+    .aresetn  (i_aresetn),
+    .srst     (i_srst),
+    .flush    (1'b0),
+    .data_in  (awch),
+    .push     (i_awvalid),
+    .full     (aw_full),
+    .data_out (o_awch),
+    .pull     (o_awready),
+    .empty    (aw_empty)
+    );
+    assign i_awready = ~aw_full;
+    assign o_awvalid = ~aw_empty;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Data Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    axicb_scfifo
+    #(
+    .PASS_THRU  (PASS_THRU),
+    .ADDR_WIDTH (W_ASIZE),
+    .DATA_WIDTH (WCH_W+1)
+    )
+    w_scfifo
+    (
+    .aclk     (i_aclk),
+    .aresetn  (i_aresetn),
+    .srst     (i_srst),
+    .flush    (1'b0),
+    .data_in  ({i_wlast, i_wstrb, i_wdata}),
+    .push     (i_wvalid),
+    .full     (w_full),
+    .data_out ({o_wlast, o_wch}),
+    .pull     (o_wready),
+    .empty    (w_empty)
+    );
+    assign i_wready = ~w_full;
+    assign o_wvalid = ~w_empty;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Response Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    axicb_scfifo
+    #(
+    .PASS_THRU  (PASS_THRU),
+    .ADDR_WIDTH (B_ASIZE),
+    .DATA_WIDTH (BCH_W)
+    )
+    b_scfifo
+    (
+    .aclk     (o_aclk),
+    .aresetn  (o_aresetn),
+    .srst     (o_srst),
+    .flush    (1'b0),
+    .data_in  (o_bch),
+    .push     (o_bvalid),
+    .full     (b_full),
+    .data_out ({i_bresp, i_bid}),
+    .pull     (i_bready),
+    .empty    (b_empty)
+    );
+
+    assign i_bvalid = ~b_empty;
+    assign o_bready = ~b_full;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Address Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    axicb_scfifo
+    #(
+    .PASS_THRU  (PASS_THRU),
+    .ADDR_WIDTH (AR_ASIZE),
+    .DATA_WIDTH (ARCH_W)
+    )
+    ar_scfifo
+    (
+    .aclk     (i_aclk),
+    .aresetn  (i_aresetn),
+    .srst     (i_srst),
+    .flush    (1'b0),
+    .data_in  (arch),
+    .push     (i_arvalid),
+    .full     (ar_full),
+    .data_out (o_arch),
+    .pull     (o_arready),
+    .empty    (ar_empty)
+    );
+    assign i_arready = ~ar_full;
+    assign o_arvalid = ~ar_empty;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Data Channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    axicb_scfifo
+    #(
+    .PASS_THRU  (PASS_THRU),
+    .ADDR_WIDTH (R_ASIZE),
+    .DATA_WIDTH (RCH_W+1)
+    )
+    r_scfifo
+    (
+    .aclk     (o_aclk),
+    .aresetn  (o_aresetn),
+    .srst     (o_srst),
+    .flush    (1'b0),
+    .data_in  ({o_rlast,o_rch}),
+    .push     (o_rvalid),
+    .full     (r_full),
+    .data_out ({i_rlast, i_rresp, i_rdata, i_rid}),
+    .pull     (i_rready),
+    .empty    (r_empty)
+    );
+
+    assign i_rvalid = ~r_empty;
+    assign o_rready = ~r_full;
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     end else begin: NO_CDC_NO_BUFFERING
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     assign o_awvalid = i_awvalid;
     assign o_awch = awch;

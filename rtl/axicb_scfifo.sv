@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Single clock FIFO ( first-in / first-out) to buffer an incoming stream
+// Single clock FIFO (first-in / first-out) to buffer an incoming stream
 // before consuming it.
 //
 // Address width: define the depth of the FIFO, only a power of 2

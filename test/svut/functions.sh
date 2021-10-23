@@ -48,6 +48,7 @@ get_args() {
                 MAX_TRAFFIC=$1
             ;;
             -t | --timeout )
+                shift
                 TIMEOUT=$1
             ;;
             -h | --help )

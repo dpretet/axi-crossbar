@@ -1075,17 +1075,20 @@ module axicb_crossbar_top
 
     axicb_slv_if
     #(
-    .AXI_ADDR_W     (AXI_ADDR_W),
-    .AXI_ID_W       (AXI_ID_W),
-    .AXI_DATA_W     (AXI_DATA_W),
-    .STRB_MODE      (STRB_MODE),
-    .AXI_SIGNALING  (AXI_SIGNALING),
-    .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-    .AWCH_W         (AWCH_W),
-    .WCH_W          (WCH_W),
-    .BCH_W          (BCH_W),
-    .ARCH_W         (ARCH_W),
-    .RCH_W          (RCH_W)
+    .AXI_ADDR_W       (AXI_ADDR_W),
+    .AXI_ID_W         (AXI_ID_W),
+    .AXI_DATA_W       (AXI_DATA_W),
+    .STRB_MODE        (STRB_MODE),
+    .AXI_SIGNALING    (AXI_SIGNALING),
+    .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+    .SLV_CDC          (SLV0_CDC),
+    .SLV_OSTDREQ_NUM  (SLV0_OSTDREQ_NUM),
+    .SLV_OSTDREQ_SIZE (SLV0_OSTDREQ_SIZE),
+    .AWCH_W           (AWCH_W),
+    .WCH_W            (WCH_W),
+    .BCH_W            (BCH_W),
+    .ARCH_W           (ARCH_W),
+    .RCH_W            (RCH_W)
     )
     slv0_if
     (
@@ -1159,17 +1162,20 @@ module axicb_crossbar_top
 
     axicb_slv_if
     #(
-    .AXI_ADDR_W     (AXI_ADDR_W),
-    .AXI_ID_W       (AXI_ID_W),
-    .AXI_DATA_W     (AXI_DATA_W),
-    .STRB_MODE      (STRB_MODE),
-    .AXI_SIGNALING  (AXI_SIGNALING),
-    .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-    .AWCH_W         (AWCH_W),
-    .WCH_W          (WCH_W),
-    .BCH_W          (BCH_W),
-    .ARCH_W         (ARCH_W),
-    .RCH_W          (RCH_W)
+    .AXI_ADDR_W       (AXI_ADDR_W),
+    .AXI_ID_W         (AXI_ID_W),
+    .AXI_DATA_W       (AXI_DATA_W),
+    .STRB_MODE        (STRB_MODE),
+    .AXI_SIGNALING    (AXI_SIGNALING),
+    .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+    .SLV_CDC          (SLV1_CDC),
+    .SLV_OSTDREQ_NUM  (SLV1_OSTDREQ_NUM),
+    .SLV_OSTDREQ_SIZE (SLV1_OSTDREQ_SIZE),
+    .AWCH_W           (AWCH_W),
+    .WCH_W            (WCH_W),
+    .BCH_W            (BCH_W),
+    .ARCH_W           (ARCH_W),
+    .RCH_W            (RCH_W)
     )
     slv1_if
     (
@@ -1243,17 +1249,20 @@ module axicb_crossbar_top
 
     axicb_slv_if
     #(
-    .AXI_ADDR_W     (AXI_ADDR_W),
-    .AXI_ID_W       (AXI_ID_W),
-    .AXI_DATA_W     (AXI_DATA_W),
-    .STRB_MODE      (STRB_MODE),
-    .AXI_SIGNALING  (AXI_SIGNALING),
-    .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-    .AWCH_W         (AWCH_W),
-    .WCH_W          (WCH_W),
-    .BCH_W          (BCH_W),
-    .ARCH_W         (ARCH_W),
-    .RCH_W          (RCH_W)
+    .AXI_ADDR_W       (AXI_ADDR_W),
+    .AXI_ID_W         (AXI_ID_W),
+    .AXI_DATA_W       (AXI_DATA_W),
+    .STRB_MODE        (STRB_MODE),
+    .AXI_SIGNALING    (AXI_SIGNALING),
+    .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+    .SLV_CDC          (SLV2_CDC),
+    .SLV_OSTDREQ_NUM  (SLV2_OSTDREQ_NUM),
+    .SLV_OSTDREQ_SIZE (SLV2_OSTDREQ_SIZE),
+    .AWCH_W           (AWCH_W),
+    .WCH_W            (WCH_W),
+    .BCH_W            (BCH_W),
+    .ARCH_W           (ARCH_W),
+    .RCH_W            (RCH_W)
     )
     slv2_if
     (
@@ -1327,17 +1336,20 @@ module axicb_crossbar_top
 
     axicb_slv_if
     #(
-    .AXI_ADDR_W     (AXI_ADDR_W),
-    .AXI_ID_W       (AXI_ID_W),
-    .AXI_DATA_W     (AXI_DATA_W),
-    .STRB_MODE      (STRB_MODE),
-    .AXI_SIGNALING  (AXI_SIGNALING),
-    .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-    .AWCH_W         (AWCH_W),
-    .WCH_W          (WCH_W),
-    .BCH_W          (BCH_W),
-    .ARCH_W         (ARCH_W),
-    .RCH_W          (RCH_W)
+    .AXI_ADDR_W       (AXI_ADDR_W),
+    .AXI_ID_W         (AXI_ID_W),
+    .AXI_DATA_W       (AXI_DATA_W),
+    .STRB_MODE        (STRB_MODE),
+    .AXI_SIGNALING    (AXI_SIGNALING),
+    .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+    .SLV_CDC          (SLV3_CDC),
+    .SLV_OSTDREQ_NUM  (SLV3_OSTDREQ_NUM),
+    .SLV_OSTDREQ_SIZE (SLV3_OSTDREQ_SIZE),
+    .AWCH_W           (AWCH_W),
+    .WCH_W            (WCH_W),
+    .BCH_W            (BCH_W),
+    .ARCH_W           (ARCH_W),
+    .RCH_W            (RCH_W)
     )
     slv3_if
     (

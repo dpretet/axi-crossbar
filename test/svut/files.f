@@ -11,3 +11,13 @@
 ./src/mst_driver.sv
 ./src/slv_monitor.sv
 ./src/lfsr.sv
+../../deps/dcfifo/src/vlog/async_bidir_fifo.v
+../../deps/dcfifo/src/vlog/async_bidir_ramif_fifo.v
+../../deps/dcfifo/src/vlog/async_fifo.v
+../../deps/dcfifo/src/vlog/fifo_2mem.v
+../../deps/dcfifo/src/vlog/fifomem_dp.v
+../../deps/dcfifo/src/vlog/rptr_empty.v
+../../deps/dcfifo/src/vlog/sync_ptr.v
+../../deps/dcfifo/src/vlog/sync_r2w.v
+../../deps/dcfifo/src/vlog/sync_w2r.v
+../../deps/dcfifo/src/vlog/wptr_full.v

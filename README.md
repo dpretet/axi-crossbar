@@ -2,51 +2,71 @@
 
 ## Overview
 
-An AXI4 crossbar implementation in SystemVerilog
+An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 
-Features
-
-- Number of master and slave configurable, maximum 8x8 m/s
-- Master/slave buffering configurable per interface
-    - Outstanding request number configurable per interface
+- Number of master and slave configurable
+- Master/slave buffering capability, configurable per interface
+    - Outstanding request number configurable
     - Request payload configurable per interface (AXI3 vs AXI4 vs AXI4-lite seamless support)
-- CDC support per master/slave interface
+- CDC support in master & slave interface. Convert an interface's clock domain
+  from/to the crossbar inner clock domain
 - Round-robin arbitration
-    - non-blocking balance between requesters
-    - priority configurable per master interface
-- Timeout support per AXI4 channel & per interface (shared counter configurable)
-- Pipeline stage configurable for input & output of the interconnect
-- Full-STRB storage or contiguous-only/partial STRB for first and last phase only
-- USER signal support, optional but impact all interfaces
-- FULL, RESTRICTED and LITE modes for the crossbar infrastructure to save gate count
-    - LITE mode: all signals described in AXI4-lite specification
-    - FULL mode: all signals described by AXI4 specification (PROT, CACHE, REGION, QOS, ...)
-    - RESTRICTED mode: only an AXI4 subset, for application needing to do simple
-      memory-mapped requests (AXI4-lite with burst mode capability)
+    - Non-blocking arbitration between requesters
+    - Priority configurable per master interface
+- Timeout support per AXI channel & per interface
+    - A shared counter implement a time reference
+    - A request timeout leads the completion to response with DECERR
+    - A completion timeout leads the completion to response with SLVERR
+- Switching logic IO interfaces can be pipelined to achieve timing closure easier
+- Full-STRB vs Partial-STRB mode
+    - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
+      all other dataphases are fully activated (WSTRBs=1)
+    - Full-STRB mode transports the complete STRBs dataphases as driven by a master
+    - Useful to save gate count
+- USER signal support
+    - Configurable for each channel (AW, AR, W, B, R)
+    - Common to all master/slave interfaces if activated
+- FULL, RESTRICTED and LITE AXI modes
+    - LITE mode: route all signals described in AXI4-lite specification
+    - FULL mode: route all signals described by AXI4 specification
+    - RESTRICTED mode: route only an AXI4 subset, for application needing to do simple
+      memory-mapped requests (AXI4-lite being burst capable)
+    - Useful to save gate count
+- Master routes to a slave can be defined to restrict slave access
+    - Permits to create enclosed and secured memory map
+    - Access a forbidden memory zone returns a DECERR reponse in completion channel
+    - Useful to save gate count
 
-Implementation
+## Implementation Details
 
-- All interfaces share the same address / data width
-- Routing with address decoding from master to slave
-- Routing done by ID from slave to master
+- All interfaces share the same address / data / ID width
+    - Address width configurable, any width
+    - Data width configurable, any width
+    - ID width configurable, any width
+- Route read/write requests by address decoding. All slaves are mapped into
+  the memory space with a start/end address range.
+- Route read & write completion by ID decoding. All masters have an ID mask
+  used to identified the route to drive back a completion
 
 ## Development plan
 
 Limitations (current dev stage)
 
 - 4x4 master/slave interfaces
-- no interface buffering
-- no CDC stage
+- LITE mode only (AXI4 mode should work, juest not tested yet)
 - no master priority setup
 - no timeout support
 - Full-STRB mode only
-- LITE mode only
-- no USER signals support
+- no xUSER signals support
 - AW & W channels need to be ready at the same cycle
 
 Inbox
 
+- Top level generator to adapt the core to the users need
+- AXI4/AXI4-lite converter
+- Read-only or Write-only master to save gate count
 - Number of master/slave configurable, wider than 8x8
-- Interface width adaptation
-- Can support traffic reordering in case of out-of-order completion
-- 4KB boundary crossing check
+- Interface datapath width conversion
+- Completion reordering in case of out-of-order response
+- 4KB boundary crossing checking
+- Address translation service
