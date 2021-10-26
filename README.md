@@ -4,7 +4,15 @@
 
 An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 
-- Number of master and slave configurable
+
+
+<p align="center">
+  <!--img width="100" height="100" src=""-->
+  <img src="./doc/assets/top-overview.png">
+</p>
+
+
+- Number of master and slave agents configurable
 - Master/slave buffering capability, configurable per interface
     - Outstanding request number configurable
     - Request payload configurable per interface (AXI3 vs AXI4 vs AXI4-lite seamless support)
@@ -43,30 +51,30 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
     - Address width configurable, any width
     - Data width configurable, any width
     - ID width configurable, any width
-- Route read/write requests by address decoding. All slaves are mapped into
-  the memory space with a start/end address range.
-- Route read & write completion by ID decoding. All masters have an ID mask
-  used to identified the route to drive back a completion
+- Route read/write requests by address decoding. All slave agents are mapped
+  into the memory space with a start/end address range.
+- Route read & write completion by ID decoding. All master agents have an ID
+  mask used to identified the route to drive back a completion
 
 ## Development plan
 
 Limitations (current dev stage)
 
-- 4x4 master/slave interfaces
-- LITE mode only (AXI4 mode should work, juest not tested yet)
-- no master priority setup
-- no timeout support
-- Full-STRB mode only
-- no xUSER signals support
 - AW & W channels need to be ready at the same cycle
+- No timeout support
+- 4x4 master/slave interfaces
+- LITE mode only (AXI4 mode should work, just not tested yet)
+- No master priority setup
+- Full-STRB mode only
+- No xUSER signals support
 
 Inbox
 
+- Address translation service
 - Top level generator to adapt the core to the users need
+- Number of master/slave configurable, wider than 8x8
+- Completion reordering in case of out-of-order response
+- Interface datapath width conversion
 - AXI4/AXI4-lite converter
 - Read-only or Write-only master to save gate count
-- Number of master/slave configurable, wider than 8x8
-- Interface datapath width conversion
-- Completion reordering in case of out-of-order response
 - 4KB boundary crossing checking
-- Address translation service

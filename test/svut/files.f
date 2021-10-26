@@ -8,9 +8,11 @@
 ../../rtl/axicb_slv_if.sv
 ../../rtl/axicb_slv_switch.sv
 ../../rtl/axicb_switch_top.sv
+../../rtl/axicb_pipeline.sv
 ./src/mst_driver.sv
 ./src/slv_monitor.sv
 ./src/lfsr.sv
+./src/pipeline_checker.sv
 ../../deps/dcfifo/src/vlog/async_bidir_fifo.v
 ../../deps/dcfifo/src/vlog/async_bidir_ramif_fifo.v
 ../../deps/dcfifo/src/vlog/async_fifo.v

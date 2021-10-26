@@ -3,3 +3,4 @@ obj_dir
 *.out
 *.vcd
 tags
+.DS_Store

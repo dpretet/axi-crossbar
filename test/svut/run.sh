@@ -47,7 +47,7 @@ main() {
         svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
         # Grab the return code used later to determine the compliance status
         test_ret=$((test_ret+$?))
-        mv axicb_*.vcd ${config_name}.vcd
+        # mv axicb_*.vcd ${config_name}.vcd
     done
 
     # Check if errors occured and exit

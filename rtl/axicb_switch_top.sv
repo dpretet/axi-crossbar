@@ -18,7 +18,7 @@ module axicb_switch_top
         parameter MST_NB = 4,
         // Number of slave(s)
         parameter SLV_NB = 4,
-        // Switching logic pipelining (0 deactivate, 1 enable)
+        // Switching logic pipelining (0 deactivate, 1 or more enable)
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
 
@@ -96,104 +96,211 @@ module axicb_switch_top
         input  logic [SLV_NB*RCH_W      -1:0] o_rch
     );
 
-    // master logic routing
-    logic [MST_NB*SLV_NB            -1:0] ml_awvalid;
-    logic [MST_NB*SLV_NB            -1:0] ml_awready;
-    logic [MST_NB*AWCH_W            -1:0] ml_awch;
-    logic [MST_NB*SLV_NB            -1:0] ml_wvalid;
-    logic [MST_NB*SLV_NB            -1:0] ml_wready;
-    logic [MST_NB*SLV_NB            -1:0] ml_wlast;
-    logic [MST_NB*WCH_W             -1:0] ml_wch;
-    logic [MST_NB*SLV_NB            -1:0] ml_bvalid;
-    logic [MST_NB*SLV_NB            -1:0] ml_bready;
-    logic [MST_NB*SLV_NB            -1:0] ml_arvalid;
-    logic [MST_NB*SLV_NB            -1:0] ml_arready;
-    logic [MST_NB*ARCH_W            -1:0] ml_arch;
-    logic [MST_NB*SLV_NB            -1:0] ml_rvalid;
-    logic [MST_NB*SLV_NB            -1:0] ml_rready;
-    logic [MST_NB*SLV_NB            -1:0] ml_rlast;
+    // master <> slave logic routing
+    logic [MST_NB*SLV_NB            -1:0] slv_awvalid;
+    logic [MST_NB*SLV_NB            -1:0] slv_awready;
+    logic [MST_NB*AWCH_W            -1:0] awch;
+    logic [MST_NB*SLV_NB            -1:0] slv_wvalid;
+    logic [MST_NB*SLV_NB            -1:0] slv_wready;
+    logic [MST_NB*SLV_NB            -1:0] slv_wlast;
+    logic [MST_NB*WCH_W             -1:0] wch;
+    logic [MST_NB*SLV_NB            -1:0] slv_bvalid;
+    logic [MST_NB*SLV_NB            -1:0] slv_bready;
+    logic [MST_NB*SLV_NB            -1:0] slv_arvalid;
+    logic [MST_NB*SLV_NB            -1:0] slv_arready;
+    logic [MST_NB*ARCH_W            -1:0] arch;
+    logic [MST_NB*SLV_NB            -1:0] slv_rvalid;
+    logic [MST_NB*SLV_NB            -1:0] slv_rready;
+    logic [MST_NB*SLV_NB            -1:0] slv_rlast;
+    logic [MST_NB*SLV_NB            -1:0] mst_awvalid;
+    logic [MST_NB*SLV_NB            -1:0] mst_awready;
+    logic [MST_NB*SLV_NB            -1:0] mst_wvalid;
+    logic [MST_NB*SLV_NB            -1:0] mst_wready;
+    logic [MST_NB*SLV_NB            -1:0] mst_wlast;
+    logic [MST_NB*SLV_NB            -1:0] mst_bvalid;
+    logic [MST_NB*SLV_NB            -1:0] mst_bready;
+    logic [SLV_NB*BCH_W             -1:0] bch;
+    logic [MST_NB*SLV_NB            -1:0] mst_arvalid;
+    logic [MST_NB*SLV_NB            -1:0] mst_arready;
+    logic [MST_NB*SLV_NB            -1:0] mst_rvalid;
+    logic [MST_NB*SLV_NB            -1:0] mst_rready;
+    logic [MST_NB*SLV_NB            -1:0] mst_rlast;
+    logic [SLV_NB*RCH_W             -1:0] rch;
 
-    // slave logic routing
-    logic [MST_NB*SLV_NB            -1:0] sl_awvalid;
-    logic [MST_NB*SLV_NB            -1:0] sl_awready;
-    logic [MST_NB*SLV_NB            -1:0] sl_wvalid;
-    logic [MST_NB*SLV_NB            -1:0] sl_wready;
-    logic [MST_NB*SLV_NB            -1:0] sl_wlast;
-    logic [MST_NB*SLV_NB            -1:0] sl_bvalid;
-    logic [MST_NB*SLV_NB            -1:0] sl_bready;
-    logic [SLV_NB*BCH_W             -1:0] sl_bch;
-    logic [MST_NB*SLV_NB            -1:0] sl_arvalid;
-    logic [MST_NB*SLV_NB            -1:0] sl_arready;
-    logic [MST_NB*SLV_NB            -1:0] sl_rvalid;
-    logic [MST_NB*SLV_NB            -1:0] sl_rready;
-    logic [MST_NB*SLV_NB            -1:0] sl_rlast;
-    logic [SLV_NB*RCH_W             -1:0] sl_rch;
 
     ///////////////////////////////////////////////////////////////////////////
     // Generate all master interfaces
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<MST_NB;i=i+1) begin: MST_GEN
+    for (genvar i=0;i<MST_NB;i=i+1) begin: SLV_SWITCHS_GEN
 
-        axicb_mst_switch 
+        logic                          pipe_awvalid;
+        logic                          pipe_awready;
+        logic [AWCH_W            -1:0] pipe_awch;
+        logic                          pipe_wvalid;
+        logic                          pipe_wready;
+        logic                          pipe_wlast;
+        logic [WCH_W             -1:0] pipe_wch;
+        logic                          pipe_bvalid;
+        logic                          pipe_bready;
+        logic [BCH_W             -1:0] pipe_bch;
+        logic                          pipe_arvalid;
+        logic                          pipe_arready;
+        logic [ARCH_W            -1:0] pipe_arch;
+        logic                          pipe_rvalid;
+        logic                          pipe_rready;
+        logic                          pipe_rlast;
+        logic [RCH_W             -1:0] pipe_rch;
+
+        axicb_pipeline 
         #(
-        .AXI_ADDR_W      (AXI_ADDR_W),
-        .SLV_NB          (SLV_NB),
-        .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
-        .SLV0_START_ADDR (SLV0_START_ADDR),
-        .SLV0_END_ADDR   (SLV0_END_ADDR),
-        .SLV1_START_ADDR (SLV1_START_ADDR),
-        .SLV1_END_ADDR   (SLV1_END_ADDR),
-        .SLV2_START_ADDR (SLV2_START_ADDR),
-        .SLV2_END_ADDR   (SLV2_END_ADDR),
-        .SLV3_START_ADDR (SLV3_START_ADDR),
-        .SLV3_END_ADDR   (SLV3_END_ADDR),
-        .AWCH_W          (AWCH_W),
-        .WCH_W           (WCH_W),
-        .BCH_W           (BCH_W),
-        .ARCH_W          (ARCH_W),
-        .RCH_W           (RCH_W)
+            .DATA_BUS_W  (AWCH_W),
+            .NB_PIPELINE (SLV_PIPELINE)
         )
-        mst_switch 
+        awch_slv_pipe
         (
-        .aclk      (aclk),
-        .aresetn   (aresetn),
-        .srst      (srst),
-        .i_awvalid (i_awvalid[i]),
-        .i_awready (i_awready[i]),
-        .i_awch    (i_awch[i*AWCH_W+:AWCH_W]),
-        .i_wvalid  (i_wvalid[i]),
-        .i_wready  (i_wready[i]),
-        .i_wlast   (i_wlast[i]),
-        .i_wch     (i_wch[i*WCH_W+:WCH_W]),
-        .i_bvalid  (i_bvalid[i]),
-        .i_bready  (i_bready[i]),
-        .i_bch     (i_bch[i*BCH_W+:BCH_W]),
-        .i_arvalid (i_arvalid[i]),
-        .i_arready (i_arready[i]),
-        .i_arch    (i_arch[i*ARCH_W+:ARCH_W]),
-        .i_rvalid  (i_rvalid[i]),
-        .i_rready  (i_rready[i]),
-        .i_rlast   (i_rlast[i]),
-        .i_rch     (i_rch[i*RCH_W+:RCH_W]),
-        .o_awvalid (ml_awvalid[i*SLV_NB+:SLV_NB]),
-        .o_awready (ml_awready[i*SLV_NB+:SLV_NB]),
-        .o_awch    (ml_awch[i*AWCH_W+:AWCH_W]),
-        .o_wvalid  (ml_wvalid[i*SLV_NB+:SLV_NB]),
-        .o_wready  (ml_wready[i*SLV_NB+:SLV_NB]),
-        .o_wlast   (ml_wlast[i*SLV_NB+:SLV_NB]),
-        .o_wch     (ml_wch[i*WCH_W+:WCH_W]),
-        .o_bvalid  (ml_bvalid[i*SLV_NB+:SLV_NB]),
-        .o_bready  (ml_bready[i*SLV_NB+:SLV_NB]),
-        .o_bch     (sl_bch),
-        .o_arvalid (ml_arvalid[i*SLV_NB+:SLV_NB]),
-        .o_arready (ml_arready[i*SLV_NB+:SLV_NB]),
-        .o_arch    (ml_arch[i*ARCH_W+:ARCH_W]),
-        .o_rvalid  (ml_rvalid[i*SLV_NB+:SLV_NB]),
-        .o_rready  (ml_rready[i*SLV_NB+:SLV_NB]),
-        .o_rlast   (ml_rlast[i*SLV_NB+:SLV_NB]),
-        .o_rch     (sl_rch)
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (i_awvalid[i]),
+            .i_ready (i_awready[i]),
+            .i_data  (i_awch[i*AWCH_W+:AWCH_W]),
+            .o_valid (pipe_awvalid),
+            .o_ready (pipe_awready),
+            .o_data  (pipe_awch)
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (WCH_W+1),
+            .NB_PIPELINE (SLV_PIPELINE)
+        )
+        wch_slv_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (i_wvalid[i]),
+            .i_ready (i_wready[i]),
+            .i_data  ({i_wlast[i], i_wch[i*WCH_W+:WCH_W]}),
+            .o_valid (pipe_wvalid),
+            .o_ready (pipe_wready),
+            .o_data  ({pipe_wlast, pipe_wch})
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (BCH_W),
+            .NB_PIPELINE (SLV_PIPELINE)
+        )
+        bch_slv_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (pipe_bvalid),
+            .i_ready (pipe_bready),
+            .i_data  (pipe_bch),
+            .o_valid (i_bvalid[i]),
+            .o_ready (i_bready[i]),
+            .o_data  (i_bch[i*BCH_W+:BCH_W])
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (ARCH_W),
+            .NB_PIPELINE (SLV_PIPELINE)
+        )
+        arch_slv_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (i_arvalid[i]),
+            .i_ready (i_arready[i]),
+            .i_data  (i_arch[i*ARCH_W+:ARCH_W]),
+            .o_valid (pipe_arvalid),
+            .o_ready (pipe_arready),
+            .o_data  (pipe_arch)
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (RCH_W+1),
+            .NB_PIPELINE (SLV_PIPELINE)
+        )
+        rch_slv_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (pipe_rvalid),
+            .i_ready (pipe_rready),
+            .i_data  ({pipe_rlast, pipe_rch}),
+            .o_valid (i_rvalid[i]),
+            .o_ready (i_rready[i]),
+            .o_data  ({i_rlast[i],i_rch[i*RCH_W+:RCH_W]})
+        );
+
+        axicb_slv_switch 
+        #(
+            .AXI_ADDR_W      (AXI_ADDR_W),
+            .SLV_NB          (SLV_NB),
+            .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
+            .SLV0_START_ADDR (SLV0_START_ADDR),
+            .SLV0_END_ADDR   (SLV0_END_ADDR),
+            .SLV1_START_ADDR (SLV1_START_ADDR),
+            .SLV1_END_ADDR   (SLV1_END_ADDR),
+            .SLV2_START_ADDR (SLV2_START_ADDR),
+            .SLV2_END_ADDR   (SLV2_END_ADDR),
+            .SLV3_START_ADDR (SLV3_START_ADDR),
+            .SLV3_END_ADDR   (SLV3_END_ADDR),
+            .AWCH_W          (AWCH_W),
+            .WCH_W           (WCH_W),
+            .BCH_W           (BCH_W),
+            .ARCH_W          (ARCH_W),
+            .RCH_W           (RCH_W)
+        )
+        slv_switch 
+        (
+            .aclk      (aclk),
+            .aresetn   (aresetn),
+            .srst      (srst),
+            .i_awvalid (pipe_awvalid),
+            .i_awready (pipe_awready),
+            .i_awch    (pipe_awch),
+            .i_wvalid  (pipe_wvalid),
+            .i_wready  (pipe_wready),
+            .i_wlast   (pipe_wlast),
+            .i_wch     (pipe_wch),
+            .i_bvalid  (pipe_bvalid),
+            .i_bready  (pipe_bready),
+            .i_bch     (pipe_bch),
+            .i_arvalid (pipe_arvalid),
+            .i_arready (pipe_arready),
+            .i_arch    (pipe_arch),
+            .i_rvalid  (pipe_rvalid),
+            .i_rready  (pipe_rready),
+            .i_rlast   (pipe_rlast),
+            .i_rch     (pipe_rch),
+            .o_awvalid (slv_awvalid[i*SLV_NB+:SLV_NB]),
+            .o_awready (slv_awready[i*SLV_NB+:SLV_NB]),
+            .o_awch    (awch[i*AWCH_W+:AWCH_W]),
+            .o_wvalid  (slv_wvalid[i*SLV_NB+:SLV_NB]),
+            .o_wready  (slv_wready[i*SLV_NB+:SLV_NB]),
+            .o_wlast   (slv_wlast[i*SLV_NB+:SLV_NB]),
+            .o_wch     (wch[i*WCH_W+:WCH_W]),
+            .o_bvalid  (slv_bvalid[i*SLV_NB+:SLV_NB]),
+            .o_bready  (slv_bready[i*SLV_NB+:SLV_NB]),
+            .o_bch     (bch),
+            .o_arvalid (slv_arvalid[i*SLV_NB+:SLV_NB]),
+            .o_arready (slv_arready[i*SLV_NB+:SLV_NB]),
+            .o_arch    (arch[i*ARCH_W+:ARCH_W]),
+            .o_rvalid  (slv_rvalid[i*SLV_NB+:SLV_NB]),
+            .o_rready  (slv_rready[i*SLV_NB+:SLV_NB]),
+            .o_rlast   (slv_rlast[i*SLV_NB+:SLV_NB]),
+            .o_rch     (rch)
         );
     end
     endgenerate
@@ -202,38 +309,48 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
     // Reorder the valid/ready handshakes:
     //
-    // mst0 uses awvalid[0,1,2,3,...] for slave 0,1,2,3 ... same for mst1 ...
+    // slave interface uses awvalid[0,1,2,3,...] to target master interface 0,
+    // master interface 1, master interface 2, master interface 3 ... 
     //
-    // slv0 must receives awvalid[0] of mst0 + awvalid[0] of mst 1 ...
+    // master interfaces must receive awvalid[0] of slv_if0 + awvalid[0] of
+    // slv_if1 ...
     //
-    // Same for all channels driven from the masters: aw, w & ar channels
+    // The same principle is applied for all channels targeted from slave
+    // interfaces: AW, W & AR channels.
     //
     // Then apply the same process for completion channel coming from the
-    // slave interfaces.
+    // slave interfaces: B channel & R chennel.
     //
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<SLV_NB;i=i+1) begin: REORDERING_TO_SLV
-        for (genvar j=0;j<MST_NB;j=j+1) begin: MST_PARSING
-            assign sl_awvalid[i*SLV_NB+j] = ml_awvalid[j*MST_NB+i];
-            assign sl_wvalid[i*SLV_NB+j] = ml_wvalid[j*MST_NB+i];
-            assign sl_wlast[i*SLV_NB+j] = ml_wlast[j*MST_NB+i];
-            assign sl_bready[i*SLV_NB+j] = ml_bready[j*MST_NB+i];
-            assign sl_arvalid[i*SLV_NB+j] = ml_arvalid[j*MST_NB+i];
-            assign sl_rready[i*SLV_NB+j] = ml_rready[j*MST_NB+i];
+
+    // Parse all slave agents, thus output master interfaces
+    for (genvar i=0;i<SLV_NB;i=i+1) begin: REORDERING_TO_MST
+        // Parse all master agents, thus input slave interfaces
+        for (genvar j=0;j<MST_NB;j=j+1) begin: SLV_IF_PARSING
+            assign mst_awvalid[i*SLV_NB+j] = slv_awvalid[j*MST_NB+i];
+            assign mst_wvalid[i*SLV_NB+j] = slv_wvalid[j*MST_NB+i];
+            assign mst_wlast[i*SLV_NB+j] = slv_wlast[j*MST_NB+i];
+            assign mst_bready[i*SLV_NB+j] = slv_bready[j*MST_NB+i];
+            assign mst_arvalid[i*SLV_NB+j] = slv_arvalid[j*MST_NB+i];
+            assign mst_rready[i*SLV_NB+j] = slv_rready[j*MST_NB+i];
         end
     end
-    for (genvar i=0;i<MST_NB;i=i+1) begin: REORDERING_TO_MST
-        for (genvar j=0;j<SLV_NB;j=j+1) begin: SLV_PARSING
-            assign ml_awready[i*MST_NB+j] = sl_awready[j*SLV_NB+i];
-            assign ml_wready[i*MST_NB+j] = sl_wready[j*SLV_NB+i];
-            assign ml_bvalid[i*MST_NB+j] = sl_bvalid[j*SLV_NB+i];
-            assign ml_arready[i*MST_NB+j] = sl_arready[j*SLV_NB+i];
-            assign ml_rvalid[i*MST_NB+j] = sl_rvalid[j*SLV_NB+i];
-            assign ml_rlast[i*MST_NB+j] = sl_rlast[j*SLV_NB+i];
+
+    // Parse all master agents, thus input slave interfaces
+    for (genvar i=0;i<MST_NB;i=i+1) begin: REORDERING_TO_SLV
+        // Parse all slave agents, thus output master interfaces
+        for (genvar j=0;j<SLV_NB;j=j+1) begin: MST_IF_PARSING
+            assign slv_awready[i*MST_NB+j] = mst_awready[j*SLV_NB+i];
+            assign slv_wready[i*MST_NB+j] = mst_wready[j*SLV_NB+i];
+            assign slv_bvalid[i*MST_NB+j] = mst_bvalid[j*SLV_NB+i];
+            assign slv_arready[i*MST_NB+j] = mst_arready[j*SLV_NB+i];
+            assign slv_rvalid[i*MST_NB+j] = mst_rvalid[j*SLV_NB+i];
+            assign slv_rlast[i*MST_NB+j] = mst_rlast[j*SLV_NB+i];
         end
     end
+
     endgenerate
 
 
@@ -242,72 +359,182 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<SLV_NB;i=i+1) begin: SLV_GEN
+    for (genvar i=0;i<SLV_NB;i=i+1) begin: MST_SWITCHS_GEN
 
-        axicb_slv_switch 
+        logic                          pipe_awvalid;
+        logic                          pipe_awready;
+        logic [AWCH_W            -1:0] pipe_awch;
+        logic                          pipe_wvalid;
+        logic                          pipe_wready;
+        logic                          pipe_wlast;
+        logic [WCH_W             -1:0] pipe_wch;
+        logic                          pipe_bvalid;
+        logic                          pipe_bready;
+        logic [BCH_W             -1:0] pipe_bch;
+        logic                          pipe_arvalid;
+        logic                          pipe_arready;
+        logic [ARCH_W            -1:0] pipe_arch;
+        logic                          pipe_rvalid;
+        logic                          pipe_rready;
+        logic                          pipe_rlast;
+        logic [RCH_W             -1:0] pipe_rch;
+
+        axicb_mst_switch 
         #(
-        .AXI_ID_W       (AXI_ID_W),
-        .AXI_DATA_W     (AXI_DATA_W),
-        .MST_NB         (MST_NB),
-        .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-        .MST0_ID_MASK   (MST0_ID_MASK),
-        .MST1_ID_MASK   (MST1_ID_MASK),
-        .MST2_ID_MASK   (MST2_ID_MASK),
-        .MST3_ID_MASK   (MST3_ID_MASK),
-        .MST0_PRIORITY  (MST0_PRIORITY),
-        .MST1_PRIORITY  (MST1_PRIORITY),
-        .MST2_PRIORITY  (MST2_PRIORITY),
-        .MST3_PRIORITY  (MST3_PRIORITY),
-        .AWCH_W         (AWCH_W),
-        .WCH_W          (WCH_W),
-        .BCH_W          (BCH_W),
-        .ARCH_W         (ARCH_W),
-        .RCH_W          (RCH_W)
+            .AXI_ID_W       (AXI_ID_W),
+            .AXI_DATA_W     (AXI_DATA_W),
+            .MST_NB         (MST_NB),
+            .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
+            .MST0_ID_MASK   (MST0_ID_MASK),
+            .MST1_ID_MASK   (MST1_ID_MASK),
+            .MST2_ID_MASK   (MST2_ID_MASK),
+            .MST3_ID_MASK   (MST3_ID_MASK),
+            .MST0_PRIORITY  (MST0_PRIORITY),
+            .MST1_PRIORITY  (MST1_PRIORITY),
+            .MST2_PRIORITY  (MST2_PRIORITY),
+            .MST3_PRIORITY  (MST3_PRIORITY),
+            .AWCH_W         (AWCH_W),
+            .WCH_W          (WCH_W),
+            .BCH_W          (BCH_W),
+            .ARCH_W         (ARCH_W),
+            .RCH_W          (RCH_W)
         )
-        slv_switch
+        mst_switch
         (
-        .aclk      (aclk),
-        .aresetn   (aresetn),
-        .srst      (srst),
-        .i_awvalid (sl_awvalid[i*MST_NB+:MST_NB]),
-        .i_awready (sl_awready[i*MST_NB+:MST_NB]),
-        .i_awch    (ml_awch),
-        .i_wvalid  (sl_wvalid [i*MST_NB+:MST_NB]),
-        .i_wready  (sl_wready[i*MST_NB+:MST_NB]),
-        .i_wlast   (sl_wlast[i*MST_NB+:MST_NB]),
-        .i_wch     (ml_wch),
-        .i_bvalid  (sl_bvalid[i*MST_NB+:MST_NB]),
-        .i_bready  (sl_bready[i*MST_NB+:MST_NB]),
-        .i_bch     (sl_bch[i*BCH_W+:BCH_W]),
-        .i_arvalid (sl_arvalid[i*MST_NB+:MST_NB]),
-        .i_arready (sl_arready[i*MST_NB+:MST_NB]),
-        .i_arch    (ml_arch),
-        .i_rvalid  (sl_rvalid[i*MST_NB+:MST_NB]),
-        .i_rready  (sl_rready[i*MST_NB+:MST_NB]),
-        .i_rlast   (sl_rlast[i*MST_NB+:MST_NB]),
-        .i_rch     (sl_rch[i*RCH_W+:RCH_W]),
-        .o_awvalid (o_awvalid[i]),
-        .o_awready (o_awready[i]),
-        .o_awch    (o_awch[i*AWCH_W+:AWCH_W]),
-        .o_wvalid  (o_wvalid[i]),
-        .o_wready  (o_wready[i]),
-        .o_wlast   (o_wlast[i]),
-        .o_wch     (o_wch[i*WCH_W+:WCH_W]),
-        .o_bvalid  (o_bvalid[i]),
-        .o_bready  (o_bready[i]),
-        .o_bch     (o_bch[i*BCH_W+:BCH_W]),
-        .o_arvalid (o_arvalid[i]),
-        .o_arready (o_arready[i]),
-        .o_arch    (o_arch[i*ARCH_W+:ARCH_W]),
-        .o_rvalid  (o_rvalid[i]),
-        .o_rready  (o_rready[i]),
-        .o_rlast   (o_rlast[i]),
-        .o_rch     (o_rch[i*RCH_W+:RCH_W])
+            .aclk      (aclk),
+            .aresetn   (aresetn),
+            .srst      (srst),
+            .i_awvalid (mst_awvalid[i*MST_NB+:MST_NB]),
+            .i_awready (mst_awready[i*MST_NB+:MST_NB]),
+            .i_awch    (awch),
+            .i_wvalid  (mst_wvalid [i*MST_NB+:MST_NB]),
+            .i_wready  (mst_wready[i*MST_NB+:MST_NB]),
+            .i_wlast   (mst_wlast[i*MST_NB+:MST_NB]),
+            .i_wch     (wch),
+            .i_bvalid  (mst_bvalid[i*MST_NB+:MST_NB]),
+            .i_bready  (mst_bready[i*MST_NB+:MST_NB]),
+            .i_bch     (bch[i*BCH_W+:BCH_W]),
+            .i_arvalid (mst_arvalid[i*MST_NB+:MST_NB]),
+            .i_arready (mst_arready[i*MST_NB+:MST_NB]),
+            .i_arch    (arch),
+            .i_rvalid  (mst_rvalid[i*MST_NB+:MST_NB]),
+            .i_rready  (mst_rready[i*MST_NB+:MST_NB]),
+            .i_rlast   (mst_rlast[i*MST_NB+:MST_NB]),
+            .i_rch     (rch[i*RCH_W+:RCH_W]),
+            .o_awvalid (pipe_awvalid),
+            .o_awready (pipe_awready),
+            .o_awch    (pipe_awch),
+            .o_wvalid  (pipe_wvalid),
+            .o_wready  (pipe_wready),
+            .o_wlast   (pipe_wlast),
+            .o_wch     (pipe_wch),
+            .o_bvalid  (pipe_bvalid),
+            .o_bready  (pipe_bready),
+            .o_bch     (pipe_bch),
+            .o_arvalid (pipe_arvalid),
+            .o_arready (pipe_arready),
+            .o_arch    (pipe_arch),
+            .o_rvalid  (pipe_rvalid),
+            .o_rready  (pipe_rready),
+            .o_rlast   (pipe_rlast),
+            .o_rch     (pipe_rch)
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (AWCH_W),
+            .NB_PIPELINE (MST_PIPELINE)
+        )
+        awch_mst_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (pipe_awvalid),
+            .i_ready (pipe_awready),
+            .i_data  (pipe_awch),
+            .o_valid (o_awvalid[i]),
+            .o_ready (o_awready[i]),
+            .o_data  (o_awch[i*AWCH_W+:AWCH_W])
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (WCH_W+1),
+            .NB_PIPELINE (MST_PIPELINE)
+        )
+        wch_mst_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (pipe_wvalid),
+            .i_ready (pipe_wready),
+            .i_data  ({pipe_wlast, pipe_wch}),
+            .o_valid (o_wvalid[i]),
+            .o_ready (o_wready[i]),
+            .o_data  ({o_wlast[i], o_wch[i*WCH_W+:WCH_W]})
+        );
+
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (BCH_W),
+            .NB_PIPELINE (MST_PIPELINE)
+        )
+        bch_mst_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (o_bvalid[i]),
+            .i_ready (o_bready[i]),
+            .i_data  (o_bch[i*BCH_W+:BCH_W]),
+            .o_valid (pipe_bvalid),
+            .o_ready (pipe_bready),
+            .o_data  (pipe_bch)
+        );
+
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (ARCH_W),
+            .NB_PIPELINE (MST_PIPELINE)
+        )
+        arch_mst_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (pipe_arvalid),
+            .i_ready (pipe_arready),
+            .i_data  (pipe_arch),
+            .o_valid (o_arvalid[i]),
+            .o_ready (o_arready[i]),
+            .o_data  (o_arch[i*ARCH_W+:ARCH_W])
+        );
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (RCH_W+1),
+            .NB_PIPELINE (MST_PIPELINE)
+        )
+        rch_mst_pipe
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (o_rvalid[i]),
+            .i_ready (o_rready[i]),
+            .i_data  ({o_rlast[i], o_rch[i*RCH_W+:RCH_W]}),
+            .o_valid (pipe_rvalid),
+            .o_ready (pipe_rready),
+            .o_data  ({pipe_rlast, pipe_rch})
         );
 
     end
     endgenerate
 
-endmodule
+    endmodule
 
-`resetall
+    `resetall

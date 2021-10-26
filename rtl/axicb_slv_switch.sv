@@ -6,29 +6,26 @@
 
 module axicb_slv_switch
 
+
     #(
-        // ID width in bits
-        parameter AXI_ID_W = 8,
-        // Data width in bits
-        parameter AXI_DATA_W = 8,
+        // Address width in bits
+        parameter AXI_ADDR_W = 8,
 
-        // Number of master(s)
-        parameter MST_NB = 4,
-
+        // Number of slave(s)
+        parameter SLV_NB = 4,
+            //
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
-
-        // Masters ID mask
-        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
-        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
-        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20,
-        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30,
-
-        // Masters priorities
-        parameter MST0_PRIORITY = 0,
-        parameter MST1_PRIORITY = 0,
-        parameter MST2_PRIORITY = 0,
-        parameter MST3_PRIORITY = 0,
+        
+        // Slaves memory mapping
+        parameter SLV0_START_ADDR = 0,
+        parameter SLV0_END_ADDR = 4095,
+        parameter SLV1_START_ADDR = 4096,
+        parameter SLV1_END_ADDR = 8191,
+        parameter SLV2_START_ADDR = 8192,
+        parameter SLV2_END_ADDR = 12287,
+        parameter SLV3_START_ADDR = 12288,
+        parameter SLV3_END_ADDR = 16383,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -42,254 +39,243 @@ module axicb_slv_switch
         input  logic                          aresetn,
         input  logic                          srst,
         // Input interfaces from masters
-        input  logic [MST_NB            -1:0] i_awvalid,
-        output logic [MST_NB            -1:0] i_awready,
-        input  logic [MST_NB*AWCH_W     -1:0] i_awch,
-        input  logic [MST_NB            -1:0] i_wvalid,
-        output logic [MST_NB            -1:0] i_wready,
-        input  logic [MST_NB            -1:0] i_wlast,
-        input  logic [MST_NB*WCH_W      -1:0] i_wch,
-        output logic [MST_NB            -1:0] i_bvalid,
-        input  logic [MST_NB            -1:0] i_bready,
+        input  logic                          i_awvalid,
+        output logic                          i_awready,
+        input  logic [AWCH_W            -1:0] i_awch,
+        input  logic                          i_wvalid,
+        output logic                          i_wready,
+        input  logic                          i_wlast,
+        input  logic [WCH_W             -1:0] i_wch,
+        output logic                          i_bvalid,
+        input  logic                          i_bready,
         output logic [BCH_W             -1:0] i_bch,
-        input  logic [MST_NB            -1:0] i_arvalid,
-        output logic [MST_NB            -1:0] i_arready,
-        input  logic [MST_NB*ARCH_W     -1:0] i_arch,
-        output logic [MST_NB            -1:0] i_rvalid,
-        input  logic [MST_NB            -1:0] i_rready,
-        output logic [MST_NB            -1:0] i_rlast,
+        input  logic                          i_arvalid,
+        output logic                          i_arready,
+        input  logic [ARCH_W            -1:0] i_arch,
+        output logic                          i_rvalid,
+        input  logic                          i_rready,
+        output logic                          i_rlast,
         output logic [RCH_W             -1:0] i_rch,
         // Output interfaces to slaves
-        output logic                          o_awvalid,
-        input  logic                          o_awready,
+        output logic [SLV_NB            -1:0] o_awvalid,
+        input  logic [SLV_NB            -1:0] o_awready,
         output logic [AWCH_W            -1:0] o_awch,
-        output logic                          o_wvalid,
-        input  logic                          o_wready,
-        output logic                          o_wlast,
+        output logic [SLV_NB            -1:0] o_wvalid,
+        input  logic [SLV_NB            -1:0] o_wready,
+        output logic [SLV_NB            -1:0] o_wlast,
         output logic [WCH_W             -1:0] o_wch,
-        input  logic                          o_bvalid,
-        output logic                          o_bready,
-        input  logic [BCH_W             -1:0] o_bch,
-        output logic                          o_arvalid,
-        input  logic                          o_arready,
+        input  logic [SLV_NB            -1:0] o_bvalid,
+        output logic [SLV_NB            -1:0] o_bready,
+        input  logic [SLV_NB*BCH_W      -1:0] o_bch,
+        output logic [SLV_NB            -1:0] o_arvalid,
+        input  logic [SLV_NB            -1:0] o_arready,
         output logic [ARCH_W            -1:0] o_arch,
-        input  logic                          o_rvalid,
-        output logic                          o_rready,
-        input  logic                          o_rlast,
-        input  logic [RCH_W             -1:0] o_rch
+        input  logic [SLV_NB            -1:0] o_rvalid,
+        output logic [SLV_NB            -1:0] o_rready,
+        input  logic [SLV_NB            -1:0] o_rlast,
+        input  logic [SLV_NB*RCH_W      -1:0] o_rch
     );
 
     ///////////////////////////////////////////////////////////////////////////
     // Local declarations
     ///////////////////////////////////////////////////////////////////////////
 
-    logic                  awch_en;
-    logic [MST_NB    -1:0] awch_req;
-    logic [MST_NB    -1:0] awch_grant;
+    logic                  slv0_aw_targeted;
+    logic                  slv1_aw_targeted;
+    logic                  slv2_aw_targeted;
+    logic                  slv3_aw_targeted;
+    logic                  slv0_ar_targeted;
+    logic                  slv1_ar_targeted;
+    logic                  slv2_ar_targeted;
+    logic                  slv3_ar_targeted;
 
-    logic                  wch_en;
-    logic [MST_NB    -1:0] wch_req;
-    logic [MST_NB    -1:0] wch_grant;
+    logic                  bch_en;
+    logic [SLV_NB    -1:0] bch_req;
+    logic [SLV_NB    -1:0] bch_grant;
 
-    logic                  arch_en;
-    logic [MST_NB    -1:0] arch_req;
-    logic [MST_NB    -1:0] arch_grant;
+    logic                  rch_en;
+    logic [SLV_NB    -1:0] rch_req;
+    logic [SLV_NB    -1:0] rch_grant;
 
-    logic                  mst0_bch_targeted;
-    logic                  mst1_bch_targeted;
-    logic                  mst2_bch_targeted;
-    logic                  mst3_bch_targeted;
-
-    logic                  mst0_rch_targeted;
-    logic                  mst1_rch_targeted;
-    logic                  mst2_rch_targeted;
-    logic                  mst3_rch_targeted;
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Write Address Channel
-    ///////////////////////////////////////////////////////////////////////////
-
-    assign awch_req = i_awvalid;
-
-    axicb_round_robin
-    #(
-        .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
-    )
-    awch_round_robin
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (awch_en),
-        .req     (awch_req),
-        .grant   (awch_grant)
-    );
-
-    assign o_awvalid = (awch_grant[0]) ? i_awvalid[0] :
-                       (awch_grant[1]) ? i_awvalid[1] :
-                       (awch_grant[2]) ? i_awvalid[2] :
-                       (awch_grant[3]) ? i_awvalid[3] :
-                                         1'b0;
-
-    assign i_awready = awch_grant & {MST_NB{o_awready}};
-
-    assign awch_en = o_awvalid & o_awready;
-
-    assign o_awch = (awch_grant[0]) ? i_awch[0*AWCH_W+:AWCH_W] :
-                    (awch_grant[1]) ? i_awch[1*AWCH_W+:AWCH_W] :
-                    (awch_grant[2]) ? i_awch[2*AWCH_W+:AWCH_W] :
-                    (awch_grant[3]) ? i_awch[3*AWCH_W+:AWCH_W] :
-                                      {AWCH_W{1'b0}};
+    logic [AXI_ADDR_W-1:0] slv0_start_addr = SLV0_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv0_end_addr =   SLV0_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv1_start_addr = SLV1_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv1_end_addr =   SLV1_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv2_start_addr = SLV2_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv2_end_addr =   SLV2_END_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv3_start_addr = SLV3_START_ADDR[0+:AXI_ADDR_W];
+    logic [AXI_ADDR_W-1:0] slv3_end_addr =   SLV3_END_ADDR[0+:AXI_ADDR_W];
 
     ///////////////////////////////////////////////////////////////////////////
-    // Write Data Channel
-    //
-    // TODO: Ensure the granted write is routed from the same master. If a
-    // master doesn't drive the write data channel at the same time,
-    // may lead to a data corruption.
-    // This arbitrer should be replaced by a FIFO
+    // Write Address & Data Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign wch_req = i_wvalid;
+    assign slv0_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    axicb_round_robin
-    #(
-        .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
-    )
-    wch_round_robin
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (wch_en),
-        .req     (wch_req),
-        .grant   (wch_grant)
-    );
+    assign slv1_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign o_wvalid = (wch_grant[0]) ? i_wvalid[0] :
-                      (wch_grant[1]) ? i_wvalid[1] :
-                      (wch_grant[2]) ? i_wvalid[2] :
-                      (wch_grant[3]) ? i_wvalid[3] :
-                                       1'b0;
+    assign slv2_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign o_wlast = (wch_grant[0]) ? i_wlast[0] :
-                     (wch_grant[1]) ? i_wlast[1] :
-                     (wch_grant[2]) ? i_wlast[2] :
-                     (wch_grant[3]) ? i_wlast[3] :
-                                      1'b0;
+    assign slv3_aw_targeted = (i_awch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
+                               i_awch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
 
-    assign i_wready = wch_grant & {MST_NB{o_wready}};
+    assign o_awvalid[0] = (slv0_aw_targeted) ? i_awvalid : 1'b0;
+    assign o_awvalid[1] = (slv1_aw_targeted) ? i_awvalid : 1'b0;
+    assign o_awvalid[2] = (slv2_aw_targeted) ? i_awvalid : 1'b0;
+    assign o_awvalid[3] = (slv3_aw_targeted) ? i_awvalid : 1'b0;
 
-    assign wch_en = o_wvalid & o_wready & o_wlast;
+    assign i_awready = (slv0_aw_targeted) ? o_awready[0] :
+                       (slv1_aw_targeted) ? o_awready[1] :
+                       (slv2_aw_targeted) ? o_awready[2] :
+                       (slv3_aw_targeted) ? o_awready[3] :
+                                            1'b0;
 
-    assign o_wch = (wch_grant[0]) ? i_wch[0*WCH_W+:WCH_W] :
-                   (wch_grant[1]) ? i_wch[1*WCH_W+:WCH_W] :
-                   (wch_grant[2]) ? i_wch[2*WCH_W+:WCH_W] :
-                   (wch_grant[3]) ? i_wch[3*WCH_W+:WCH_W] :
-                                    {WCH_W{1'b0}};
+    assign o_awch = i_awch;
+
+    assign o_wvalid[0] = (slv0_aw_targeted) ? i_wvalid : 1'b0;
+    assign o_wvalid[1] = (slv1_aw_targeted) ? i_wvalid : 1'b0;
+    assign o_wvalid[2] = (slv2_aw_targeted) ? i_wvalid : 1'b0;
+    assign o_wvalid[3] = (slv3_aw_targeted) ? i_wvalid : 1'b0;
+
+    assign i_wready = (slv0_aw_targeted) ? o_wready[0] :
+                      (slv1_aw_targeted) ? o_wready[1] :
+                      (slv2_aw_targeted) ? o_wready[2] :
+                      (slv3_aw_targeted) ? o_wready[3] :
+                                           1'b0;
+
+    assign o_wlast[0] = (slv0_aw_targeted) ? i_wlast : 1'b0;
+    assign o_wlast[1] = (slv1_aw_targeted) ? i_wlast : 1'b0;
+    assign o_wlast[2] = (slv2_aw_targeted) ? i_wlast : 1'b0;
+    assign o_wlast[3] = (slv3_aw_targeted) ? i_wlast : 1'b0;
+
+    assign o_wch = i_wch;
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    // BCH = {RESP, ID}
+    axicb_round_robin
+    #(
+        .REQ_NB        (SLV_NB),
+        .REQ0_PRIORITY (0),
+        .REQ1_PRIORITY (0),
+        .REQ2_PRIORITY (0),
+        .REQ3_PRIORITY (0)
+    )
+    bch_round_robin
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (bch_en),
+        .req     (bch_req),
+        .grant   (bch_grant)
+    );
 
-    assign mst0_bch_targeted = ((MST0_ID_MASK & o_bch[0+:AXI_ID_W]) == MST0_ID_MASK);
-    assign mst1_bch_targeted = ((MST1_ID_MASK & o_bch[0+:AXI_ID_W]) == MST1_ID_MASK);
-    assign mst2_bch_targeted = ((MST2_ID_MASK & o_bch[0+:AXI_ID_W]) == MST2_ID_MASK);
-    assign mst3_bch_targeted = ((MST3_ID_MASK & o_bch[0+:AXI_ID_W]) == MST3_ID_MASK);
+    assign bch_en = i_bvalid & i_bready;
 
-    assign i_bvalid[0] = (mst0_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[1] = (mst1_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[2] = (mst2_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[3] = (mst3_bch_targeted) ? o_bvalid : 1'b0;
+    assign bch_req = o_bvalid;
 
-    assign o_bready = (mst0_bch_targeted) ? i_bready[0] :
-                      (mst1_bch_targeted) ? i_bready[1] :
-                      (mst2_bch_targeted) ? i_bready[2] :
-                      (mst3_bch_targeted) ? i_bready[3] :
-                                            1'b0;
+    assign i_bvalid = (bch_grant[0]) ? o_bvalid[0] :
+                      (bch_grant[1]) ? o_bvalid[1] :
+                      (bch_grant[2]) ? o_bvalid[2] :
+                      (bch_grant[3]) ? o_bvalid[3] :
+                                       1'b0;
 
-    assign i_bch = o_bch;
+    assign o_bready[0] = bch_grant[0] & i_bready;
+    assign o_bready[1] = bch_grant[1] & i_bready;
+    assign o_bready[2] = bch_grant[2] & i_bready;
+    assign o_bready[3] = bch_grant[3] & i_bready;
+
+    assign i_bch = (bch_grant[0]) ? o_bch[0*BCH_W+:BCH_W] :
+                   (bch_grant[1]) ? o_bch[1*BCH_W+:BCH_W] :
+                   (bch_grant[2]) ? o_bch[2*BCH_W+:BCH_W] :
+                   (bch_grant[3]) ? o_bch[3*BCH_W+:BCH_W] :
+                                    {BCH_W{1'b0}};
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign arch_req = i_arvalid;
+    assign slv0_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv1_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv2_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+                                                                                                     
+    assign slv3_ar_targeted = (i_arch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
+                               i_arch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1 : 1'b0;
+
+    assign o_arvalid[0] = (slv0_ar_targeted) ? i_arvalid : 1'b0;
+    assign o_arvalid[1] = (slv1_ar_targeted) ? i_arvalid : 1'b0;
+    assign o_arvalid[2] = (slv2_ar_targeted) ? i_arvalid : 1'b0;
+    assign o_arvalid[3] = (slv3_ar_targeted) ? i_arvalid : 1'b0;
+
+    assign i_arready = (slv0_ar_targeted) ? o_arready[0] :
+                       (slv1_ar_targeted) ? o_arready[1] :
+                       (slv2_ar_targeted) ? o_arready[2] :
+                       (slv3_ar_targeted) ? o_arready[3] :
+                                            1'b0;
+
+    assign o_arch = i_arch;
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Read Data Channel
+    ///////////////////////////////////////////////////////////////////////////
 
     axicb_round_robin
     #(
-        .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
+        .REQ_NB        (SLV_NB),
+        .REQ0_PRIORITY (0),
+        .REQ1_PRIORITY (0),
+        .REQ2_PRIORITY (0),
+        .REQ3_PRIORITY (0)
     )
-    arch_round_robin
+    rch_round_robin
     (
         .aclk    (aclk),
         .aresetn (aresetn),
         .srst    (srst),
-        .en      (arch_en),
-        .req     (arch_req),
-        .grant   (arch_grant)
+        .en      (rch_en),
+        .req     (rch_req),
+        .grant   (rch_grant)
     );
 
-    assign o_arvalid = (arch_grant[0]) ? i_arvalid[0] :
-                       (arch_grant[1]) ? i_arvalid[1] :
-                       (arch_grant[2]) ? i_arvalid[2] :
-                       (arch_grant[3]) ? i_arvalid[3] :
-                                         1'b0;
+    assign rch_en = i_rvalid & i_rready;
 
-    assign i_arready = arch_grant & {MST_NB{o_arready}};
+    assign rch_req = o_rvalid;
 
-    assign arch_en = o_arvalid & o_arready;
+    assign i_rvalid = (rch_grant[0]) ? o_rvalid[0] :
+                      (rch_grant[1]) ? o_rvalid[1] :
+                      (rch_grant[2]) ? o_rvalid[2] :
+                      (rch_grant[3]) ? o_rvalid[3] :
+                                       1'b0;
 
-    assign o_arch = (arch_grant[0]) ? i_arch[0*ARCH_W+:ARCH_W] :
-                    (arch_grant[1]) ? i_arch[1*ARCH_W+:ARCH_W] :
-                    (arch_grant[2]) ? i_arch[2*ARCH_W+:ARCH_W] :
-                    (arch_grant[3]) ? i_arch[3*ARCH_W+:ARCH_W] :
-                                      {ARCH_W{1'b0}};
+    assign i_rlast = (rch_grant[0]) ? o_rlast[0] :
+                     (rch_grant[1]) ? o_rlast[1] :
+                     (rch_grant[2]) ? o_rlast[2] :
+                     (rch_grant[3]) ? o_rlast[3] :
+                                      1'b0;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Read Response Channel
-    ///////////////////////////////////////////////////////////////////////////
+    assign o_rready[0] = rch_grant[0] & i_rready;
+    assign o_rready[1] = rch_grant[1] & i_rready;
+    assign o_rready[2] = rch_grant[2] & i_rready;
+    assign o_rready[3] = rch_grant[3] & i_rready;
 
-    // RCH = {RESP, ID, DATA}
-
-    assign mst0_rch_targeted = ((MST0_ID_MASK & o_rch[0+:AXI_ID_W]) == MST0_ID_MASK);
-    assign mst1_rch_targeted = ((MST1_ID_MASK & o_rch[0+:AXI_ID_W]) == MST1_ID_MASK);
-    assign mst2_rch_targeted = ((MST2_ID_MASK & o_rch[0+:AXI_ID_W]) == MST2_ID_MASK);
-    assign mst3_rch_targeted = ((MST3_ID_MASK & o_rch[0+:AXI_ID_W]) == MST3_ID_MASK);
-
-    assign i_rvalid[0] = (mst0_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[1] = (mst1_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[2] = (mst2_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[3] = (mst3_rch_targeted) ? o_rvalid : 1'b0;
-
-    assign i_rlast[0] = (mst0_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[1] = (mst1_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[2] = (mst2_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[3] = (mst3_rch_targeted) ? o_rlast : 1'b0;
-
-    assign o_rready = (mst0_rch_targeted) ? i_rready[0] :
-                      (mst1_rch_targeted) ? i_rready[1] :
-                      (mst2_rch_targeted) ? i_rready[2] :
-                      (mst3_rch_targeted) ? i_rready[3] :
-                                            1'b0;
-
-    assign i_rch = o_rch;
+    assign i_rch = (rch_grant[0]) ? o_rch[0*RCH_W+:RCH_W] :
+                   (rch_grant[1]) ? o_rch[1*RCH_W+:RCH_W] :
+                   (rch_grant[2]) ? o_rch[2*RCH_W+:RCH_W] :
+                   (rch_grant[3]) ? o_rch[3*RCH_W+:RCH_W] :
+                                    {RCH_W{1'b0}};
 
 endmodule
 

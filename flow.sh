@@ -102,6 +102,7 @@ main() {
             ./rtl/axicb_mst_if.sv\
             ./rtl/axicb_slv_if.sv\
             ./rtl/axicb_slv_switch.sv\
+            ./rtl/axicb_pipeline.sv\
             ./rtl/axicb_mst_switch.sv\
             ./rtl/axicb_switch_top.sv\
             ./rtl/axicb_round_robin.sv\
@@ -110,8 +111,8 @@ main() {
     fi
     if [[ $1 == "sim" ]]; then
         cd $CURDIR/test/svut
-        ./run.sh
-        exit$$?
+        ./run.sh -m 10000 -t 100000
+        exit $?
     fi
 
     if [[ $1 == "syn" ]]; then

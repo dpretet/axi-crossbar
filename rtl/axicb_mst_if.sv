@@ -14,13 +14,6 @@ module axicb_mst_if
         // Data width in bits
         parameter AXI_DATA_W = 8,
 
-        // Number of slave
-        parameter SLV_NB = 4,
-
-        // Enable routing to a slave, one bit per slave,
-        // bit 0 = slave 0, bit 1 = slave 1, ...
-        parameter MST_ROUTES = 4'b1_1_1_1,
-
         // STRB support:
         //   - 0: contiguous wstrb (store only 1st/last dataphase)
         //   - 1: full wstrb transport
@@ -35,84 +28,84 @@ module axicb_mst_if
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
 
-        // Implement CDC input stage
-        parameter MST_CDC = 0,
-        // Maximum number of requests a master can store
-        parameter MST_OSTDREQ_NUM = 4,
+        // Implement CDC output stage
+        parameter SLV_CDC = 0,
+        // Maximum number of requests a slave can store
+        parameter SLV_OSTDREQ_NUM = 4,
         // Size of an outstanding request in dataphase
-        parameter MST_OSTDREQ_SIZE = 1,
+        parameter SLV_OSTDREQ_SIZE = 1,
 
-        // Output channels' width (concatenated)
+        // Input channels' width (concatenated)
         parameter AWCH_W = 8,
         parameter WCH_W = 8,
         parameter BCH_W = 8,
         parameter ARCH_W = 8,
         parameter RCH_W = 8
     )(
-        // input interface from external master
+        // input interface from switching logic
         input  logic                      i_aclk,
         input  logic                      i_aresetn,
         input  logic                      i_srst,
         input  logic                      i_awvalid,
         output logic                      i_awready,
-        input  logic [AXI_ADDR_W    -1:0] i_awaddr,
-        input  logic [8             -1:0] i_awlen,
-        input  logic [3             -1:0] i_awsize,
-        input  logic [2             -1:0] i_awburst,
-        input  logic [2             -1:0] i_awlock,
-        input  logic [4             -1:0] i_awcache,
-        input  logic [3             -1:0] i_awprot,
-        input  logic [4             -1:0] i_awqos,
-        input  logic [4             -1:0] i_awregion,
-        input  logic [AXI_ID_W      -1:0] i_awid,
+        input  logic [AWCH_W        -1:0] i_awch,
         input  logic                      i_wvalid,
         output logic                      i_wready,
         input  logic                      i_wlast,
-        input  logic [AXI_DATA_W    -1:0] i_wdata,
-        input  logic [AXI_DATA_W/8  -1:0] i_wstrb,
+        input  logic [WCH_W         -1:0] i_wch,
         output logic                      i_bvalid,
         input  logic                      i_bready,
-        output logic [AXI_ID_W      -1:0] i_bid,
-        output logic [2             -1:0] i_bresp,
+        output logic [BCH_W         -1:0] i_bch,
         input  logic                      i_arvalid,
         output logic                      i_arready,
-        input  logic [AXI_ADDR_W    -1:0] i_araddr,
-        input  logic [8             -1:0] i_arlen,
-        input  logic [3             -1:0] i_arsize,
-        input  logic [2             -1:0] i_arburst,
-        input  logic [2             -1:0] i_arlock,
-        input  logic [4             -1:0] i_arcache,
-        input  logic [3             -1:0] i_arprot,
-        input  logic [4             -1:0] i_arqos,
-        input  logic [4             -1:0] i_arregion,
-        input  logic [AXI_ID_W      -1:0] i_arid,
+        input  logic [ARCH_W        -1:0] i_arch,
         output logic                      i_rvalid,
         input  logic                      i_rready,
-        output logic [AXI_ID_W      -1:0] i_rid,
-        output logic [2             -1:0] i_rresp,
-        output logic [AXI_DATA_W    -1:0] i_rdata,
         output logic                      i_rlast,
-        // output interface to switching logic
+        output logic [RCH_W         -1:0] i_rch,
+        // output interface to external slave
         input  logic                      o_aclk,
         input  logic                      o_aresetn,
         input  logic                      o_srst,
         output logic                      o_awvalid,
         input  logic                      o_awready,
-        output logic [AWCH_W        -1:0] o_awch,
+        output logic [AXI_ADDR_W    -1:0] o_awaddr,
+        output logic [8             -1:0] o_awlen,
+        output logic [3             -1:0] o_awsize,
+        output logic [2             -1:0] o_awburst,
+        output logic [2             -1:0] o_awlock,
+        output logic [4             -1:0] o_awcache,
+        output logic [3             -1:0] o_awprot,
+        output logic [4             -1:0] o_awqos,
+        output logic [4             -1:0] o_awregion,
+        output logic [AXI_ID_W      -1:0] o_awid,
         output logic                      o_wvalid,
         input  logic                      o_wready,
         output logic                      o_wlast,
-        output logic [WCH_W         -1:0] o_wch,
+        output logic [AXI_DATA_W    -1:0] o_wdata,
+        output logic [AXI_DATA_W/8  -1:0] o_wstrb,
         input  logic                      o_bvalid,
         output logic                      o_bready,
-        input  logic [BCH_W         -1:0] o_bch,
+        input  logic [AXI_ID_W      -1:0] o_bid,
+        input  logic [2             -1:0] o_bresp,
         output logic                      o_arvalid,
         input  logic                      o_arready,
-        output logic [ARCH_W        -1:0] o_arch,
+        output logic [AXI_ADDR_W    -1:0] o_araddr,
+        output logic [8             -1:0] o_arlen,
+        output logic [3             -1:0] o_arsize,
+        output logic [2             -1:0] o_arburst,
+        output logic [2             -1:0] o_arlock,
+        output logic [4             -1:0] o_arcache,
+        output logic [3             -1:0] o_arprot,
+        output logic [4             -1:0] o_arqos,
+        output logic [4             -1:0] o_arregion,
+        output logic [AXI_ID_W      -1:0] o_arid,
         input  logic                      o_rvalid,
         output logic                      o_rready,
-        input  logic                      o_rlast,
-        input  logic [RCH_W         -1:0] o_rch
+        input  logic [AXI_ID_W      -1:0] o_rid,
+        input  logic [2             -1:0] o_rresp,
+        input  logic [AXI_DATA_W    -1:0] o_rdata,
+        input  logic                      o_rlast
     );
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -123,94 +116,32 @@ module axicb_mst_if
     logic [ARCH_W        -1:0] arch;
 
     generate
-    if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
-
-        assign awch = {
-            i_awid,
-            i_awprot,
-            i_awaddr
-        };
-
-        assign arch = {
-            i_arid,
-            i_arprot,
-            i_araddr
-        };
-
-    end else if (AXI_SIGNALING==1) begin : AXI4LITE_BURST_MODE
-
-        assign awch = {
-            i_awid,
-            i_awprot,
-            i_awlen,
-            i_awaddr
-        };
-
-        assign arch = {
-            i_arid,
-            i_arprot,
-            i_arlen,
-            i_araddr
-        };
-
-    end else begin : AXI4_MODE
-
-        assign awch = {
-            i_awid,
-            i_awregion,
-            i_awqos,
-            i_awprot,
-            i_awcache,
-            i_awlock,
-            i_awburst,
-            i_awsize,
-            i_awlen,
-            i_awaddr
-        };
-
-        assign arch = {
-            i_arid,
-            i_arregion,
-            i_arqos,
-            i_arprot,
-            i_arcache,
-            i_arlock,
-            i_arburst,
-            i_arsize,
-            i_arlen,
-            i_araddr
-        };
-
-    end
-    endgenerate
-
-    generate
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    if (MST_CDC) begin: CDC_STAGE
+    if (SLV_CDC) begin: CDC_STAGE
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam AW_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
-                          (MST_OSTDREQ_NUM<2)  ? 2 :
-                          $clog2(MST_OSTDREQ_NUM);
+    localparam AW_ASIZE = (SLV_OSTDREQ_NUM==0) ? 2 :
+                          (SLV_OSTDREQ_NUM<2)  ? 2 :
+                          $clog2(SLV_OSTDREQ_NUM);
 
-    localparam W_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
-                         (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 2 :
-                         $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+    localparam W_ASIZE = (SLV_OSTDREQ_NUM==0) ? 2 :
+                         (SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE<2) ? 2 :
+                         $clog2(SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE);
 
-    localparam B_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
-                         (MST_OSTDREQ_NUM<2)  ? 2 :
-                         $clog2(MST_OSTDREQ_NUM);
+    localparam B_ASIZE = (SLV_OSTDREQ_NUM==0) ? 2 :
+                         (SLV_OSTDREQ_NUM<2)  ? 2 :
+                         $clog2(SLV_OSTDREQ_NUM);
 
-    localparam AR_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
-                          (MST_OSTDREQ_NUM<2)  ? 2 :
-                          $clog2(MST_OSTDREQ_NUM);
+    localparam AR_ASIZE = (SLV_OSTDREQ_NUM==0) ? 2 :
+                          (SLV_OSTDREQ_NUM<2)  ? 2 :
+                          $clog2(SLV_OSTDREQ_NUM);
 
-    localparam R_ASIZE = (MST_OSTDREQ_NUM==0) ? 2 :
-                         (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 2 :
-                         $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+    localparam R_ASIZE = (SLV_OSTDREQ_NUM==0) ? 2 :
+                         (SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE<2) ? 2 :
+                         $clog2(SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE);
 
     logic             aw_winc;
     logic             aw_full;
@@ -248,13 +179,13 @@ module axicb_mst_if
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
     .winc    (aw_winc),
-    .wdata   (awch),
+    .wdata   (i_awch),
     .wfull   (aw_full),
     .awfull  (),
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (aw_rinc),
-    .rdata   (o_awch),
+    .rdata   (awch),
     .rempty  (aw_empty),
     .arempty ()
     );
@@ -280,13 +211,13 @@ module axicb_mst_if
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
     .winc    (w_winc),
-    .wdata   ({i_wlast, i_wstrb, i_wdata}),
+    .wdata   ({i_wlast, i_wch}),
     .wfull   (w_full),
     .awfull  (),
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (w_rinc),
-    .rdata   ({o_wlast, o_wch}),
+    .rdata   ({o_wlast, o_wstrb, o_wdata}),
     .rempty  (w_empty),
     .arempty ()
     );
@@ -312,13 +243,13 @@ module axicb_mst_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (b_winc),
-    .wdata   (o_bch),
+    .wdata   ({o_bresp, o_bid}),
     .wfull   (b_full),
     .awfull  (),
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (b_rinc),
-    .rdata   ({i_bresp, i_bid}),
+    .rdata   (i_bch),
     .rempty  (b_empty),
     .arempty ()
     );
@@ -344,13 +275,13 @@ module axicb_mst_if
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
     .winc    (ar_winc),
-    .wdata   (arch),
+    .wdata   (i_arch),
     .wfull   (ar_full),
     .awfull  (),
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (ar_rinc),
-    .rdata   (o_arch),
+    .rdata   (arch),
     .rempty  (ar_empty),
     .arempty ()
     );
@@ -376,13 +307,13 @@ module axicb_mst_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (r_winc),
-    .wdata   ({o_rlast,o_rch}),
+    .wdata   ({o_rlast, o_rresp, o_rdata, o_rid}),
     .wfull   (r_full),
     .awfull  (),
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (r_rinc),
-    .rdata   ({i_rlast, i_rresp, i_rdata, i_rid}),
+    .rdata   ({i_rlast, i_rch}),
     .rempty  (r_empty),
     .arempty ()
     );
@@ -396,16 +327,16 @@ module axicb_mst_if
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    end else if (MST_OSTDREQ_NUM>0) begin: BUFF_STAGE
+    end else if (SLV_OSTDREQ_NUM>0) begin: BUFF_STAGE
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
     localparam PASS_THRU = 0;
-    localparam AW_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
-    localparam W_ASIZE = (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 1 : $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
-    localparam B_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
-    localparam AR_ASIZE = (MST_OSTDREQ_NUM<2) ? 1 : $clog2(MST_OSTDREQ_NUM);
-    localparam R_ASIZE = (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 1 : $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
+    localparam AW_ASIZE = (SLV_OSTDREQ_NUM<2) ? 1 : $clog2(SLV_OSTDREQ_NUM);
+    localparam W_ASIZE = (SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE<2) ? 1 : $clog2(SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE);
+    localparam B_ASIZE = (SLV_OSTDREQ_NUM<2) ? 1 : $clog2(SLV_OSTDREQ_NUM);
+    localparam AR_ASIZE = (SLV_OSTDREQ_NUM<2) ? 1 : $clog2(SLV_OSTDREQ_NUM);
+    localparam R_ASIZE = (SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE<2) ? 1 : $clog2(SLV_OSTDREQ_NUM*SLV_OSTDREQ_SIZE);
 
     logic aw_full;
     logic aw_empty;
@@ -434,10 +365,10 @@ module axicb_mst_if
     .aresetn  (i_aresetn),
     .srst     (i_srst),
     .flush    (1'b0),
-    .data_in  (awch),
+    .data_in  (i_awch),
     .push     (i_awvalid),
     .full     (aw_full),
-    .data_out (o_awch),
+    .data_out (awch),
     .pull     (o_awready),
     .empty    (aw_empty)
     );
@@ -460,10 +391,10 @@ module axicb_mst_if
     .aresetn  (i_aresetn),
     .srst     (i_srst),
     .flush    (1'b0),
-    .data_in  ({i_wlast, i_wstrb, i_wdata}),
+    .data_in  ({i_wlast, i_wch}),
     .push     (i_wvalid),
     .full     (w_full),
-    .data_out ({o_wlast, o_wch}),
+    .data_out ({o_wlast, o_wstrb, o_wdata}),
     .pull     (o_wready),
     .empty    (w_empty)
     );
@@ -486,10 +417,10 @@ module axicb_mst_if
     .aresetn  (o_aresetn),
     .srst     (o_srst),
     .flush    (1'b0),
-    .data_in  (o_bch),
+    .data_in  ({o_bresp, o_bid}),
     .push     (o_bvalid),
     .full     (b_full),
-    .data_out ({i_bresp, i_bid}),
+    .data_out (i_bch),
     .pull     (i_bready),
     .empty    (b_empty)
     );
@@ -513,13 +444,14 @@ module axicb_mst_if
     .aresetn  (i_aresetn),
     .srst     (i_srst),
     .flush    (1'b0),
-    .data_in  (arch),
+    .data_in  (i_arch),
     .push     (i_arvalid),
     .full     (ar_full),
-    .data_out (o_arch),
+    .data_out (arch),
     .pull     (o_arready),
     .empty    (ar_empty)
     );
+
     assign i_arready = ~ar_full;
     assign o_arvalid = ~ar_empty;
 
@@ -539,10 +471,10 @@ module axicb_mst_if
     .aresetn  (o_aresetn),
     .srst     (o_srst),
     .flush    (1'b0),
-    .data_in  ({o_rlast,o_rch}),
+    .data_in  ({o_rlast, o_rresp, o_rdata, o_rid}),
     .push     (o_rvalid),
     .full     (r_full),
-    .data_out ({i_rlast, i_rresp, i_rdata, i_rid}),
+    .data_out ({i_rlast,i_rch}),
     .pull     (i_rready),
     .empty    (r_empty)
     );
@@ -558,32 +490,94 @@ module axicb_mst_if
     ///////////////////////////////////////////////////////////////////////////
 
     assign o_awvalid = i_awvalid;
-    assign o_awch = awch;
     assign i_awready = o_awready;
+    assign awch = i_awch;
 
     assign o_wvalid = i_wvalid;
     assign i_wready = o_wready;
     assign o_wlast = i_wlast;
 
-    assign o_wch = {i_wstrb, i_wdata};
+    assign {o_wstrb, o_wdata} = i_wch;
 
     assign i_bvalid = o_bvalid;
     assign o_bready = i_bready;
-    assign {i_bresp, i_bid} = o_bch;
+    assign i_bch = {o_bresp, o_bid};
 
     assign o_arvalid = i_arvalid;
     assign i_arready = o_arready;
-    assign o_arch = arch;
+    assign arch = i_arch;
 
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
-    assign {i_rresp, i_rdata, i_rid} = o_rch;
+    assign i_rch = {o_rresp, o_rdata, o_rid};
 
     end
+    endgenerate
 
+    generate
+    if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
+
+        assign {
+            o_awid,
+            o_awprot,
+            o_awaddr
+        } = awch;
+
+        assign {
+            o_arid,
+            o_arprot,
+            o_araddr
+        }  = arch;
+
+    end else if (AXI_SIGNALING==1) begin : AXI4LITE_BURST_MODE
+
+        assign {
+            o_awid,
+            o_awprot,
+            o_awlen,
+            o_awaddr
+        } = awch;
+
+        assign {
+            o_arid,
+            o_arprot,
+            o_arlen,
+            o_araddr
+        } = arch;
+
+    end else begin : AXI4_MODE
+
+        assign {
+            o_awid,
+            o_awregion,
+            o_awqos,
+            o_awprot,
+            o_awcache,
+            o_awlock,
+            o_awburst,
+            o_awsize,
+            o_awlen,
+            o_awaddr
+        } = awch;
+
+        assign {
+            o_arid,
+            o_arregion,
+            o_arqos,
+            o_arprot,
+            o_arcache,
+            o_arlock,
+            o_arburst,
+            o_arsize,
+            o_arlen,
+            o_araddr
+        } = arch;
+
+    end
     endgenerate
 
 endmodule
 
 `resetall
+
