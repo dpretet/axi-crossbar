@@ -12,4 +12,10 @@ function automatic integer gen_resp(integer value);
 
 endfunction
 
+function automatic integer gen_data(integer value);
+
+    gen_data = {value[7:0],value[7:0],value[7:0],value[7:0]};
+
+endfunction
+
 `endif

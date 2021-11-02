@@ -460,7 +460,8 @@ module axicb_crossbar_top_testbench();
             while (|error===1'b0) begin
                 @(posedge aclk);
             end
-            `ASSERT((error==0), "Error detected during execution");
+            `ASSERT((|error===1'b0), "Error detected during execution");
+            `ERROR("Encountered issues during execution");
             $display("Errors: %x", error);
         end
         join_any

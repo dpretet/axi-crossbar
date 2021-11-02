@@ -71,13 +71,19 @@ module slv_monitor
     );
 
     logic [32                          -1:0] aw_lfsr;
+    logic [32                          -1:0] w_lfsr;
     logic [32                          -1:0] ar_lfsr;
     logic [32                          -1:0] b_lfsr;
     logic [32                          -1:0] r_lfsr;
     logic [32                          -1:0] awready_lfsr;
+    logic [32                          -1:0] wready_lfsr;
     logic [32                          -1:0] bvalid_lfsr;
     logic [32                          -1:0] arready_lfsr;
     logic [32                          -1:0] rvalid_lfsr;
+    logic                                    w_full;
+    logic                                    w_empty;
+    logic [AXI_DATA_W                  -1:0] w_fifo_i;
+    logic [AXI_DATA_W                  -1:0] w_fifo_o;
     logic                                    b_full;
     logic                                    b_empty;
     logic [2+AXI_ID_W                  -1:0] b_fifo_i;
@@ -94,13 +100,14 @@ module slv_monitor
     integer                                  rtimer;
     logic                                    btimeout;
     logic                                    rtimeout;
+    logic                                    wdata_error;
 
 
-    assign error = btimeout | rtimeout;
+    assign error = btimeout | rtimeout | wdata_error;
 
 
     ///////////////////////////////////////////////////////////////////////////
-    // Write Address & Data channels
+    // Write Address channel
     ///////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
@@ -124,19 +131,99 @@ module slv_monitor
 
     lfsr32 
     #(
-    .KEY (KEY)
+        .KEY (KEY)
     )
     awch_lfsr
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (awvalid & awready & wready),
-    .lfsr    (aw_lfsr)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (awvalid & awready),
+        .lfsr    (aw_lfsr)
     );
 
-    assign awready = awready_lfsr[0] & ~b_full;
-    assign wready = awready_lfsr[0] & ~b_full;
+    assign awready = awready_lfsr[0] & ~b_full & ~w_full;
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Data channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            wready_lfsr <= 32'b0;
+        end else if (srst) begin
+            wready_lfsr <= 32'b0;
+        end else begin
+            // At startup init with LFSR default value 
+            if (wready_lfsr==32'b0) begin
+                wready_lfsr <= w_lfsr;
+            // Use to randomly assert awready/wready
+            end else if (~wready) begin
+                wready_lfsr <= wready_lfsr >> 1;
+            end else if (wvalid) begin
+                wready_lfsr <= w_lfsr;
+            end
+        end
+    end
+
+    lfsr32 
+    #(
+        .KEY ({KEY[15:0],KEY[31:16]})
+    )
+    wch_lfsr
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (wvalid & wready & wlast),
+        .lfsr    (w_lfsr)
+    );
+
+    assign wready = wready_lfsr[0] & ~w_empty;
+
+    assign w_fifo_i = gen_data(awaddr);
+
+    axicb_scfifo 
+    #(
+        .PASS_THRU  (0),
+        .ADDR_WIDTH (8),
+        .DATA_WIDTH (AXI_DATA_W)
+    )
+    wfifo 
+    (
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .flush    (1'b0),
+        .data_in  (w_fifo_i),
+        .push     (awvalid & awready),
+        .full     (w_full),
+        .data_out (w_fifo_o),
+        .pull     (wvalid & wready & wlast),
+        .empty    (w_empty)
+    );
+
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            wdata_error <= 1'b0;
+        end else if (srst) begin
+            wdata_error <= 1'b0;
+        end else begin
+            if (wvalid & wready & wlast) begin
+                if (w_fifo_o != wdata) begin
+                    $display("ERROR: WDATA received doesn't match the expected (@ %g)", $realtime());
+                    wdata_error <= 1'b1;
+                    $finish();
+                end begin
+                    wdata_error <= 1'b0;
+                end
+            end
+        end
+    end
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -148,22 +235,22 @@ module slv_monitor
 
     axicb_scfifo 
     #(
-    .PASS_THRU  (0),
-    .ADDR_WIDTH (2),
-    .DATA_WIDTH (AXI_ID_W+2)
+        .PASS_THRU  (0),
+        .ADDR_WIDTH (8),
+        .DATA_WIDTH (AXI_ID_W+2)
     )
     bfifo 
     (
-    .aclk     (aclk),
-    .aresetn  (aresetn),
-    .srst     (srst),
-    .flush    (1'b0),
-    .data_in  (b_fifo_i),
-    .push     (awvalid & awready),
-    .full     (b_full),
-    .data_out (b_fifo_o),
-    .pull     (bvalid & bready),
-    .empty    (b_empty)
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .flush    (1'b0),
+        .data_in  (b_fifo_i),
+        .push     (awvalid & awready),
+        .full     (b_full),
+        .data_out (b_fifo_o),
+        .pull     (bvalid & bready),
+        .empty    (b_empty)
     );
 
     always @ (posedge aclk or negedge aresetn) begin
@@ -187,15 +274,15 @@ module slv_monitor
 
     lfsr32 
     #(
-    .KEY (KEY)
+        .KEY (KEY)
     )
     bch_lfsr
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (bvalid & bready),
-    .lfsr    (b_lfsr)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (bvalid & bready),
+        .lfsr    (b_lfsr)
     );
 
     assign bvalid = ~b_empty & bvalid_lfsr[0];
@@ -224,6 +311,7 @@ module slv_monitor
         end
     end
 
+
     ///////////////////////////////////////////////////////////////////////////////
     // Read Address channel
     ///////////////////////////////////////////////////////////////////////////////
@@ -251,15 +339,15 @@ module slv_monitor
 
     lfsr32 
     #(
-    .KEY (KEY)
+        .KEY (KEY)
     )
     arch_lfsr
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (arvalid & arready),
-    .lfsr    (ar_lfsr)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (arvalid & arready),
+        .lfsr    (ar_lfsr)
     );
 
 
@@ -273,22 +361,22 @@ module slv_monitor
 
     axicb_scfifo 
     #(
-    .PASS_THRU  (0),
-    .ADDR_WIDTH (2),
-    .DATA_WIDTH (AXI_ID_W+2+AXI_DATA_W)
+        .PASS_THRU  (0),
+        .ADDR_WIDTH (2),
+        .DATA_WIDTH (AXI_ID_W+2+AXI_DATA_W)
     )
     rfifo 
     (
-    .aclk     (aclk),
-    .aresetn  (aresetn),
-    .srst     (srst),
-    .flush    (1'b0),
-    .data_in  (r_fifo_i),
-    .push     (arvalid & arready),
-    .full     (r_full),
-    .data_out (r_fifo_o),
-    .pull     (rvalid & rready),
-    .empty    (r_empty)
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .flush    (1'b0),
+        .data_in  (r_fifo_i),
+        .push     (arvalid & arready),
+        .full     (r_full),
+        .data_out (r_fifo_o),
+        .pull     (rvalid & rready),
+        .empty    (r_empty)
     );
 
     always @ (posedge aclk or negedge aresetn) begin

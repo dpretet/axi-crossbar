@@ -105,6 +105,8 @@ module axicb_mst_switch
     logic                  mst2_rch_targeted;
     logic                  mst3_rch_targeted;
 
+    logic                  wch_full;
+    logic                  wch_empty;
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address Channel
@@ -148,54 +150,50 @@ module axicb_mst_switch
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Data Channel
-    //
-    // TODO: Ensure the granted write is routed from the same master. If a
-    // master doesn't drive the write data channel at the same time,
-    // may lead to a data corruption.
-    // This arbitrer should be replaced by a FIFO
     ///////////////////////////////////////////////////////////////////////////
 
-    assign wch_req = i_wvalid;
-
-    axicb_round_robin
+    axicb_scfifo
     #(
-        .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
+    .PASS_THRU  (1),
+    .ADDR_WIDTH (8),
+    .DATA_WIDTH (MST_NB)
     )
-    wch_round_robin
+    wch_gnt_fifo
     (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (wch_en),
-        .req     (wch_req),
-        .grant   (wch_grant)
+    .aclk     (aclk),
+    .aresetn  (aresetn),
+    .srst     (srst),
+    .flush    (1'b0),
+    .data_in  (awch_grant),
+    .push     (o_awvalid & o_awready),
+    .full     (wch_full),
+    .data_out (wch_grant),
+    .pull     (o_wvalid & o_wready & o_wlast),
+    .empty    (wch_empty)
     );
 
-    assign o_wvalid = (wch_grant[0]) ? i_wvalid[0] :
-                      (wch_grant[1]) ? i_wvalid[1] :
-                      (wch_grant[2]) ? i_wvalid[2] :
-                      (wch_grant[3]) ? i_wvalid[3] :
-                                       1'b0;
+    assign o_wvalid = (~wch_empty & wch_grant[0]) ? i_wvalid[0] :
+                      (~wch_empty & wch_grant[1]) ? i_wvalid[1] :
+                      (~wch_empty & wch_grant[2]) ? i_wvalid[2] :
+                      (~wch_empty & wch_grant[3]) ? i_wvalid[3] :
+                                                    1'b0;
 
-    assign o_wlast = (wch_grant[0]) ? i_wlast[0] :
-                     (wch_grant[1]) ? i_wlast[1] :
-                     (wch_grant[2]) ? i_wlast[2] :
-                     (wch_grant[3]) ? i_wlast[3] :
-                                      1'b0;
+    assign o_wlast = (~wch_empty & wch_grant[0]) ? i_wlast[0] :
+                     (~wch_empty & wch_grant[1]) ? i_wlast[1] :
+                     (~wch_empty & wch_grant[2]) ? i_wlast[2] :
+                     (~wch_empty & wch_grant[3]) ? i_wlast[3] :
+                                                   1'b0;
 
-    assign i_wready = wch_grant & {MST_NB{o_wready}};
+    assign i_wready = (wch_empty) ? {MST_NB{1'b0}} :
+                                     wch_grant & {MST_NB{o_wready}};
 
     assign wch_en = o_wvalid & o_wready & o_wlast;
 
-    assign o_wch = (wch_grant[0]) ? i_wch[0*WCH_W+:WCH_W] :
-                   (wch_grant[1]) ? i_wch[1*WCH_W+:WCH_W] :
-                   (wch_grant[2]) ? i_wch[2*WCH_W+:WCH_W] :
-                   (wch_grant[3]) ? i_wch[3*WCH_W+:WCH_W] :
-                                    {WCH_W{1'b0}};
+    assign o_wch = (~wch_empty & wch_grant[0]) ? i_wch[0*WCH_W+:WCH_W] :
+                   (~wch_empty & wch_grant[1]) ? i_wch[1*WCH_W+:WCH_W] :
+                   (~wch_empty & wch_grant[2]) ? i_wch[2*WCH_W+:WCH_W] :
+                   (~wch_empty & wch_grant[3]) ? i_wch[3*WCH_W+:WCH_W] :
+                                                 {WCH_W{1'b0}};
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response channel

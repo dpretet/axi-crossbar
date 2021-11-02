@@ -4,6 +4,11 @@
 
 An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 
+A crossbar is a circuit connecting multiple master and slave agents, mapped
+across a memory space. The core consists of a collection of switches, routing
+the master requests to the slaves and driving back completions to the agents.
+A crossbar is common piece of logic to connect for instance in a SOC the
+processor(s) with the peripherals like memories, IOs, coprocessors...
 
 
 <p align="center">
@@ -11,6 +16,7 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
   <img src="./doc/assets/top-overview.png">
 </p>
 
+Features
 
 - Number of master and slave agents configurable
 - Master/slave buffering capability, configurable per interface
@@ -34,16 +40,15 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 - USER signal support
     - Configurable for each channel (AW, AR, W, B, R)
     - Common to all master/slave interfaces if activated
-- FULL, RESTRICTED and LITE AXI modes
+- AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
-    - RESTRICTED mode: route only an AXI4 subset, for application needing to do simple
-      memory-mapped requests (AXI4-lite being burst capable)
-    - Useful to save gate count
+    - The mode applies to global infrastructure
 - Master routes to a slave can be defined to restrict slave access
     - Permits to create enclosed and secured memory map
     - Access a forbidden memory zone returns a DECERR reponse in completion channel
     - Useful to save gate count
+
 
 ## Implementation Details
 
@@ -55,6 +60,7 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
   into the memory space with a start/end address range.
 - Route read & write completion by ID decoding. All master agents have an ID
   mask used to identified the route to drive back a completion
+
 
 ## Development plan
 

@@ -87,6 +87,8 @@ module mst_driver
         input  logic                      rlast
     );
 
+    logic [32                          -1:0] awaddr_ramp;
+    logic [32                          -1:0] araddr_ramp;
     logic [AXI_ID_W                    -1:0] awid_cnt;
     logic [AXI_ID_W                    -1:0] arid_cnt;
     logic [32                          -1:0] aw_lfsr;
@@ -94,6 +96,7 @@ module mst_driver
     logic [32                          -1:0] r_lfsr;
     logic [32                          -1:0] b_lfsr;
     logic [32                          -1:0] awvalid_lfsr;
+    logic [32                          -1:0] wvalid_lfsr;
     logic [32                          -1:0] arvalid_lfsr;
     logic [32                          -1:0] bready_lfsr;
     logic [32                          -1:0] rready_lfsr;
@@ -110,13 +113,14 @@ module mst_driver
     logic                                    ror_error;
     integer                                  wr_orreq_timeout[MST_OSTDREQ_NUM-1:0];
     integer                                  rd_orreq_timeout[MST_OSTDREQ_NUM-1:0];
-
     integer                                  awtimer;
     integer                                  wtimer;
     integer                                  artimer;
     logic                                    awtimeout;
     logic                                    wtimeout;
     logic                                    artimeout;
+    logic                                    w_full;
+    logic                                    w_empty;
 
     `SVUT_SETUP
 
@@ -139,11 +143,14 @@ module mst_driver
 
         if (~aresetn) begin
             awvalid_lfsr <= 32'b0;
+            wvalid_lfsr <= 32'b0;
             awid_cnt <= {AXI_ID_W{1'b0}};
         end else if (srst) begin
             awvalid_lfsr <= 32'b0;
+            wvalid_lfsr <= 32'b0;
             awid_cnt <= {AXI_ID_W{1'b0}};
         end else if (en) begin
+
             // At startup init with LFSR default value
             if (awvalid_lfsr==32'b0) begin
                 awvalid_lfsr <= aw_lfsr;
@@ -154,50 +161,102 @@ module mst_driver
                 awvalid_lfsr <= aw_lfsr;
             end
 
+            // At startup init with LFSR default value
+            if (wvalid_lfsr==32'b0) begin
+                wvalid_lfsr <= aw_lfsr;
+            // Use to randomly assert awvalid/wvalid
+            end else if (~wvalid) begin
+                wvalid_lfsr <= wvalid_lfsr >> 1;
+            end else if (wready) begin
+                wvalid_lfsr <= aw_lfsr;
+            end
+
             // ID counter
-            if (awvalid && awready && wready) begin
+            if (awvalid && awready) begin
                 if (awid_cnt==(MST_OSTDREQ_NUM-1)) awid_cnt <= 'h0;
                 else awid_cnt <= awid_cnt + 1;
             end
         end
     end
 
+    // LFSR to generate valid of AW / W channels
     lfsr32
     #(
-    .KEY (KEY)
+        .KEY (KEY)
     )
     awch_lfsr
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (awvalid & awready & wready),
-    .lfsr    (aw_lfsr)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (awvalid & awready),
+        .lfsr    (aw_lfsr)
     );
 
-    // Limit the address ragne to target possibly a particular slave
+    // A ramp used in address field when generated one is out of 
+    // min/max bound
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            awaddr_ramp <= 32'b0;
+        end else if (srst) begin
+            awaddr_ramp <= 32'b0;
+        end else begin
+            if (awvalid & awready) begin
+                if (awaddr_ramp >= (addr_max-16))
+                    awaddr_ramp <= 32'b0;
+                else
+                    awaddr_ramp <= awaddr_ramp + 4;
+            end
+        end
+    end
+
+    assign awvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt] & ~w_full;
+    // Limit the address range to target possibly a particular slave
     // Always use aligned address
-    assign awaddr = (aw_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {addr_max[AXI_ADDR_W-1:2],2'b0} :
-                    (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
+    assign awaddr = (aw_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
+                    (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
-    assign awvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
-    assign wvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt];
-    assign wdata = aw_lfsr[0+:AXI_DATA_W];
-    assign wstrb = aw_lfsr[0+:AXI_DATA_W/8];
+    axicb_scfifo 
+    #(
+        .PASS_THRU  (0),
+        .ADDR_WIDTH (8),
+        .DATA_WIDTH (AXI_DATA_W)
+    )
+    wfifo 
+    (
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .flush    (1'b0),
+        .data_in  (gen_data(awaddr)),
+        .push     (awvalid & awready),
+        .full     (w_full),
+        .data_out (wdata),
+        .pull     (wvalid & wready & wlast),
+        .empty    (w_empty)
+    );
+
+    assign wvalid = wvalid_lfsr[0] & en & ~w_empty;
+    assign wstrb = {AXI_DATA_W/8{1'b1}};
     assign wlast = 1'b1;
 
+    ///////////////////////////////////////////////////////////////////////////////
     // Monitor AW/W channel to detect timeout
+    ///////////////////////////////////////////////////////////////////////////////
+
     always @ (posedge aclk or negedge aresetn) begin
         if (~aresetn) begin
             awtimer <= 0;
             awtimeout <= 1'b0;
+            wtimer <= 0;
+            wtimeout <= 1'b0;
         end else if (srst) begin
             awtimer <= 0;
             awtimeout <= 1'b0;
             wtimer <= 0;
             wtimeout <= 1'b0;
-        end else begin
+        end else if (en) begin
             if (awvalid && ~awready) begin
                 awtimer <= awtimer + 1;
             end else begin
@@ -205,6 +264,7 @@ module mst_driver
             end
             if (awtimer >= TIMEOUT) begin
                 `ERROR("AW Channel reached timeout");
+                $display("  - MST_ID=%0x", MST_ID);
                 awtimeout <= 1'b1;
             end else begin
                 awtimeout <= 1'b0;
@@ -217,6 +277,7 @@ module mst_driver
             if (wtimer >= TIMEOUT) begin
                 wtimeout <= 1'b1;
                 `ERROR("W Channel reached timeout");
+                $display("  - MST_ID=%0x", MST_ID);
             end else begin
                 wtimeout <= 1'b0;
             end
@@ -235,6 +296,7 @@ module mst_driver
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
             bresp_error <= 1'b0;
+            wor_error <= 1'b0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
@@ -246,6 +308,7 @@ module mst_driver
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
             bresp_error <= 1'b0;
+            wor_error <= 1'b0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
@@ -329,7 +392,7 @@ module mst_driver
             // Use to randomly assert arready
             end else if (~bready) begin
                 bready_lfsr <= bready_lfsr >> 1;
-            end else begin
+            end else if (bvalid) begin
                 bready_lfsr <= b_lfsr;
             end
         end
@@ -337,6 +400,7 @@ module mst_driver
 
     assign bready = bready_lfsr[0];
 
+    // LFSR to generate valid of B channels
     lfsr32
     #(
     .KEY (KEY)
@@ -374,6 +438,7 @@ module mst_driver
             arvalid_lfsr <= 32'b0;
             arid_cnt <= {AXI_ID_W{1'b0}};
         end else if (en) begin
+
             // At startup init with LFSR default value
             if (arvalid_lfsr==32'b0) begin
                 arvalid_lfsr <= ar_lfsr;
@@ -392,28 +457,49 @@ module mst_driver
         end
     end
 
+    // LFSR to generate valid of AR channel
     lfsr32
     #(
-    .KEY (KEY)
+        .KEY (KEY)
     )
     arch_lfsr
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (arvalid & arready),
-    .lfsr    (ar_lfsr)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (arvalid & arready),
+        .lfsr    (ar_lfsr)
     );
+
+    // A ramp used in address field when generated one is out of 
+    // min/max bound
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            araddr_ramp <= 32'b0;
+        end else if (srst) begin
+            araddr_ramp <= 32'b0;
+        end else begin
+            if (arvalid & arready) begin
+                if (araddr_ramp >= (addr_max-16))
+                    araddr_ramp <= 32'b0;
+                else
+                    araddr_ramp <= araddr_ramp + 4;
+            end
+        end
+    end
 
     // Limit the address ragne to target possibly a particular slave
     // Always use aligned address
-    assign araddr = (ar_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {addr_max[AXI_ADDR_W-1:2],2'b0} :
-                    (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {addr_min[AXI_ADDR_W-1:2],2'b0} :
+    assign araddr = (ar_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {araddr_ramp} :
+                    (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {araddr_ramp} :
                                                          {ar_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
+    ///////////////////////////////////////////////////////////////////////////
     // Monitor AR channel to detect timeout
+    ///////////////////////////////////////////////////////////////////////////
+
     always @ (posedge aclk or negedge aresetn) begin
         if (~aresetn) begin
             artimer <= 0;
@@ -421,7 +507,7 @@ module mst_driver
         end else if (srst) begin
             artimer <= 0;
             artimeout <= 1'b0;
-        end else begin
+        end else if (en) begin
             if (arvalid && ~arready) begin
                 artimer <= artimer + 1;
             end else begin
@@ -453,7 +539,7 @@ module mst_driver
             // Use to randomly assert arready
             end else if (~rready) begin
                 rready_lfsr <= rready_lfsr >> 1;
-            end else begin
+            end else if (rvalid) begin
                 rready_lfsr <= r_lfsr;
             end
         end
@@ -461,6 +547,7 @@ module mst_driver
 
     assign rready = rready_lfsr[0];
 
+    // LFSR to generate valid of R channel
     lfsr32
     #(
     .KEY (KEY)
@@ -488,6 +575,7 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
+            ror_error <= 1'b0;
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
@@ -499,6 +587,7 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rresp_error <= 1'b0;
+            ror_error <= 1'b0;
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
@@ -569,8 +658,13 @@ module mst_driver
         end
     end
 
-    assign error = bresp_error | rresp_error | wor_error | ror_error |
-                   awtimeout | wtimeout | artimeout;
+    // Error report to the testbench
+    assign error = (en) ?
+
+                    bresp_error | rresp_error | wor_error | ror_error |
+                    awtimeout | wtimeout | artimeout :
+
+                    1'b0;
 
 endmodule
 
