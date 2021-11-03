@@ -1,4 +1,4 @@
-+incdir+../../rtl+./src
++incdir+../../rtl+./src+../../deps/svlogger/
 ../../rtl/axicb_crossbar_top.sv
 ../../rtl/axicb_mst_if.sv
 ../../rtl/axicb_mst_switch.sv

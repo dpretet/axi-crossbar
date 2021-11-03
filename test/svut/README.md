@@ -1,25 +1,18 @@
 # SystemVerilog Testbench
 
 This testbench is a simple environment to stress the crossbar infrastructure
-by randomly access slave nodes from two master nodes.
+by randomly access slave nodes from up to four master nodes.
 
 This testbench is focused on an AXI4-lite configuration of the crossbar with
 following setup:
 
 - 4 masters
 - 4 slaves
-- ADDR_W is restricted to 8 bits
-- DATA_W is restricted to 32 bits
-- ID_W to 8 bits
-- No pipeline usage
-- No CDC usage
-- No internal buffering
 - Use a full-mode STRB
 - AXI_SIGNALING set to AXI4-lite mode
 - No USER fields usage
-- TIMEOUT set to 10000 cycles
-- Both masters have the same priority in arbitration stages
-- both masters can access the two slaves
+- All masters have the same priority in arbitration stages
+- All masters can access the two slaves
 
 The master model is very simple and limited to a basic behavior. It doesn't
 widely cover the corner cases of a complex crossbar. Further and better
@@ -52,7 +45,24 @@ An address can be out of range, thus a DECERR response is recorded and checked.
 
 - check response received against the generated one
 
-The testbench includes several testcases using the above described scenario,
+
+The drivers can detect the following errors:
+
+- Write outstanding request timeout
+- Read outstanding request timeout
+- AW request timeout
+- W request timeout
+- AR request timeout
+- BRESP response error
+- RRESP response error
+
+The monitors can detect the following errors:
+
+- B response timeout
+- R response timeout
+- WDATA error
+
+The testbench includes several testcases using the above described scenarios,
 limiting the address range target (and so the number of slaves), use on or more
 master. The testbench is also setup by different configuration loaded by the
 Bash front-end, relying on configuration files. The flow is launched as much

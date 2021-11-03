@@ -1,9 +1,4 @@
-#!/usr/bin/env bash
-
-# -e: exit if one command fails
-# -o pipefail: causes a pipeline to fail if any command fails
-# set -e -o pipefail
-
+#!usr/bin/env bash
 
 #------------------------------------------------------------------------------
 # Helper
@@ -25,14 +20,24 @@ EOF
 # Check the execution ran well
 #------------------------------------------------------------------------------
 check_status() {
+
+    echo "INFO: Check testsuite status"
+
     # Exit if execution failed.
     # Double check the execution status by parsing the log
     ec=$(grep -c "ERROR:" simulation.log)
+
     if [[ $ec != 0 || $test_ret != 0 ]]; then
+        echo "error count: $ec"
+        echo "test_ret: $test_ret"
         echo -e "${RED}ERROR: Testsuite failed!${NC}"
         grep -i "Failling" simulation.log
+        echo $fails
         exit 1
     fi
+
+    echo -e "${GREEN}INFO: Testsuites executed successfully!${NV}"
+    exit 0
 }
 
 
@@ -46,6 +51,10 @@ get_args() {
             -m | --maxtraffic )
                 shift
                 MAX_TRAFFIC=$1
+            ;;
+            --tc )
+                shift
+                TC=$1
             ;;
             -t | --timeout )
                 shift
@@ -76,4 +85,30 @@ read_config() {
     done < $1
 
     echo "$DEFINES"
+}
+
+#------------------------------------------------------------------------------
+# Run function targeting a specific configuration
+#------------------------------------------------------------------------------
+
+runner() {
+
+    # Grab config name to setup testsuite name
+    config_file=$(basename $1)
+    config_name=${config_file%%.*}
+
+    # Read testbench configuration and add config from command line
+    DEFINES=$(read_config $1)
+    DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC;TSNAME=$config_name"
+
+    # Run the simulation
+    svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+    ret=$?
+    if [[ $ret != 0 ]]; then
+        fails="$fails "
+    fi
+
+    # Grab the return code used later to determine the compliance status
+    test_ret=$((test_ret+$ret))
+    mv axicb_*.vcd vcd/${config_name}.vcd
 }

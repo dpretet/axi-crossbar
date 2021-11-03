@@ -5,7 +5,7 @@
 `default_nettype none
 
 `include "functions.sv"
-`include "svut_h.sv"
+`include "svlogger.sv"
 
 module mst_driver
 
@@ -122,7 +122,18 @@ module mst_driver
     logic                                    w_full;
     logic                                    w_empty;
 
-    `SVUT_SETUP
+    // Logger setup
+
+    svlogger log;
+    string svlogger_name;
+    string msg;
+
+    initial begin
+        $sformat(svlogger_name, "MstDriver%x", MST_ID);
+        log = new(svlogger_name,
+                  `SVL_VERBOSE_DEBUG,
+                  `SVL_ROUTE_ALL);
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address & Data Channels
@@ -263,8 +274,7 @@ module mst_driver
                 awtimer <= 0;
             end
             if (awtimer >= TIMEOUT) begin
-                `ERROR("AW Channel reached timeout");
-                $display("  - MST_ID=%0x", MST_ID);
+                log.error("AW Channel reached timeout");
                 awtimeout <= 1'b1;
             end else begin
                 awtimeout <= 1'b0;
@@ -276,8 +286,7 @@ module mst_driver
             end
             if (wtimer >= TIMEOUT) begin
                 wtimeout <= 1'b1;
-                `ERROR("W Channel reached timeout");
-                $display("  - MST_ID=%0x", MST_ID);
+                log.error("W Channel reached timeout");
             end else begin
                 wtimeout <= 1'b0;
             end
@@ -318,10 +327,8 @@ module mst_driver
 
             if (bvalid && bready) begin
                 if ((bid&MST_ID) != MST_ID) begin
-                    `ERROR("Received a completion not addressed to the right master");
-                    $display("  - MST_ID=%0x", MST_ID);
-                    $display("  - BID=%0x", bid);
-                    $display("  - EN=%0x", en);
+                    $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid);
+                    log.error(msg);
                     @(posedge aclk);
                     $finish();
                 end
@@ -346,10 +353,10 @@ module mst_driver
                     wr_orreq_resp[i*2+:2] <= 2'b0;
 
                     if (wr_orreq_resp[i*2+:2] !== bresp && CHECK_REPORT) begin
-                        `ERROR("BRESP doesn't match expected value");
-                        $display("  - BID: %x", bid);
-                        $display("  - BRESP: %x", bresp);
-                        $display("  - Expected BRESP: %x", wr_orreq_resp[i*2+:2]);
+                        log.error("BRESP doesn't match expected value");
+                        $sformat(msg, "  - BID: %x", bid); log.error(msg);
+                        $sformat(msg, "  - BRESP: %x", bresp); log.error(msg);
+                        $sformat(msg, "  - Expected BRESP: %x", wr_orreq_resp[i*2+:2]); log.error(msg);
                         bresp_error <= 1'b1;
                     end
 
@@ -360,7 +367,8 @@ module mst_driver
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
-                        $display("Write OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
+                        $sformat(msg, "Write OR %x reached timeout (MST_ID: %0x)", i, MST_ID);
+                        log.error(msg);
                         wor_error <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
@@ -515,7 +523,7 @@ module mst_driver
             end
             if (artimer >= TIMEOUT) begin
                 artimeout <= 1'b1;
-                `ERROR("AR Channel reached timeout");
+                log.error("AR Channel reached timeout");
             end else begin
                 artimeout <= 1'b0;
             end
@@ -596,10 +604,8 @@ module mst_driver
 
             if (rvalid && rready) begin
                 if ((rid&MST_ID) != MST_ID) begin
-                    `ERROR("Received a completion not addressed to the right master");
-                    $display("  - MST_ID: %0x", MST_ID);
-                    $display("  - RID: %0x", rid);
-                    $display("  - EN=%0x", en);
+                    $sformat(msg, "Received a completion not addressed to the right master (RID=%0x)", rid);
+                    log.error(msg);
                     @(posedge aclk);
                     $finish();
                 end
@@ -629,12 +635,12 @@ module mst_driver
                         rd_orreq_rresp[i*2+:2] != rresp &&
                         CHECK_REPORT)
                     begin
-                        `ERROR("RRESP/RDATA don't match expected values");
-                        $display("  - RID: %x", rid);
-                        $display("  - RRESP: %x", rresp);
-                        $display("  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
-                        $display("  - RDATA: %x", rdata);
-                        $display("  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]);
+                        log.error("RRESP/RDATA don't match expected values");
+                        $sformat(msg, "  - RID: %x", rid); log.error(msg);
+                        $sformat(msg, "  - RRESP: %x", rresp); log.error(msg);
+                        $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]); log.error(msg);
+                        $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
+                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]); log.error(msg);
                         rresp_error <= 1'b1;
                     end
                 end else begin
@@ -644,7 +650,8 @@ module mst_driver
                 // Manage OR timeout
                 if (rd_orreq[i]) begin
                     if (rd_orreq_timeout[i]==TIMEOUT) begin
-                        $display("ERROR: Read OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
+                        $sformat(msg, "ERROR: Read OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
+                        log.error(msg);
                         ror_error <= 1'b1;
                     end
                     if (rd_orreq_timeout[i]<=TIMEOUT) begin

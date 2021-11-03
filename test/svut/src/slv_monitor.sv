@@ -5,10 +5,13 @@
 `default_nettype none
 
 `include "functions.sv"
+`include "svlogger.sv"
 
 module slv_monitor
 
     #(
+        parameter SLV_ID = 0,
+
         // Address width in bits
         parameter AXI_ADDR_W = 8,
         // ID width in bits
@@ -102,6 +105,16 @@ module slv_monitor
     logic                                    rtimeout;
     logic                                    wdata_error;
 
+    // Logger setup
+    svlogger log;
+    string svlogger_name;
+
+    initial begin
+        $sformat(svlogger_name, "SlvMonitor%0x", SLV_ID);
+        log = new(svlogger_name,
+                  `SVL_VERBOSE_DEBUG,
+                  `SVL_ROUTE_ALL);
+    end
 
     assign error = btimeout | rtimeout | wdata_error;
 
@@ -215,7 +228,7 @@ module slv_monitor
         end else begin
             if (wvalid & wready & wlast) begin
                 if (w_fifo_o != wdata) begin
-                    $display("ERROR: WDATA received doesn't match the expected (@ %g)", $realtime());
+                    log.error("ERROR: WDATA received doesn't match the expected");
                     wdata_error <= 1'b1;
                     $finish();
                 end begin

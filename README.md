@@ -28,9 +28,6 @@ Features
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
 - Timeout support per AXI channel & per interface
-    - A shared counter implement a time reference
-    - A request timeout leads the completion to response with DECERR
-    - A completion timeout leads the completion to response with SLVERR
 - Switching logic IO interfaces can be pipelined to achieve timing closure easier
 - Full-STRB vs Partial-STRB mode
     - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
@@ -60,21 +57,27 @@ Features
   into the memory space with a start/end address range.
 - Route read & write completion by ID decoding. All master agents have an ID
   mask used to identified the route to drive back a completion
+- Timeout behaqves as following:
+    - A shared counter implements a millisecond / microsecond time reference,
+      configurable based on the platform clock speed
+    - A request timeout leads the completion to response with DECERR
+    - A completion timeout leads the switching logic circuit to empty the
+      completer response (up to RLAST assertion for the R channel, else simply
+      handshake the B channel)
 
 
 ## Development plan
 
 Limitations (current dev stage)
 
-- AW & W channels need to be ready at the same cycle
-- No timeout support
-- 4x4 master/slave interfaces
-- LITE mode only (AXI4 mode should work, just not tested yet)
-- No master priority setup
-- Full-STRB mode only
 - No xUSER signals support
+- No master priority setup
+- No timeout support
+- LITE mode only (AXI4 mode should work, just not tested yet)
+- Full-STRB mode only
+- 4x4 master/slave interfaces
 
-Inbox
+Inbox (possible next devs)
 
 - Address translation service
 - Top level generator to adapt the core to the users need

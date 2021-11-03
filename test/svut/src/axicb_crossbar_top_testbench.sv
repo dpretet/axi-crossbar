@@ -1133,6 +1133,7 @@ module axicb_crossbar_top_testbench();
 
     slv_monitor 
     #(
+    .SLV_ID       (0),
     .AXI_ADDR_W   (AXI_ADDR_W),
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
@@ -1189,6 +1190,7 @@ module axicb_crossbar_top_testbench();
 
     slv_monitor 
     #(
+    .SLV_ID       (1),
     .AXI_ADDR_W   (AXI_ADDR_W),
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
@@ -1245,6 +1247,7 @@ module axicb_crossbar_top_testbench();
 
     slv_monitor 
     #(
+    .SLV_ID       (2),
     .AXI_ADDR_W   (AXI_ADDR_W),
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
@@ -1301,6 +1304,7 @@ module axicb_crossbar_top_testbench();
 
     slv_monitor 
     #(
+    .SLV_ID       (3),
     .AXI_ADDR_W   (AXI_ADDR_W),
     .AXI_ID_W     (AXI_ID_W),
     .AXI_DATA_W   (AXI_DATA_W),
