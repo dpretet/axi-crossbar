@@ -18,7 +18,7 @@ processor(s) with the peripherals like memories, IOs, coprocessors...
 
 Features
 
-- Number of master and slave agents configurable
+- 4x4 master/slave interfaces
 - Master/slave buffering capability, configurable per interface
     - Outstanding request number configurable
     - Request payload configurable per interface (AXI3 vs AXI4 vs AXI4-lite seamless support)
@@ -34,9 +34,6 @@ Features
       all other dataphases are fully activated (WSTRBs=1)
     - Full-STRB mode transports the complete STRBs dataphases as driven by a master
     - Useful to save gate count
-- USER signal support
-    - Configurable for each channel (AW, AR, W, B, R)
-    - Common to all master/slave interfaces if activated
 - AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
@@ -70,20 +67,21 @@ Features
 
 Limitations (current dev stage)
 
-- No xUSER signals support
-- No master priority setup
 - No timeout support
+- No master routing tables
 - LITE mode only (AXI4 mode should work, just not tested yet)
 - Full-STRB mode only
-- 4x4 master/slave interfaces
 
 Inbox (possible next devs)
 
 - Address translation service
-- Top level generator to adapt the core to the users need
-- Number of master/slave configurable, wider than 8x8
-- Completion reordering in case of out-of-order response
+- Number of master and slave agents configurable
+- RTL generator to support any number of master / slave agents
+- USER signal support
+    - Configurable for each channel (AW, AR, W, B, R)
+    - Common to all master/slave interfaces if activated
+- Completion reordering to support of out-of-order responses
 - Interface datapath width conversion
 - AXI4/AXI4-lite converter
 - Read-only or Write-only master to save gate count
-- 4KB boundary crossing checking
+- 4KB boundary crossing checking, supporting splitting mechanism

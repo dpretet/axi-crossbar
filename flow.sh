@@ -106,6 +106,7 @@ main() {
             ./rtl/axicb_mst_switch.sv\
             ./rtl/axicb_switch_top.sv\
             ./rtl/axicb_round_robin.sv\
+            ./rtl/axicb_round_robin_core.sv\
             ./rtl/axicb_crossbar_top.sv\
             --top-module axicb_crossbar_top
     fi

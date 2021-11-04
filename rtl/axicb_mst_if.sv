@@ -25,9 +25,6 @@ module axicb_mst_if
         //   - 2: Complete
         parameter AXI_SIGNALING = 0,
 
-        // Activate the timer to avoid deadlock
-        parameter TIMEOUT_ENABLE = 1,
-
         // Implement CDC output stage
         parameter SLV_CDC = 0,
         // Maximum number of requests a slave can store
@@ -516,6 +513,7 @@ module axicb_mst_if
     endgenerate
 
     generate
+
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
 
         assign {
@@ -529,22 +527,6 @@ module axicb_mst_if
             o_arprot,
             o_araddr
         }  = arch;
-
-    end else if (AXI_SIGNALING==1) begin : AXI4LITE_BURST_MODE
-
-        assign {
-            o_awid,
-            o_awprot,
-            o_awlen,
-            o_awaddr
-        } = awch;
-
-        assign {
-            o_arid,
-            o_arprot,
-            o_arlen,
-            o_araddr
-        } = arch;
 
     end else begin : AXI4_MODE
 

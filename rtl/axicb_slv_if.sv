@@ -17,10 +17,6 @@ module axicb_slv_if
         // Number of slave
         parameter SLV_NB = 4,
 
-        // Enable routing to a slave, one bit per slave,
-        // bit 0 = slave 0, bit 1 = slave 1, ...
-        parameter MST_ROUTES = 4'b1_1_1_1,
-
         // STRB support:
         //   - 0: contiguous wstrb (store only 1st/last dataphase)
         //   - 1: full wstrb transport
@@ -28,12 +24,8 @@ module axicb_slv_if
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 1: Restricted AXI4 (INCR mode, ADDR, ALEN)
-        //   - 2: Complete
+        //   - 1: Complete
         parameter AXI_SIGNALING = 0,
-
-        // Activate the timer to avoid deadlock
-        parameter TIMEOUT_ENABLE = 1,
 
         // Implement CDC input stage
         parameter MST_CDC = 0,
@@ -123,6 +115,7 @@ module axicb_slv_if
     logic [ARCH_W        -1:0] arch;
 
     generate
+
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
 
         assign awch = {
@@ -134,22 +127,6 @@ module axicb_slv_if
         assign arch = {
             i_arid,
             i_arprot,
-            i_araddr
-        };
-
-    end else if (AXI_SIGNALING==1) begin : AXI4LITE_BURST_MODE
-
-        assign awch = {
-            i_awid,
-            i_awprot,
-            i_awlen,
-            i_awaddr
-        };
-
-        assign arch = {
-            i_arid,
-            i_arprot,
-            i_arlen,
             i_araddr
         };
 

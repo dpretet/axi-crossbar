@@ -3,6 +3,7 @@
 ../../rtl/axicb_mst_if.sv
 ../../rtl/axicb_mst_switch.sv
 ../../rtl/axicb_round_robin.sv
+../../rtl/axicb_round_robin_core.sv
 ../../rtl/axicb_scfifo.sv
 ../../rtl/axicb_scfifo_ram.sv
 ../../rtl/axicb_slv_if.sv
