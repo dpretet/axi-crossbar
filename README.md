@@ -85,3 +85,12 @@ Inbox (possible next devs)
 - AXI4/AXI4-lite converter
 - Read-only or Write-only master to save gate count
 - 4KB boundary crossing checking, supporting splitting mechanism
+
+
+## License
+
+This IP core is licensed under MIT license. It grants nearly all rights to use,
+modify and distribute these sources.
+
+However, consider to contribute and provide updates to this core if you add
+feature and fix, would be greatly appreciated :)

@@ -30,6 +30,7 @@ module axicb_crossbar_top
         parameter MST_NB = 4,
         // Number of slave(s)
         parameter SLV_NB = 4,
+
         // Switching logic pipelining (0 deactivate, 1 enable)
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
@@ -41,8 +42,7 @@ module axicb_crossbar_top
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 1: Restricted AXI4 (INCR mode only, ADDR, ALEN)
-        //   - 2: Complete
+        //   - 1: AXI
         parameter AXI_SIGNALING = 0,
 
         // USER transport enabling (0 deactivate, 1 activate)
@@ -207,7 +207,7 @@ module axicb_crossbar_top
         input  logic                      srst,
 
         ///////////////////////////////////////////////////////////////////////
-        // Master 0 interface
+        // Master Agent 0 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      slv0_aclk,
@@ -254,7 +254,7 @@ module axicb_crossbar_top
         output logic                      slv0_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Master 1 interface
+        // Master Agent 1 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      slv1_aclk,
@@ -301,7 +301,7 @@ module axicb_crossbar_top
         output logic                      slv1_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Master 1 interface
+        // Master Agent 2 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      slv2_aclk,
@@ -348,7 +348,7 @@ module axicb_crossbar_top
         output logic                      slv2_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Master 1 interface
+        // Master Agent 3 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      slv3_aclk,
@@ -395,7 +395,7 @@ module axicb_crossbar_top
         output logic                      slv3_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Slave 0 interface
+        // Slave Agent 0 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      mst0_aclk,
@@ -442,7 +442,7 @@ module axicb_crossbar_top
         input  logic                      mst0_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Slave 1 interface
+        // Slave Agent 1 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      mst1_aclk,
@@ -489,7 +489,7 @@ module axicb_crossbar_top
         input  logic                      mst1_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Slave 2 interface
+        // Slave Agent 2 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      mst2_aclk,
@@ -536,7 +536,7 @@ module axicb_crossbar_top
         input  logic                      mst2_rlast,
 
         ///////////////////////////////////////////////////////////////////////
-        // Slave 3 interface
+        // Slave Agent 3 interface
         ///////////////////////////////////////////////////////////////////////
 
         input  logic                      mst3_aclk,
@@ -588,11 +588,9 @@ module axicb_crossbar_top
     // Local declarations
     ///////////////////////////////////////////////////////////////////////////
 
-    localparam AWCH_W = // AXI4-lite signaling only: ADDR + ID + APROT
+    localparam AWCH_W =                      // AXI4-lite signaling
                         (AXI_SIGNALING==0) ? AXI_ADDR_W + AXI_ID_W + 3:
-                        // AXI4-lite + BURST mode (INCR mode only)
-                        (AXI_SIGNALING==1) ? AXI_ADDR_W + AXI_ID_W + 11:
-                        // Complete AXI4 signaling
+                                             // AXI4 signaling
                                              AXI_ADDR_W + AXI_ID_W + 30;
 
     localparam WCH_W = AXI_DATA_W + AXI_DATA_W/8;
@@ -988,7 +986,7 @@ module axicb_crossbar_top
     );
 
     ///////////////////////////////////////////////////////////////////////////
-    // AXI channels switching logic
+    // AXI switching logic
     ///////////////////////////////////////////////////////////////////////////
 
     axicb_switch_top
