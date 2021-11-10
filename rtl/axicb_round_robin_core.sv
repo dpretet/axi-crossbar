@@ -12,10 +12,10 @@
 //     thus from req 0 to req 3 and then restart from 0
 //
 //         req    mask  grant  next-mask
-//                             
+//
 //         1111   1111   0001    1110
 //         1111   1110   0010    1100
-//         1111   1100   0100    1000 
+//         1111   1100   0100    1000
 //         1111   1000   1000    1111
 //         1111   1111   0001    1110
 //         ...
@@ -23,7 +23,7 @@
 //   - if the next allowed is not active, pass to the next+2
 //
 //         req    mask   grant   next-mask
-//                     
+//
 //         1101   1111    0001     1110
 //         1101   1110    0100     1000
 //         1101   1000    1000     1111
@@ -36,23 +36,23 @@
 //     mask if no next req index is active
 //
 //         req    mask  grant   next-mask
-//                      
+//
 //         0011   1111   0001     1110
 //         0011   1110   0010     1100
-//         0011   1100   0001     1110 
+//         0011   1100   0001     1110
 //         0111   1110   0010     1100
 //         0111   1100   0100     1000
 //         ...
 //
-//   - to balance granting, masters can be prioritzed (from 0 to 3); an 
+//   - to balance granting, masters can be prioritzed (from 0 to 3); an
 //     activated highest priority layer prevent computation of lowest
 //     priority layers.
-//     
+//
 //     (here, priority 1 for req 2, 0 for others)
 //
 //         req    mask   grant   next-mask (p2) next-mask (p0)
-//                      
-//         1111   1111    0100      1000          1111    
+//
+//         1111   1111    0100      1000          1111
 //         1011   1111    0001      1100          1110
 //         1011   1110    0010      1100          1100
 //         1111   1000    0100      1111          1100
@@ -111,7 +111,7 @@ module axicb_round_robin_core
         end
     end
 
-    end else if (REQ_NB==8) begin : REQ_8
+    end else if (REQ_NB==8) begin : GRANT_8
 
     always @ (*) begin
 
