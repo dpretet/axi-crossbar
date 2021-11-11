@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Defines passed to the simulation. Read from read_config() config files
 DEFINES=""
 MAX_TRAFFIC=1000
-TIMEOUT=50000
+TIMEOUT=500000
 TC=""
 NOVCD=0
 
@@ -45,7 +45,7 @@ main() {
 
     if [[ $TC != "" ]]; then
         runner $TC
-    else 
+    else
         for config in ./tb_config/*.cfg; do
             runner $config
         done

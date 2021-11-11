@@ -20,7 +20,7 @@ module slv_monitor
         parameter AXI_DATA_W = 8,
 
         // Enable completion check and log
-        parameter CHECK_REPORT = 1, 
+        parameter CHECK_REPORT = 1,
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
@@ -93,7 +93,6 @@ module slv_monitor
     logic [32                          -1:0] rvalid_lfsr;
     logic                                    w_full;
     logic                                    w_empty;
-    logic                                    w_empty_r;
     logic                                    b_full;
     logic                                    b_empty;
     logic [32                          -1:0] bresp_exp;
@@ -111,10 +110,12 @@ module slv_monitor
     logic                                    wdata_error;
     logic [AXI_ADDR_W                  -1:0] awaddr_w;
     logic [AXI_ID_W                    -1:0] awid_w;
+    logic [8                           -1:0] awlen_w;
     logic [AXI_ADDR_W                  -1:0] awaddr_b;
     logic [AXI_ID_W                    -1:0] awid_b;
     logic [AXI_DATA_W                  -1:0] next_wdata;
     logic [8                           -1:0] wbeat;
+    logic                                    wlen_error;
 
     // Logger setup
     svlogger log;
@@ -127,7 +128,7 @@ module slv_monitor
                   `SVL_ROUTE_ALL);
     end
 
-    assign error = btimeout | rtimeout | wdata_error;
+    assign error = btimeout | rtimeout | wdata_error | wlen_error;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -141,7 +142,7 @@ module slv_monitor
         end else if (srst) begin
             awready_lfsr <= 32'b0;
         end else begin
-            // At startup init with LFSR default value 
+            // At startup init with LFSR default value
             if (awready_lfsr==32'b0) begin
                 awready_lfsr <= aw_lfsr;
             // Use to randomly assert awready/wready
@@ -153,7 +154,7 @@ module slv_monitor
         end
     end
 
-    lfsr32 
+    lfsr32
     #(
         .KEY (KEY)
     )
@@ -180,7 +181,7 @@ module slv_monitor
         end else if (srst) begin
             wready_lfsr <= 32'b0;
         end else begin
-            // At startup init with LFSR default value 
+            // At startup init with LFSR default value
             if (wready_lfsr==32'b0) begin
                 wready_lfsr <= w_lfsr;
             // Use to randomly assert awready/wready
@@ -192,7 +193,7 @@ module slv_monitor
         end
     end
 
-    lfsr32 
+    lfsr32
     #(
         .KEY ({KEY[15:0],KEY[31:16]})
     )
@@ -206,22 +207,22 @@ module slv_monitor
     );
 
 
-    axicb_scfifo 
+    axicb_scfifo
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
-        .DATA_WIDTH (AXI_ADDR_W+AXI_ID_W)
+        .DATA_WIDTH (AXI_ADDR_W+AXI_ID_W+8)
     )
-    wfifo 
+    wfifo
     (
         .aclk     (aclk),
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  ({awid,awaddr}),
+        .data_in  ({awlen,awid,awaddr}),
         .push     (awvalid & awready),
         .full     (w_full),
-        .data_out ({awid_w,awaddr_w}),
+        .data_out ({awlen_w,awid_w,awaddr_w}),
         .pull     (wvalid & wready & wlast),
         .empty    (w_empty)
     );
@@ -240,15 +241,13 @@ module slv_monitor
                 wbeat <= 8'h0;
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 wdata_error <= 1'b0;
-                w_empty_r <= 1'b0;
+                wlen_error <= 1'b0;
             end else if (srst) begin
                 wbeat <= 8'h0;
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 wdata_error <= 1'b0;
-                w_empty_r <= 1'b0;
+                wlen_error <= 1'b0;
             end else begin
-
-                w_empty_r <= w_empty;
 
                 if (wvalid & wready) begin
                     if (wlast) wbeat <= 8'h0;
@@ -257,6 +256,15 @@ module slv_monitor
                 end
 
                 if (wvalid & wready) begin
+
+                    if (wlast && awlen_w!=wbeat) begin
+                        log.error("AWLEN received doesn't match AW channel setup");
+                        wlen_error <= 1'b1;
+                        $finish();
+                    end else begin
+                        wlen_error <= 1'b0;
+                    end
+
                     if (wbeat!=0 && next_wdata!=wdata ||
                         wbeat==0 && gen_data(awaddr_w)!=wdata
                     ) begin
@@ -273,8 +281,8 @@ module slv_monitor
     // AXI4-lite Support
     end else begin
 
+        assign wlen_error = 1'b0;
         assign wbeat = 8'h0;
-        assign w_empty_r = 1'b0;
         assign wready = wready_lfsr[0] & ~w_empty;
 
         always @ (posedge aclk or negedge aresetn) begin
@@ -304,13 +312,13 @@ module slv_monitor
     // Write Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    axicb_scfifo 
+    axicb_scfifo
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
         .DATA_WIDTH (AXI_ID_W+AXI_ADDR_W)
     )
-    bfifo 
+    bfifo
     (
         .aclk     (aclk),
         .aresetn  (aresetn),
@@ -331,7 +339,7 @@ module slv_monitor
         end else if (srst) begin
             bvalid_lfsr <= 32'b0;
         end else begin
-            // At startup init with LFSR default value 
+            // At startup init with LFSR default value
             if (bvalid_lfsr==32'b0) begin
                 bvalid_lfsr <= b_lfsr;
             // Use to randomly assert bvalid/wready
@@ -343,7 +351,7 @@ module slv_monitor
         end
     end
 
-    lfsr32 
+    lfsr32
     #(
         .KEY (KEY)
     )
@@ -395,7 +403,7 @@ module slv_monitor
         end else if (srst) begin
             arready_lfsr <= 32'b0;
         end else begin
-            // At startup init with LFSR default value 
+            // At startup init with LFSR default value
             if (arready_lfsr==32'b0) begin
                 arready_lfsr <= ar_lfsr;
             // Use to randomly assert arready
@@ -409,7 +417,7 @@ module slv_monitor
 
     assign arready = arready_lfsr[0] & ~r_full;
 
-    lfsr32 
+    lfsr32
     #(
         .KEY (KEY)
     )
@@ -431,13 +439,13 @@ module slv_monitor
     assign rdata_exp = gen_resp(araddr/*+SLV_ADDR*/);
     assign r_fifo_i = {arid, rresp_exp[1:0], rdata_exp};
 
-    axicb_scfifo 
+    axicb_scfifo
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (2),
         .DATA_WIDTH (AXI_ID_W+2+AXI_DATA_W)
     )
-    rfifo 
+    rfifo
     (
         .aclk     (aclk),
         .aresetn  (aresetn),
@@ -458,7 +466,7 @@ module slv_monitor
         end else if (srst) begin
             rvalid_lfsr <= 32'b0;
         end else begin
-            // At startup init with LFSR default value 
+            // At startup init with LFSR default value
             if (rvalid_lfsr==32'b0) begin
                 rvalid_lfsr <= b_lfsr;
             // Use to randomly assert bvalid/wready
@@ -470,7 +478,7 @@ module slv_monitor
         end
     end
 
-    lfsr32 
+    lfsr32
     #(
     .KEY (KEY)
     )
