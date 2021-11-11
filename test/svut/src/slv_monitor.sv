@@ -22,8 +22,16 @@ module slv_monitor
         // Enable completion check and log
         parameter CHECK_REPORT = 1, 
 
+        // AXI Signals Supported:
+        //   - 0: AXI4-lite
+        //   - 1: AXI4
+        parameter AXI_SIGNALING = 0,
+
         // TIMEOUT value used for response channels
         parameter TIMEOUT = 100,
+
+        // Offset of the emulated slave
+        parameter SLV_ADDR = 0,
 
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
@@ -85,12 +93,9 @@ module slv_monitor
     logic [32                          -1:0] rvalid_lfsr;
     logic                                    w_full;
     logic                                    w_empty;
-    logic [AXI_DATA_W                  -1:0] w_fifo_i;
-    logic [AXI_DATA_W                  -1:0] w_fifo_o;
+    logic                                    w_empty_r;
     logic                                    b_full;
     logic                                    b_empty;
-    logic [2+AXI_ID_W                  -1:0] b_fifo_i;
-    logic [2+AXI_ID_W                  -1:0] b_fifo_o;
     logic [32                          -1:0] bresp_exp;
     logic                                    r_full;
     logic                                    r_empty;
@@ -104,6 +109,12 @@ module slv_monitor
     logic                                    btimeout;
     logic                                    rtimeout;
     logic                                    wdata_error;
+    logic [AXI_ADDR_W                  -1:0] awaddr_w;
+    logic [AXI_ID_W                    -1:0] awid_w;
+    logic [AXI_ADDR_W                  -1:0] awaddr_b;
+    logic [AXI_ID_W                    -1:0] awid_b;
+    logic [AXI_DATA_W                  -1:0] next_wdata;
+    logic [8                           -1:0] wbeat;
 
     // Logger setup
     svlogger log;
@@ -194,15 +205,12 @@ module slv_monitor
         .lfsr    (w_lfsr)
     );
 
-    assign wready = wready_lfsr[0] & ~w_empty;
-
-    assign w_fifo_i = gen_data(awaddr);
 
     axicb_scfifo 
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
-        .DATA_WIDTH (AXI_DATA_W)
+        .DATA_WIDTH (AXI_ADDR_W+AXI_ID_W)
     )
     wfifo 
     (
@@ -210,47 +218,97 @@ module slv_monitor
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  (w_fifo_i),
+        .data_in  ({awid,awaddr}),
         .push     (awvalid & awready),
         .full     (w_full),
-        .data_out (w_fifo_o),
+        .data_out ({awid_w,awaddr_w}),
         .pull     (wvalid & wready & wlast),
         .empty    (w_empty)
     );
 
 
-    always @ (posedge aclk or negedge aresetn) begin
+    generate
 
-        if (~aresetn) begin
-            wdata_error <= 1'b0;
-        end else if (srst) begin
-            wdata_error <= 1'b0;
-        end else begin
-            if (wvalid & wready & wlast) begin
-                if (w_fifo_o != wdata) begin
-                    log.error("ERROR: WDATA received doesn't match the expected");
-                    wdata_error <= 1'b1;
-                    $finish();
-                end begin
-                    wdata_error <= 1'b0;
+    // AXI4 Support
+    if (AXI_SIGNALING > 0) begin
+
+        assign wready = wready_lfsr[0] & ~w_empty;
+
+        always @ (posedge aclk or negedge aresetn) begin
+
+            if (~aresetn) begin
+                wbeat <= 8'h0;
+                next_wdata <= {AXI_DATA_W{1'b0}};
+                wdata_error <= 1'b0;
+                w_empty_r <= 1'b0;
+            end else if (srst) begin
+                wbeat <= 8'h0;
+                next_wdata <= {AXI_DATA_W{1'b0}};
+                wdata_error <= 1'b0;
+                w_empty_r <= 1'b0;
+            end else begin
+
+                w_empty_r <= w_empty;
+
+                if (wvalid & wready) begin
+                    if (wlast) wbeat <= 8'h0;
+                    else wbeat <= wbeat + 1;
+                    next_wdata <= next_data(wdata);
+                end
+
+                if (wvalid & wready) begin
+                    if (wbeat!=0 && next_wdata!=wdata ||
+                        wbeat==0 && gen_data(awaddr_w)!=wdata
+                    ) begin
+                        log.error("ERROR: WDATA received doesn't match the expected");
+                        wdata_error <= 1'b1;
+                        $finish();
+                    end begin
+                        wdata_error <= 1'b0;
+                    end
                 end
             end
         end
+
+    // AXI4-lite Support
+    end else begin
+
+        assign wbeat = 8'h0;
+        assign w_empty_r = 1'b0;
+        assign wready = wready_lfsr[0] & ~w_empty;
+
+        always @ (posedge aclk or negedge aresetn) begin
+
+            if (~aresetn) begin
+                wdata_error <= 1'b0;
+            end else if (srst) begin
+                wdata_error <= 1'b0;
+            end else begin
+                if (wvalid & wready & wlast) begin
+                    if (gen_data(awaddr_w) != wdata) begin
+                        log.error("ERROR: WDATA received doesn't match the expected");
+                        wdata_error <= 1'b1;
+                        $finish();
+                    end begin
+                        wdata_error <= 1'b0;
+                    end
+                end
+            end
+        end
+
     end
+    endgenerate
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign bresp_exp = gen_resp(awaddr);
-    assign b_fifo_i = {awid, bresp_exp[1:0]};
-
     axicb_scfifo 
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
-        .DATA_WIDTH (AXI_ID_W+2)
+        .DATA_WIDTH (AXI_ID_W+AXI_ADDR_W)
     )
     bfifo 
     (
@@ -258,10 +316,10 @@ module slv_monitor
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  (b_fifo_i),
-        .push     (awvalid & awready),
+        .data_in  ({awid_w,awaddr_w}),
+        .push     (wvalid & wready & wlast),
         .full     (b_full),
-        .data_out (b_fifo_o),
+        .data_out ({awid_b,awaddr_b}),
         .pull     (bvalid & bready),
         .empty    (b_empty)
     );
@@ -299,8 +357,9 @@ module slv_monitor
     );
 
     assign bvalid = ~b_empty & bvalid_lfsr[0];
-    assign bresp = b_fifo_o[1:0];
-    assign bid = (bvalid) ? b_fifo_o[2+:AXI_ID_W] : {AXI_ID_W{1'b0}};
+    assign bresp_exp = gen_resp(awaddr_b/*+SLV_ADDR*/);
+    assign bresp = bresp_exp[1:0];
+    assign bid = (bvalid) ?  awid_b : {AXI_ID_W{1'b0}};
 
     // Monitor BRESP channel to detect timeout
     always @ (posedge aclk or negedge aresetn) begin
@@ -368,8 +427,8 @@ module slv_monitor
     // Read Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign rresp_exp = gen_resp(araddr);
-    assign rdata_exp = gen_resp(araddr);
+    assign rresp_exp = gen_resp(araddr/*+SLV_ADDR*/);
+    assign rdata_exp = gen_resp(araddr/*+SLV_ADDR*/);
     assign r_fifo_i = {arid, rresp_exp[1:0], rdata_exp};
 
     axicb_scfifo 

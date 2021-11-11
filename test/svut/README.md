@@ -9,7 +9,6 @@ following setup:
 - 4 masters
 - 4 slaves
 - Use a full-mode STRB
-- AXI_SIGNALING set to AXI4-lite mode
 - No USER fields usage
 - All masters have the same priority in arbitration stages
 - All masters can access the two slaves
@@ -67,3 +66,20 @@ limiting the address range target (and so the number of slaves), use on or more
 master. The testbench is also setup by different configuration loaded by the
 Bash front-end, relying on configuration files. The flow is launched as much
 configuration are present in `tb_config` folder.
+
+
+To get help an understand all options:
+
+```bash
+./run.sh --help
+```
+To run the complete testsuite:
+
+```bash
+./run.sh --timeout 50000 --no-vcd
+```
+
+The above command extend the default value of the timeout while AXI4 testsuite
+is longer to process; it also disables VCD dump to avoid dropping an insane
+number of BIG VCD files. Default run always drops them. During the execution,
+1000 AXI4(-lite) requests are injected into each of the 9 scenarios available.

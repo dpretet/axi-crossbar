@@ -7,8 +7,10 @@ usage()
 {
 cat << EOF
 usage: bash ./run.sh ...
+        --tc                (optional)            Path to a testbench setup (located in tb_config)
 -m    | --maxtraffic        (optional)            Maximun number of requests injected by the drivers
 -t    | --timeout           (optional)            Timeout in number of cycles (10000 by default)
+-n    | --no-vcd            (optional)            Don't dump VCD file
 -h    | --help                                    Brings up this menu
 EOF
 }
@@ -60,6 +62,10 @@ get_args() {
                 shift
                 TIMEOUT=$1
             ;;
+            -n | --no-vcd )
+                shift
+                NOVCD=1
+            ;;
             -h | --help )
                 usage
                 exit 0
@@ -101,8 +107,12 @@ runner() {
     DEFINES=$(read_config $1)
     DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC;TSNAME=$config_name"
 
+    if [ $NOVCD != 0 ]; then
+        DEFINES="$DEFINES;NOVCD=1"
+    fi
+
     # Run the simulation
-    svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+    time svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
     ret=$?
     if [[ $ret != 0 ]]; then
         fails="$fails "
@@ -110,5 +120,8 @@ runner() {
 
     # Grab the return code used later to determine the compliance status
     test_ret=$((test_ret+$ret))
-    mv axicb_*.vcd vcd/${config_name}.vcd
+
+    if [ $NOVCD == 0 ]; then
+        mv axicb_*.vcd vcd/${config_name}.vcd
+    fi
 }

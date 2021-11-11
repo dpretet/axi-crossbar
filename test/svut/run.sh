@@ -18,6 +18,7 @@ DEFINES=""
 MAX_TRAFFIC=1000
 TIMEOUT=50000
 TC=""
+NOVCD=0
 
 test_ret=0
 ret=0

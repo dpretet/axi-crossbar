@@ -440,7 +440,7 @@ module axicb_crossbar_top_testbench();
     //////////////////////////////////////////////////////////////////////////
     task wait_end_of_execution();
 
-        fork 
+        fork
         begin
             while (timeout<`TIMEOUT) begin
                 @(posedge aclk);
@@ -882,7 +882,7 @@ module axicb_crossbar_top_testbench();
     );
 
 
-    mst_driver 
+    mst_driver
     #(
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
@@ -894,7 +894,7 @@ module axicb_crossbar_top_testbench();
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hCCCCCCCC)
     )
-    mst_driver0 
+    mst_driver0
     (
     .aclk     (mst0_aclk),
     .aresetn  (mst0_aresetn),
@@ -944,7 +944,7 @@ module axicb_crossbar_top_testbench();
     .rlast    (mst0_rlast)
     );
 
-    mst_driver 
+    mst_driver
     #(
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
@@ -956,7 +956,7 @@ module axicb_crossbar_top_testbench();
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hEEEEEEEE)
     )
-    mst_driver1 
+    mst_driver1
     (
     .aclk     (mst1_aclk),
     .aresetn  (mst1_aresetn),
@@ -1006,7 +1006,7 @@ module axicb_crossbar_top_testbench();
     .rlast    (mst1_rlast)
     );
 
-    mst_driver 
+    mst_driver
     #(
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
@@ -1018,7 +1018,7 @@ module axicb_crossbar_top_testbench();
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hAAAAAAAA)
     )
-    mst_driver2 
+    mst_driver2
     (
     .aclk     (mst2_aclk),
     .aresetn  (mst2_aresetn),
@@ -1068,7 +1068,7 @@ module axicb_crossbar_top_testbench();
     .rlast    (mst2_rlast)
     );
 
-    mst_driver 
+    mst_driver
     #(
     .AXI_ADDR_W      (AXI_ADDR_W),
     .AXI_ID_W        (AXI_ID_W),
@@ -1080,7 +1080,7 @@ module axicb_crossbar_top_testbench();
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('h55555555)
     )
-    mst_driver3 
+    mst_driver3
     (
     .aclk     (mst3_aclk),
     .aresetn  (mst3_aresetn),
@@ -1131,17 +1131,19 @@ module axicb_crossbar_top_testbench();
     );
 
 
-    slv_monitor 
+    slv_monitor
     #(
-    .SLV_ID       (0),
-    .AXI_ADDR_W   (AXI_ADDR_W),
-    .AXI_ID_W     (AXI_ID_W),
-    .AXI_DATA_W   (AXI_DATA_W),
-    .CHECK_REPORT (CHECK_REPORT),
-    .TIMEOUT      (`OR_TIMEOUT),
-    .KEY          ('hABCDEF0)
+    .SLV_ID         (0),
+    .AXI_ADDR_W     (AXI_ADDR_W),
+    .AXI_ID_W       (AXI_ID_W),
+    .AXI_DATA_W     (AXI_DATA_W),
+    .CHECK_REPORT   (CHECK_REPORT),
+    .AXI_SIGNALING  (AXI_SIGNALING),
+    .SLV_ADDR       (SLV0_START_ADDR),
+    .TIMEOUT        (`OR_TIMEOUT),
+    .KEY            ('hABCDEF0)
     )
-    slv_monitor0 
+    slv_monitor0
     (
     .aclk     (slv0_aclk),
     .aresetn  (slv0_aresetn),
@@ -1188,17 +1190,19 @@ module axicb_crossbar_top_testbench();
     .rlast    (slv0_rlast)
     );
 
-    slv_monitor 
+    slv_monitor
     #(
-    .SLV_ID       (1),
-    .AXI_ADDR_W   (AXI_ADDR_W),
-    .AXI_ID_W     (AXI_ID_W),
-    .AXI_DATA_W   (AXI_DATA_W),
-    .CHECK_REPORT (CHECK_REPORT),
-    .TIMEOUT      (`OR_TIMEOUT),
-    .KEY          ('hA1C5EF0)
+    .SLV_ID         (1),
+    .AXI_ADDR_W     (AXI_ADDR_W),
+    .AXI_ID_W       (AXI_ID_W),
+    .AXI_DATA_W     (AXI_DATA_W),
+    .CHECK_REPORT   (CHECK_REPORT),
+    .AXI_SIGNALING  (AXI_SIGNALING),
+    .SLV_ADDR       (SLV1_START_ADDR),
+    .TIMEOUT        (`OR_TIMEOUT),
+    .KEY            ('hA1C5EF0)
     )
-    slv_monitor1 
+    slv_monitor1
     (
     .aclk     (slv1_aclk),
     .aresetn  (slv1_aresetn),
@@ -1245,17 +1249,19 @@ module axicb_crossbar_top_testbench();
     .rlast    (slv1_rlast)
 );
 
-    slv_monitor 
+    slv_monitor
     #(
-    .SLV_ID       (2),
-    .AXI_ADDR_W   (AXI_ADDR_W),
-    .AXI_ID_W     (AXI_ID_W),
-    .AXI_DATA_W   (AXI_DATA_W),
-    .CHECK_REPORT (CHECK_REPORT),
-    .TIMEOUT      (`OR_TIMEOUT),
-    .KEY          ('hABCDEF5)
+    .SLV_ID         (2),
+    .AXI_ADDR_W     (AXI_ADDR_W),
+    .AXI_ID_W       (AXI_ID_W),
+    .AXI_DATA_W     (AXI_DATA_W),
+    .CHECK_REPORT   (CHECK_REPORT),
+    .AXI_SIGNALING  (AXI_SIGNALING),
+    .SLV_ADDR       (SLV2_START_ADDR),
+    .TIMEOUT        (`OR_TIMEOUT),
+    .KEY            ('hABCDEF5)
     )
-    slv_monitor2 
+    slv_monitor2
     (
     .aclk     (slv2_aclk),
     .aresetn  (slv2_aresetn),
@@ -1302,17 +1308,19 @@ module axicb_crossbar_top_testbench();
     .rlast    (slv2_rlast)
 );
 
-    slv_monitor 
+    slv_monitor
     #(
-    .SLV_ID       (3),
-    .AXI_ADDR_W   (AXI_ADDR_W),
-    .AXI_ID_W     (AXI_ID_W),
-    .AXI_DATA_W   (AXI_DATA_W),
-    .CHECK_REPORT (CHECK_REPORT),
-    .TIMEOUT      (`OR_TIMEOUT),
-    .KEY          ('hADCDEF0)
+    .SLV_ID         (3),
+    .AXI_ADDR_W     (AXI_ADDR_W),
+    .AXI_ID_W       (AXI_ID_W),
+    .AXI_DATA_W     (AXI_DATA_W),
+    .CHECK_REPORT   (CHECK_REPORT),
+    .AXI_SIGNALING  (AXI_SIGNALING),
+    .SLV_ADDR       (SLV3_START_ADDR),
+    .TIMEOUT        (`OR_TIMEOUT),
+    .KEY            ('hADCDEF0)
     )
-    slv_monitor3 
+    slv_monitor3
     (
     .aclk     (slv3_aclk),
     .aresetn  (slv3_aresetn),
@@ -1384,11 +1392,13 @@ module axicb_crossbar_top_testbench();
     always #2 slv2_aclk = ~slv2_aclk;
     always #2 slv3_aclk = ~slv3_aclk;
 
+    `ifndef NOVCD
     // To dump data for visualization:
     initial begin
          $dumpfile("axicb_crossbar_top_testbench.vcd");
          $dumpvars(0, axicb_crossbar_top_testbench);
      end
+    `endif
 
     // Setup time format when printing with $realtime
     initial $timeformat(-9, 1, "ns", 8);

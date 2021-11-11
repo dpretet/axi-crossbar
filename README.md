@@ -69,7 +69,6 @@ Limitations (current dev stage)
 
 - No timeout support
 - No master routing tables
-- LITE mode only (AXI4 mode should work, just not tested yet)
 - Full-STRB mode only
 
 Inbox (possible next devs)

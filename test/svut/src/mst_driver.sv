@@ -25,8 +25,7 @@ module mst_driver
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 1: Restricted AXI4 (INCR mode, ADDR, ALEN)
-        //   - 2: Complete
+        //   - 1: AXI4
         parameter AXI_SIGNALING = 0,
 
         // Enable completion check and log
@@ -97,6 +96,10 @@ module mst_driver
     logic [32                          -1:0] b_lfsr;
     logic [32                          -1:0] awvalid_lfsr;
     logic [32                          -1:0] wvalid_lfsr;
+    logic [8                           -1:0] awlen_w;
+    logic [8                           -1:0] wbeat;
+    logic [AXI_DATA_W                  -1:0] wdata_w;
+    logic [AXI_DATA_W                  -1:0] wdata_r;
     logic [32                          -1:0] arvalid_lfsr;
     logic [32                          -1:0] bready_lfsr;
     logic [32                          -1:0] rready_lfsr;
@@ -121,6 +124,8 @@ module mst_driver
     logic                                    artimeout;
     logic                                    w_full;
     logic                                    w_empty;
+    logic                                    w_empty_r;
+    logic                                    wlast_r;
 
     // Logger setup
 
@@ -139,7 +144,6 @@ module mst_driver
     // Write Address & Data Channels
     ///////////////////////////////////////////////////////////////////////////
 
-    assign awlen = 0;
     assign awsize = 0 ;
     assign awburst = 1;
     assign awlock = 0;
@@ -174,7 +178,7 @@ module mst_driver
 
             // At startup init with LFSR default value
             if (wvalid_lfsr==32'b0) begin
-                wvalid_lfsr <= aw_lfsr;
+                wvalid_lfsr <= {aw_lfsr[15:0],aw_lfsr[31:16]};
             // Use to randomly assert awvalid/wvalid
             end else if (~wvalid) begin
                 wvalid_lfsr <= wvalid_lfsr >> 1;
@@ -204,7 +208,7 @@ module mst_driver
         .lfsr    (aw_lfsr)
     );
 
-    // A ramp used in address field when generated one is out of 
+    // A ramp used in address field when the generated one is out of
     // min/max bound
     always @ (posedge aclk or negedge aresetn) begin
         if (~aresetn) begin
@@ -228,29 +232,81 @@ module mst_driver
                     (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
-    axicb_scfifo 
+    assign awlen = {3'h0, awaddr[4:0]};
+
+    axicb_scfifo
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
-        .DATA_WIDTH (AXI_DATA_W)
+        .DATA_WIDTH (AXI_DATA_W+8)
     )
-    wfifo 
+    wfifo
     (
         .aclk     (aclk),
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  (gen_data(awaddr)),
+        .data_in  ({awlen, gen_data(awaddr)}),
         .push     (awvalid & awready),
         .full     (w_full),
-        .data_out (wdata),
+        .data_out ({awlen_w, wdata_w}),
         .pull     (wvalid & wready & wlast),
         .empty    (w_empty)
     );
 
-    assign wvalid = wvalid_lfsr[0] & en & ~w_empty;
-    assign wstrb = {AXI_DATA_W/8{1'b1}};
-    assign wlast = 1'b1;
+    generate
+    if (AXI_SIGNALING > 0) begin
+
+        assign wvalid = wvalid_lfsr[0] & en & ~w_empty_r;
+        assign wdata = (wbeat==8'h0) ? wdata_w : wdata_r;
+        assign wstrb = {AXI_DATA_W/8{1'b1}};
+        assign wlast = (wbeat==awlen_w) ? 1'b1 : 1'b0;
+
+        always @ (posedge aclk or negedge aresetn) begin
+            if (~aresetn) begin
+                wbeat <= 8'h0;
+                wdata_r <= {AXI_DATA_W{1'b0}};
+                w_empty_r <= 1'b0;
+                wlast_r <= 1'b0;
+            end else if (srst) begin
+                wbeat <= 8'h0;
+                wdata_r <= {AXI_DATA_W{1'b0}};
+                w_empty_r <= 1'b0;
+                wlast_r <= 1'b0;
+            end else if (en) begin
+
+                w_empty_r <= w_empty;
+                wlast_r <= wlast;
+
+                // Was empty, but now it's filled with new request
+                if (!w_empty && w_empty_r) begin
+                    wdata_r <= wdata_w;
+                // FIFO is filled and last request has been fully transmitted
+                end else if (!w_empty && wbeat==8'h0 && wlast_r==1'b1) begin
+                    wdata_r <= next_data(wdata_w);
+                // Under a request processing
+                end else if (wvalid && wready) begin
+                    wdata_r <= next_data(wdata);
+                end
+
+                if (!w_empty) begin
+                    if (wvalid && wready && wbeat==awlen_w) wbeat <= 8'h0;
+                    else if (wvalid && wready) wbeat <= wbeat + 1;
+                end else begin
+                    wbeat <= 8'h0;
+                end
+            end
+        end
+
+    end else begin
+
+        assign wvalid = wvalid_lfsr[0] & en & ~w_empty;
+        assign wdata = wdata_w;
+        assign wstrb = {AXI_DATA_W/8{1'b1}};
+        assign wlast = 1'b1;
+
+    end
+    endgenerate
 
     ///////////////////////////////////////////////////////////////////////////////
     // Monitor AW/W channel to detect timeout
@@ -479,7 +535,7 @@ module mst_driver
         .lfsr    (ar_lfsr)
     );
 
-    // A ramp used in address field when generated one is out of 
+    // A ramp used in address field when generated one is out of
     // min/max bound
     always @ (posedge aclk or negedge aresetn) begin
         if (~aresetn) begin

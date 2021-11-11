@@ -18,4 +18,10 @@ function automatic integer gen_data(integer value);
 
 endfunction
 
+function automatic integer next_data(integer value);
+
+    next_data = value + {8'h1, 8'h1, 8'h1, 8'h1};
+
+endfunction
+
 `endif
