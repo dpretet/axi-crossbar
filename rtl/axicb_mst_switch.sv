@@ -155,7 +155,7 @@ module axicb_mst_switch
 
     axicb_scfifo
     #(
-    .PASS_THRU  (1),
+    .PASS_THRU  (0),
     .ADDR_WIDTH (8),
     .DATA_WIDTH (MST_NB)
     )

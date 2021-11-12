@@ -409,7 +409,7 @@ module slv_monitor
             // Use to randomly assert arready
             end else if (~arready) begin
                 arready_lfsr <= arready_lfsr >> 1;
-            end else begin
+            end else if (arvalid) begin
                 arready_lfsr <= ar_lfsr;
             end
         end
