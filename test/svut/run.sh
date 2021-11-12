@@ -44,13 +44,11 @@ main() {
     # Get configuration from command line
     get_args "$@"
 
-    if [[ $TC != "" ]]; then
-        runner $TC
-    else
-        for config in ./tb_config/*.cfg; do
-            runner $config
-        done
-    fi
+    if [[ $TC == "" ]]; then TC="./tb_config/*.cfg"; fi
+
+    for config in $TC; do
+        runner $config
+    done
 
     # Check if errors occured and exit
     check_status

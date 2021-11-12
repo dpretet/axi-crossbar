@@ -138,7 +138,7 @@ module axicb_mst_switch
                        (awch_grant[3]) ? i_awvalid[3] :
                                          1'b0;
 
-    assign i_awready = awch_grant & {MST_NB{o_awready}};
+    assign i_awready = awch_grant & {MST_NB{o_awready & !wch_full}};
 
     assign awch_en = o_awvalid & o_awready;
 
