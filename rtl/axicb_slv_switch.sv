@@ -76,6 +76,7 @@ module axicb_slv_switch
         input  logic [SLV_NB*RCH_W      -1:0] o_rch
     );
 
+
     ///////////////////////////////////////////////////////////////////////////
     // Local declarations
     ///////////////////////////////////////////////////////////////////////////
@@ -104,6 +105,7 @@ module axicb_slv_switch
     logic [AXI_ADDR_W-1:0] slv3_start_addr = SLV3_START_ADDR[0+:AXI_ADDR_W];
     logic [AXI_ADDR_W-1:0] slv3_end_addr =   SLV3_END_ADDR[0+:AXI_ADDR_W];
 
+
     ///////////////////////////////////////////////////////////////////////////
     // Write Address Channel
     ///////////////////////////////////////////////////////////////////////////
@@ -129,9 +131,10 @@ module axicb_slv_switch
                        (slv_aw_targeted[1]) ? o_awready[1] :
                        (slv_aw_targeted[2]) ? o_awready[2] :
                        (slv_aw_targeted[3]) ? o_awready[3] :
-                                            1'b0;
+                                              1'b0;
 
     assign o_awch = i_awch;
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Data Channel

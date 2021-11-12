@@ -92,6 +92,11 @@ main() {
 
     if [[ $1 == "lint" ]]; then
 
+        set +e
+
+        printinfo "Start SVLINT"
+        svlint rtl/*
+
         printinfo "Start Verilator lint"
         verilator --lint-only +1800-2017ext+sv \
             -Wall -Wpedantic -cdc \
@@ -109,6 +114,8 @@ main() {
             ./rtl/axicb_round_robin_core.sv\
             ./rtl/axicb_crossbar_top.sv\
             --top-module axicb_crossbar_top
+
+        set -e
     fi
     if [[ $1 == "sim" ]]; then
         cd $CURDIR/test/svut

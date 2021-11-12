@@ -7,11 +7,11 @@ usage()
 {
 cat << EOF
 usage: bash ./run.sh ...
-        --tc                (optional)            Path to a testbench setup (located in tb_config)
--m    | --maxtraffic        (optional)            Maximun number of requests injected by the drivers
--t    | --timeout           (optional)            Timeout in number of cycles (10000 by default)
--n    | --no-vcd            (optional)            Don't dump VCD file
--h    | --help                                    Brings up this menu
+     --tc                (optional)            Path to a testbench setup (located in tb_config)
+-m | --max-traffic       (optional)            Maximun number of requests injected by the drivers
+-t | --timeout           (optional)            Timeout in number of cycles (10000 by default)
+     --no-vcd            (optional)            Don't dump VCD file
+-h | --help                                    Brings up this menu
 EOF
 }
 #------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ check_status() {
         exit 1
     fi
 
-    echo -e "${GREEN}INFO: Testsuites executed successfully!${NV}"
+    echo -e "${GREEN}INFO: Testsuites executed successfully!${NC}"
     exit 0
 }
 
@@ -50,7 +50,7 @@ get_args() {
     # First handle the arguments
     while [ "$1" != "" ]; do
         case $1 in
-            -m | --maxtraffic )
+            -m | --max-traffic )
                 shift
                 MAX_TRAFFIC=$1
             ;;
@@ -62,7 +62,7 @@ get_args() {
                 shift
                 TIMEOUT=$1
             ;;
-            -n | --no-vcd )
+            --no-vcd )
                 shift
                 NOVCD=1
             ;;
@@ -96,7 +96,6 @@ read_config() {
 #------------------------------------------------------------------------------
 # Run function targeting a specific configuration
 #------------------------------------------------------------------------------
-
 runner() {
 
     # Grab config name to setup testsuite name
@@ -112,15 +111,16 @@ runner() {
     fi
 
     # Run the simulation
-    time svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+    svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
     ret=$?
     if [[ $ret != 0 ]]; then
-        fails="$fails "
+        fails="$fails $config_name"
     fi
 
-    # Grab the return code used later to determine the compliance status
+    # Gathers the return code to check later a bunch of simulation status
     test_ret=$((test_ret+$ret))
 
+    # Backup VCD file of current test
     if [ $NOVCD == 0 ]; then
         mv axicb_*.vcd vcd/${config_name}.vcd
     fi

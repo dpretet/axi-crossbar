@@ -27,11 +27,11 @@ module axicb_scfifo_ram
         end
     end
 
-    generate if (FFD_EN==1) begin
+    generate if (FFD_EN==1) begin: WITH_FFD
         always @ (posedge aclk) begin
             data_out <= ram[addr_out];
         end
-    end else begin
+    end else begin: NO_FFD
         assign data_out = ram[addr_out];
     end
     endgenerate

@@ -37,6 +37,7 @@ main() {
 
     rm -f simulation.log
     rm -fr vcd
+    rm -fr *.vcd
     rm -f *.txt
     mkdir vcd
 

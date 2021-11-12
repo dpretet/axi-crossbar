@@ -79,6 +79,7 @@ module axicb_mst_switch
         input  logic [RCH_W             -1:0] o_rch
     );
 
+
     ///////////////////////////////////////////////////////////////////////////
     // Local declarations
     ///////////////////////////////////////////////////////////////////////////
@@ -87,8 +88,6 @@ module axicb_mst_switch
     logic [MST_NB    -1:0] awch_req;
     logic [MST_NB    -1:0] awch_grant;
 
-    logic                  wch_en;
-    logic [MST_NB    -1:0] wch_req;
     logic [MST_NB    -1:0] wch_grant;
 
     logic                  arch_en;
@@ -107,6 +106,7 @@ module axicb_mst_switch
 
     logic                  wch_full;
     logic                  wch_empty;
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address Channel
@@ -148,6 +148,7 @@ module axicb_mst_switch
                     (awch_grant[3]) ? i_awch[3*AWCH_W+:AWCH_W] :
                                       {AWCH_W{1'b0}};
 
+
     ///////////////////////////////////////////////////////////////////////////
     // Write Data Channel
     ///////////////////////////////////////////////////////////////////////////
@@ -187,13 +188,12 @@ module axicb_mst_switch
     assign i_wready = (wch_empty) ? {MST_NB{1'b0}} :
                                      wch_grant & {MST_NB{o_wready}};
 
-    assign wch_en = o_wvalid & o_wready & o_wlast;
-
     assign o_wch = (~wch_empty & wch_grant[0]) ? i_wch[0*WCH_W+:WCH_W] :
                    (~wch_empty & wch_grant[1]) ? i_wch[1*WCH_W+:WCH_W] :
                    (~wch_empty & wch_grant[2]) ? i_wch[2*WCH_W+:WCH_W] :
                    (~wch_empty & wch_grant[3]) ? i_wch[3*WCH_W+:WCH_W] :
                                                  {WCH_W{1'b0}};
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response channel
