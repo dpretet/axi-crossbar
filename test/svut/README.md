@@ -3,9 +3,10 @@
 ## Overview
 
 This testbench is a simple environment to stress the crossbar infrastructure
-by randomly access slave nodes from up to four master nodes. It's built upon 
-Icarus Verilog 11 (used on MacOS) and relies on
-[SVUT](https://github.com/dpretet/svut) to configure and execute the flow.
+by randomly access slave nodes from up to four master nodes. It's built upon
+Icarus Verilog 11 and relies on
+[SVUT](https://github.com/dpretet/svut) to configure and execute the flow,
+binded by a Bash front-end.
 
 This testbench is focused on the configuration of the crossbar with
 following setup:
@@ -13,23 +14,19 @@ following setup:
 - 4 masters
 - 4 slaves
 - Use a full-mode STRB
-- No USER fields usage
 - All masters have the same priority in arbitration stages
 - All masters can access the four slaves
 
 The master model is very simple and limited to a basic behavior. It doesn't
 widely cover the corner cases of a complex crossbar. Further and better
 coverage should be attained with a more advanced testbench architecture,
-planned in the future with BFMs to validate the AXI4 protocol support.
+planned in the future with BFMs to validate the AXI4 protocol support. However,
+usage of LFSR and more generally its inner randomized behavior should ensure
+a decent coverage of the core's features.
 
-Slaves are mapped over small memory spaces to ease and speed verification
-Traffic injection is timely random, can be continuous or sparse.
-Address and data are synchronous because of current crossbar limitations
-Verification is done only on AXI4-lite for the first verification milestone
-
-Both drivers and monitors rely on LFSR to generate the ADDR, ALEN and the
-valid/ready handshakes for all the channels. This permits to cover a wide
-number of corner cases during the traffic injection and consumption.
+Slaves are mapped over small memory spaces to ease and speed verification.
+Traffic injection is timely random, can be continuous or sparse, as the
+completions. Slave monitor also uses LFSR to handshake with the core.
 
 ## Scenario
 
@@ -38,8 +35,6 @@ number of corner cases during the traffic injection and consumption.
 - generate a random address + random sideband signals (PROT, ...)
 - generate a random data from address
 - generate a random response
-
-An address can be out of range, thus a DECERR response is recorded and checked.
 
 2/ Slave receives a request and completes it
 
@@ -86,13 +81,17 @@ To get help and understand all options:
 To run the complete testsuite:
 
 ```bash
-./run.sh --timeout 500000 --no-vcd
+./run.sh --no-vcd
 ```
 
-The above command extend the default value of the timeout while AXI4 testsuite
-is longer to process; it also disables VCD dump to avoid dropping an insane
-number of BIG VCD files. Default run always drops them. During the execution,
-1000 AXI4(-lite) requests are injected into each of the 9 scenarios available.
+The above command disables VCD dump to avoid dropping an insane number of big
+VCD files. Default run always drops them. During the execution, 1000
+AXI4(-lite) requests are injected into each of the 9 scenarios available. A
+default timeout is setup to ensure the whole requests can be completed.
+
+The number of requests can be setup to any value, the user just needs to take
+care of the timeout value. The testbench stops after a certain time, even if
+the driver/monitor handshake and complete their operations.
 
 A subset of the testbench configuration can also be ran:
 

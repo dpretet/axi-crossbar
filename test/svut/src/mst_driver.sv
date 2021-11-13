@@ -31,6 +31,12 @@ module mst_driver
         // Enable completion check and log
         parameter CHECK_REPORT = 1,
 
+        // USER sideband support ans setup
+        parameter USER_SUPPORT = 0,
+        parameter AXI_AUSER_W = 4,
+        parameter AXI_WUSER_W = 4,
+        parameter AXI_BUSER_W = 4,
+        parameter AXI_RUSER_W = 4,
         // Timeout value used outstanding request monitoring
         // and channels handshakes
         parameter TIMEOUT = 100,
@@ -57,15 +63,18 @@ module mst_driver
         output logic [4             -1:0] awqos,
         output logic [4             -1:0] awregion,
         output logic [AXI_ID_W      -1:0] awid,
+        output logic [AXI_AUSER_W   -1:0] awuser,
         output logic                      wvalid,
         input  logic                      wready,
         output logic                      wlast,
         output logic [AXI_DATA_W    -1:0] wdata,
         output logic [AXI_DATA_W/8  -1:0] wstrb,
+        output logic [AXI_WUSER_W   -1:0] wuser,
         input  logic                      bvalid,
         output logic                      bready,
         input  logic [AXI_ID_W      -1:0] bid,
         input  logic [2             -1:0] bresp,
+        input  logic [AXI_BUSER_W   -1:0] buser,
         output logic                      arvalid,
         input  logic                      arready,
         output logic [AXI_ADDR_W    -1:0] araddr,
@@ -78,12 +87,14 @@ module mst_driver
         output logic [4             -1:0] arqos,
         output logic [4             -1:0] arregion,
         output logic [AXI_ID_W      -1:0] arid,
+        output logic [AXI_AUSER_W   -1:0] aruser,
         input  logic                      rvalid,
         output logic                      rready,
         input  logic [AXI_ID_W      -1:0] rid,
         input  logic [2             -1:0] rresp,
         input  logic [AXI_DATA_W    -1:0] rdata,
-        input  logic                      rlast
+        input  logic                      rlast,
+        input  logic [AXI_RUSER_W   -1:0] ruser
     );
 
     logic [32                          -1:0] awaddr_ramp;
@@ -106,10 +117,12 @@ module mst_driver
     logic [MST_OSTDREQ_NUM             -1:0] wr_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] wr_orreq_id;
     logic [MST_OSTDREQ_NUM*2           -1:0] wr_orreq_resp;
+    logic [MST_OSTDREQ_NUM*AXI_BUSER_W -1:0] wr_orreq_buser;
     logic [MST_OSTDREQ_NUM             -1:0] rd_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] rd_orreq_id;
     logic [MST_OSTDREQ_NUM*AXI_DATA_W  -1:0] rd_orreq_rdata;
     logic [MST_OSTDREQ_NUM*2           -1:0] rd_orreq_rresp;
+    logic [MST_OSTDREQ_NUM*AXI_RUSER_W -1:0] rd_orreq_ruser;
     logic                                    bresp_error;
     logic                                    rresp_error;
     logic                                    wor_error;
@@ -144,13 +157,14 @@ module mst_driver
     // Write Address & Data Channels
     ///////////////////////////////////////////////////////////////////////////
 
-    assign awsize = 0 ;
-    assign awburst = 1;
-    assign awlock = 0;
-    assign awcache = 0;
-    assign awprot = 0;
-    assign awqos = 0;
-    assign awregion = 0;
+    assign awsize = gen_size(awaddr);
+    assign awburst = gen_burst(awaddr);
+    assign awlock = gen_lock(awaddr);
+    assign awcache = gen_cache(awaddr);
+    assign awprot = gen_prot(awaddr);
+    assign awqos = gen_qos(awaddr);
+    assign awregion = gen_region(awaddr);
+    assign awuser = gen_auser(awaddr);
     assign awid = MST_ID + awid_cnt;
 
 
@@ -261,6 +275,7 @@ module mst_driver
         assign wdata = (wbeat==8'h0) ? wdata_w : wdata_r;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = (wbeat==awlen_w) ? 1'b1 : 1'b0;
+        assign wuser = gen_auser(wdata_w);
 
         always @ (posedge aclk or negedge aresetn) begin
             if (~aresetn) begin
@@ -360,6 +375,7 @@ module mst_driver
             wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
             bresp_error <= 1'b0;
             wor_error <= 1'b0;
 
@@ -372,6 +388,7 @@ module mst_driver
             wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
             bresp_error <= 1'b0;
             wor_error <= 1'b0;
 
@@ -397,6 +414,7 @@ module mst_driver
                     wr_orreq[i] <= 1'b1;
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= awid;
                     wr_orreq_resp[i*2+:2] <= gen_resp(awaddr);
+                    wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= gen_buser(awaddr);
                 end
 
                 // Release the OR on response handshake
@@ -407,6 +425,13 @@ module mst_driver
                     wr_orreq[i] <= 1'b0;
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
                     wr_orreq_resp[i*2+:2] <= 2'b0;
+
+                    if (wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] !== buser && 
+                        USER_SUPPORT && CHECK_REPORT
+                    ) begin
+                        log.error("BUSER doesn't match expected value");
+                        bresp_error <= 1'b1;
+                    end
 
                     if (wr_orreq_resp[i*2+:2] !== bresp && CHECK_REPORT) begin
                         log.error("BRESP doesn't match expected value");
@@ -483,14 +508,14 @@ module mst_driver
     // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////////
 
-    assign arlen = 0;
-    assign arsize = 0;
-    assign arburst = 1;
-    assign arlock = 0;
-    assign arcache = 0;
-    assign arprot = 0;
-    assign arqos = 0;
-    assign arregion = 0;
+    assign arsize = gen_size(araddr);
+    assign arburst = gen_burst(araddr);
+    assign arlock = gen_lock(araddr);
+    assign arcache = gen_cache(araddr);
+    assign arprot = gen_prot(araddr);
+    assign arqos = gen_qos(araddr);
+    assign arregion = gen_region(araddr);
+    assign aruser = gen_auser(araddr);
     assign arid = MST_ID + arid_cnt;
 
     always @ (posedge aclk or negedge aresetn) begin
@@ -559,6 +584,8 @@ module mst_driver
                                                          {ar_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
+
+    assign arlen = {3'h0, araddr[4:0]};
 
     ///////////////////////////////////////////////////////////////////////////
     // Monitor AR channel to detect timeout
@@ -638,6 +665,7 @@ module mst_driver
             rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
             rresp_error <= 1'b0;
             ror_error <= 1'b0;
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
@@ -650,6 +678,7 @@ module mst_driver
             rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
             rresp_error <= 1'b0;
             ror_error <= 1'b0;
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
@@ -675,6 +704,7 @@ module mst_driver
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= arid;
                     rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= gen_resp(araddr);
                     rd_orreq_rresp[i*2+:2] <= gen_resp(araddr);
+                    rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] <= gen_ruser(araddr);
                 end
 
                 // Release the OR once read data channel hanshakes
@@ -686,6 +716,13 @@ module mst_driver
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
                     rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= {AXI_DATA_W{1'b0}};
                     rd_orreq_rresp[i*2+:2] <= 2'b0;
+
+                    if (rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] != ruser &&
+                        USER_SUPPORT && CHECK_REPORT)
+                    begin
+                        log.error("RUSER doesn't match expected value");
+                        rresp_error <= 1'b1;
+                    end
 
                     if (rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] != rdata &&
                         rd_orreq_rresp[i*2+:2] != rresp &&

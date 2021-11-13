@@ -34,6 +34,14 @@ module axicb_slv_if
         // Size of an outstanding request in dataphase
         parameter MST_OSTDREQ_SIZE = 1,
 
+        // USER fields transport enabling (0 deactivate, 1 activate)
+        parameter USER_SUPPORT = 0,
+        // USER fields width in bits
+        parameter AXI_AUSER_W = 0,
+        parameter AXI_WUSER_W = 0,
+        parameter AXI_BUSER_W = 0,
+        parameter AXI_RUSER_W = 0,
+
         // Output channels' width (concatenated)
         parameter AWCH_W = 8,
         parameter WCH_W = 8,
@@ -57,15 +65,18 @@ module axicb_slv_if
         input  logic [4             -1:0] i_awqos,
         input  logic [4             -1:0] i_awregion,
         input  logic [AXI_ID_W      -1:0] i_awid,
+        input  logic [AXI_AUSER_W   -1:0] i_awuser,
         input  logic                      i_wvalid,
         output logic                      i_wready,
         input  logic                      i_wlast,
         input  logic [AXI_DATA_W    -1:0] i_wdata,
         input  logic [AXI_DATA_W/8  -1:0] i_wstrb,
+        input  logic [AXI_WUSER_W   -1:0] i_wuser,
         output logic                      i_bvalid,
         input  logic                      i_bready,
         output logic [AXI_ID_W      -1:0] i_bid,
         output logic [2             -1:0] i_bresp,
+        output logic [AXI_BUSER_W   -1:0] i_buser,
         input  logic                      i_arvalid,
         output logic                      i_arready,
         input  logic [AXI_ADDR_W    -1:0] i_araddr,
@@ -78,12 +89,14 @@ module axicb_slv_if
         input  logic [4             -1:0] i_arqos,
         input  logic [4             -1:0] i_arregion,
         input  logic [AXI_ID_W      -1:0] i_arid,
+        input  logic [AXI_AUSER_W   -1:0] i_aruser,
         output logic                      i_rvalid,
         input  logic                      i_rready,
         output logic [AXI_ID_W      -1:0] i_rid,
         output logic [2             -1:0] i_rresp,
         output logic [AXI_DATA_W    -1:0] i_rdata,
         output logic                      i_rlast,
+        output logic [AXI_RUSER_W   -1:0] i_ruser,
         // output interface to switching logic
         input  logic                      o_aclk,
         input  logic                      o_aresetn,
@@ -107,16 +120,43 @@ module axicb_slv_if
         input  logic [RCH_W         -1:0] o_rch
     );
 
+
     ///////////////////////////////////////////////////////////////////////////////
     // Logic declarations
     ///////////////////////////////////////////////////////////////////////////////
 
     logic [AWCH_W        -1:0] awch;
+    logic [WCH_W         -1:0] wch;
+    logic [BCH_W         -1:0] bch;
     logic [ARCH_W        -1:0] arch;
+    logic [RCH_W         -1:0] rch;
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Write/Read Address Channel preparation
+    ///////////////////////////////////////////////////////////////////////////////
 
     generate
 
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
+
+        if (USER_SUPPORT>0 && AXI_AUSER_W>0) begin: AUSER_ON
+
+        assign awch = {
+            i_awuser,
+            i_awid,
+            i_awprot,
+            i_awaddr
+        };
+
+        assign arch = {
+            i_aruser,
+            i_arid,
+            i_arprot,
+            i_araddr
+        };
+
+        end else begin: AUSER_OFF
 
         assign awch = {
             i_awid,
@@ -130,7 +170,41 @@ module axicb_slv_if
             i_araddr
         };
 
+        end
+
     end else begin : AXI4_MODE
+
+        if (USER_SUPPORT>0 && AXI_AUSER_W>0) begin: AUSER_ON
+
+        assign awch = {
+            i_awuser,
+            i_awid,
+            i_awregion,
+            i_awqos,
+            i_awprot,
+            i_awcache,
+            i_awlock,
+            i_awburst,
+            i_awsize,
+            i_awlen,
+            i_awaddr
+        };
+
+        assign arch = {
+            i_aruser,
+            i_arid,
+            i_arregion,
+            i_arqos,
+            i_arprot,
+            i_arcache,
+            i_arlock,
+            i_arburst,
+            i_arsize,
+            i_arlen,
+            i_araddr
+        };
+
+        end else begin: AUSER_OFF
 
         assign awch = {
             i_awid,
@@ -158,14 +232,41 @@ module axicb_slv_if
             i_araddr
         };
 
+        end
     end
+    endgenerate
+
+    generate
+
+        if (USER_SUPPORT>0 && AXI_WUSER_W>0) begin: WUSER_ON
+            assign wch = {i_wuser, i_wstrb, i_wdata};
+        end else begin: WUSER_OFF
+            assign wch = {i_wstrb, i_wdata};
+        end
+
+    endgenerate
+
+    generate
+        if (USER_SUPPORT>0 && AXI_BUSER_W>0) begin: BUSER_ON
+            assign {i_buser, i_bresp, i_bid} = bch;
+        end else begin: BUSER_OFF
+            assign {i_bresp, i_bid} = bch;
+        end
+    endgenerate
+
+    generate
+        if (USER_SUPPORT>0 && AXI_RUSER_W>0) begin: RUSER_ON
+            assign {i_ruser, i_rresp, i_rdata, i_rid} = rch;
+        end else begin: RUSER_OFF
+            assign {i_rresp, i_rdata, i_rid} = rch;
+        end
     endgenerate
 
     generate
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    if (MST_CDC) begin: CDC_STAGE
+    if (MST_CDC > 0) begin: CDC_STAGE
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
@@ -189,26 +290,26 @@ module axicb_slv_if
                          (MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE<2) ? 2 :
                          $clog2(MST_OSTDREQ_NUM*MST_OSTDREQ_SIZE);
 
-    logic             aw_winc;
-    logic             aw_full;
-    logic             aw_rinc;
-    logic             aw_empty;
-    logic             w_winc;
-    logic             w_full;
-    logic             w_rinc;
-    logic             w_empty;
-    logic             b_winc;
-    logic             b_full;
-    logic             b_rinc;
-    logic             b_empty;
-    logic             ar_winc;
-    logic             ar_full;
-    logic             ar_rinc;
-    logic             ar_empty;
-    logic             r_winc;
-    logic             r_full;
-    logic             r_rinc;
-    logic             r_empty;
+    logic aw_winc;
+    logic aw_full;
+    logic aw_rinc;
+    logic aw_empty;
+    logic w_winc;
+    logic w_full;
+    logic w_rinc;
+    logic w_empty;
+    logic b_winc;
+    logic b_full;
+    logic b_rinc;
+    logic b_empty;
+    logic ar_winc;
+    logic ar_full;
+    logic ar_rinc;
+    logic ar_empty;
+    logic r_winc;
+    logic r_full;
+    logic r_rinc;
+    logic r_empty;
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address Channel
@@ -257,7 +358,7 @@ module axicb_slv_if
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
     .winc    (w_winc),
-    .wdata   ({i_wlast, i_wstrb, i_wdata}),
+    .wdata   ({i_wlast, wch}),
     .wfull   (w_full),
     .awfull  (),
     .rclk    (o_aclk),
@@ -295,7 +396,7 @@ module axicb_slv_if
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (b_rinc),
-    .rdata   ({i_bresp, i_bid}),
+    .rdata   (bch),
     .rempty  (b_empty),
     .arempty ()
     );
@@ -353,13 +454,13 @@ module axicb_slv_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (r_winc),
-    .wdata   ({o_rlast,o_rch}),
+    .wdata   ({o_rlast, o_rch}),
     .wfull   (r_full),
     .awfull  (),
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (r_rinc),
-    .rdata   ({i_rlast, i_rresp, i_rdata, i_rid}),
+    .rdata   ({i_rlast, rch}),
     .rempty  (r_empty),
     .arempty ()
     );
@@ -373,7 +474,7 @@ module axicb_slv_if
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    end else if (MST_OSTDREQ_NUM>0) begin: BUFF_STAGE
+    end else if (MST_OSTDREQ_NUM > 0) begin: BUFF_STAGE
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
@@ -437,7 +538,7 @@ module axicb_slv_if
     .aresetn  (i_aresetn),
     .srst     (i_srst),
     .flush    (1'b0),
-    .data_in  ({i_wlast, i_wstrb, i_wdata}),
+    .data_in  ({i_wlast, wch}),
     .push     (i_wvalid),
     .full     (w_full),
     .data_out ({o_wlast, o_wch}),
@@ -466,7 +567,7 @@ module axicb_slv_if
     .data_in  (o_bch),
     .push     (o_bvalid),
     .full     (b_full),
-    .data_out ({i_bresp, i_bid}),
+    .data_out (bch),
     .pull     (i_bready),
     .empty    (b_empty)
     );
@@ -520,7 +621,7 @@ module axicb_slv_if
     .data_in  ({o_rlast,o_rch}),
     .push     (o_rvalid),
     .full     (r_full),
-    .data_out ({i_rlast, i_rresp, i_rdata, i_rid}),
+    .data_out ({i_rlast, rch}),
     .pull     (i_rready),
     .empty    (r_empty)
     );
@@ -536,27 +637,31 @@ module axicb_slv_if
     ///////////////////////////////////////////////////////////////////////////
 
     assign o_awvalid = i_awvalid;
-    assign o_awch = awch;
     assign i_awready = o_awready;
+
+    assign o_awch = awch;
 
     assign o_wvalid = i_wvalid;
     assign i_wready = o_wready;
     assign o_wlast = i_wlast;
 
-    assign o_wch = {i_wstrb, i_wdata};
+    assign o_wch = wch;
 
     assign i_bvalid = o_bvalid;
     assign o_bready = i_bready;
-    assign {i_bresp, i_bid} = o_bch;
+
+    assign bch = o_bch;
 
     assign o_arvalid = i_arvalid;
     assign i_arready = o_arready;
+
     assign o_arch = arch;
 
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
-    assign {i_rresp, i_rdata, i_rid} = o_rch;
+
+    assign rch = o_rch;
 
     end
 

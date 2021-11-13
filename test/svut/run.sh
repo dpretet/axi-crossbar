@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 DEFINES=""
 MAX_TRAFFIC=1000
 TIMEOUT=500000
-TC=""
+TC="./tb_config/*.cfg"
 NOVCD=0
 
 test_ret=0
@@ -43,8 +43,6 @@ main() {
 
     # Get configuration from command line
     get_args "$@"
-
-    if [[ $TC == "" ]]; then TC="./tb_config/*.cfg"; fi
 
     for config in $TC; do
         runner $config

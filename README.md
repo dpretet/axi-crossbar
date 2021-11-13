@@ -42,6 +42,9 @@ Features
     - Permits to create enclosed and secured memory map
     - Access a forbidden memory zone returns a DECERR reponse in completion channel
     - Useful to save gate count
+- USER signal support
+    - Configurable for each channel (AW, AR, W, B, R)
+    - Common to all master/slave interfaces if activated
 
 
 ## Implementation Details
@@ -76,9 +79,6 @@ Inbox (possible next devs)
 - Address translation service
 - Number of master and slave agents configurable
 - RTL generator to support any number of master / slave agents
-- USER signal support
-    - Configurable for each channel (AW, AR, W, B, R)
-    - Common to all master/slave interfaces if activated
 - Completion reordering to support of out-of-order responses
 - Interface datapath width conversion
 - AXI4/AXI4-lite converter

@@ -127,10 +127,10 @@ module axicb_slv_switch
     assign o_awvalid[2] = (slv_aw_targeted[2]) ? i_awvalid : 1'b0;
     assign o_awvalid[3] = (slv_aw_targeted[3]) ? i_awvalid : 1'b0;
 
-    assign i_awready = (slv_aw_targeted[0]) ? o_awready[0] :
-                       (slv_aw_targeted[1]) ? o_awready[1] :
-                       (slv_aw_targeted[2]) ? o_awready[2] :
-                       (slv_aw_targeted[3]) ? o_awready[3] :
+    assign i_awready = (slv_aw_targeted[0]) ? o_awready[0] & !wch_full:
+                       (slv_aw_targeted[1]) ? o_awready[1] & !wch_full:
+                       (slv_aw_targeted[2]) ? o_awready[2] & !wch_full:
+                       (slv_aw_targeted[3]) ? o_awready[3] & !wch_full:
                                               1'b0;
 
     assign o_awch = i_awch;

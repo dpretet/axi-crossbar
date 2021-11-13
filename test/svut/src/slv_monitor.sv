@@ -27,6 +27,14 @@ module slv_monitor
         //   - 1: AXI4
         parameter AXI_SIGNALING = 0,
 
+        // USER fields transport enabling (0 deactivate, 1 activate)
+        parameter USER_SUPPORT = 0,
+        // USER fields width in bits
+        parameter AXI_AUSER_W = 0,
+        parameter AXI_WUSER_W = 0,
+        parameter AXI_BUSER_W = 0,
+        parameter AXI_RUSER_W = 0,
+
         // TIMEOUT value used for response channels
         parameter TIMEOUT = 100,
 
@@ -52,15 +60,18 @@ module slv_monitor
         input  logic [4             -1:0] awqos,
         input  logic [4             -1:0] awregion,
         input  logic [AXI_ID_W      -1:0] awid,
+        input  logic [AXI_AUSER_W   -1:0] awuser,
         input  logic                      wvalid,
         output logic                      wready,
         input  logic                      wlast,
         input  logic [AXI_DATA_W    -1:0] wdata,
         input  logic [AXI_DATA_W/8  -1:0] wstrb,
+        input  logic [AXI_WUSER_W   -1:0] wuser,
         output logic                      bvalid,
         input  logic                      bready,
         output logic [AXI_ID_W      -1:0] bid,
         output logic [2             -1:0] bresp,
+        output logic [AXI_BUSER_W   -1:0] buser,
         input  logic                      arvalid,
         output logic                      arready,
         input  logic [AXI_ADDR_W    -1:0] araddr,
@@ -73,12 +84,14 @@ module slv_monitor
         input  logic [4             -1:0] arqos,
         input  logic [4             -1:0] arregion,
         input  logic [AXI_ID_W      -1:0] arid,
+        input  logic [AXI_AUSER_W   -1:0] aruser,
         output logic                      rvalid,
         input  logic                      rready,
         output logic [AXI_ID_W      -1:0] rid,
         output logic [2             -1:0] rresp,
         output logic [AXI_DATA_W    -1:0] rdata,
-        output logic                      rlast
+        output logic                      rlast,
+        output logic [AXI_RUSER_W   -1:0] ruser
     );
 
     logic [32                          -1:0] aw_lfsr;
@@ -96,12 +109,12 @@ module slv_monitor
     logic                                    b_full;
     logic                                    b_empty;
     logic [32                          -1:0] bresp_exp;
+    logic [32                          -1:0] buser_exp;
     logic                                    r_full;
     logic                                    r_empty;
-    logic [2+AXI_ID_W+AXI_DATA_W       -1:0] r_fifo_i;
-    logic [2+AXI_ID_W+AXI_DATA_W       -1:0] r_fifo_o;
     logic [32                          -1:0] rdata_exp;
     logic [32                          -1:0] rresp_exp;
+    logic [32                          -1:0] ruser_exp;
 
     integer                                  btimer;
     integer                                  rtimer;
@@ -116,6 +129,33 @@ module slv_monitor
     logic [AXI_DATA_W                  -1:0] next_wdata;
     logic [8                           -1:0] wbeat;
     logic                                    wlen_error;
+    logic [AXI_ADDR_W                  -1:0] araddr_r;
+    logic [AXI_ID_W                    -1:0] arid_r;
+
+    logic                                    awsideband_error;
+    logic                                    wsideband_error;
+    logic                                    arsideband_error;
+
+    logic [8                           -1:0] exp_awlen;
+    logic [3                           -1:0] exp_awsize;
+    logic [2                           -1:0] exp_awburst;
+    logic [2                           -1:0] exp_awlock;
+    logic [4                           -1:0] exp_awcache;
+    logic [3                           -1:0] exp_awprot;
+    logic [4                           -1:0] exp_awqos;
+    logic [4                           -1:0] exp_awregion;
+    logic [AXI_AUSER_W                 -1:0] exp_awuser;
+    logic [AXI_AUSER_W                 -1:0] exp_wuser;
+
+    logic [8                           -1:0] exp_arlen;
+    logic [3                           -1:0] exp_arsize;
+    logic [2                           -1:0] exp_arburst;
+    logic [2                           -1:0] exp_arlock;
+    logic [4                           -1:0] exp_arcache;
+    logic [3                           -1:0] exp_arprot;
+    logic [4                           -1:0] exp_arqos;
+    logic [4                           -1:0] exp_arregion;
+    logic [AXI_AUSER_W                 -1:0] exp_aruser;
 
     // Logger setup
     svlogger log;
@@ -128,7 +168,8 @@ module slv_monitor
                   `SVL_ROUTE_ALL);
     end
 
-    assign error = btimeout | rtimeout | wdata_error | wlen_error;
+    assign error = btimeout | rtimeout | wdata_error | wlen_error |
+                   awsideband_error | wsideband_error | arsideband_error;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -169,6 +210,54 @@ module slv_monitor
 
     assign awready = awready_lfsr[0] & ~b_full & ~w_full;
 
+    assign exp_awsize = gen_size(awaddr);
+    assign exp_awburst = gen_burst(awaddr);
+    assign exp_awlock = gen_lock(awaddr);
+    assign exp_awcache = gen_cache(awaddr);
+    assign exp_awprot = gen_prot(awaddr);
+    assign exp_awqos = gen_qos(awaddr);
+    assign exp_awregion = gen_region(awaddr);
+    assign exp_awuser = gen_auser(awaddr);
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            awsideband_error <= 1'b0;
+        end else if (srst) begin
+            awsideband_error <= 1'b0;
+        end else begin
+            
+            if (awvalid && awready) begin
+                if (awsize != exp_awsize[2:0])
+                    awsideband_error <= 1'b1;
+
+                if (awburst != exp_awburst[1:0])
+                    awsideband_error <= 1'b1;
+
+                if (awlock != exp_awlock[1:0])
+                    awsideband_error <= 1'b1;
+
+                if (awcache != exp_awcache[3:0])
+                    awsideband_error <= 1'b1;
+
+                if (awprot != exp_awprot[2:0])
+                    awsideband_error <= 1'b1;
+
+                if (awqos != exp_awqos[3:0])
+                    awsideband_error <= 1'b1;
+
+                if (awregion != exp_awregion[3:0])
+                    awsideband_error <= 1'b1;
+
+                if (USER_SUPPORT>0 && awuser != exp_awuser[AXI_AUSER_W-1:0])
+                    awsideband_error <= 1'b1;
+
+            end else begin
+                awsideband_error <= 1'b0;
+            end
+        end
+
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Data channel
@@ -228,6 +317,8 @@ module slv_monitor
     );
 
 
+    assign exp_wuser = gen_auser(awaddr_w);
+
     generate
 
     // AXI4 Support
@@ -242,11 +333,13 @@ module slv_monitor
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 wdata_error <= 1'b0;
                 wlen_error <= 1'b0;
+                wsideband_error <= 1'b0;
             end else if (srst) begin
                 wbeat <= 8'h0;
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 wdata_error <= 1'b0;
                 wlen_error <= 1'b0;
+                wsideband_error <= 1'b0;
             end else begin
 
                 if (wvalid & wready) begin
@@ -256,6 +349,11 @@ module slv_monitor
                 end
 
                 if (wvalid & wready) begin
+
+                    if (USER_SUPPORT>0 && wuser!=exp_wuser[AXI_WUSER_W-1:0]) begin
+                        log.error("ERROR: WUSER received doesn't match the expected");
+                        wsideband_error <= 1'b1;
+                    end
 
                     if (wlast && awlen_w!=wbeat) begin
                         log.error("AWLEN received doesn't match AW channel setup");
@@ -274,6 +372,8 @@ module slv_monitor
                     end begin
                         wdata_error <= 1'b0;
                     end
+                end else begin
+                    wsideband_error <= 1'b0;
                 end
             end
         end
@@ -289,10 +389,18 @@ module slv_monitor
 
             if (~aresetn) begin
                 wdata_error <= 1'b0;
+                wsideband_error <= 1'b0;
             end else if (srst) begin
                 wdata_error <= 1'b0;
+                wsideband_error <= 1'b0;
             end else begin
                 if (wvalid & wready & wlast) begin
+
+                    if (USER_SUPPORT>0 && wuser!=exp_wuser[AXI_WUSER_W-1:0]) begin
+                        log.error("ERROR: WUSER received doesn't match the expected");
+                        wsideband_error <= 1'b1;
+                    end
+
                     if (gen_data(awaddr_w) != wdata) begin
                         log.error("ERROR: WDATA received doesn't match the expected");
                         wdata_error <= 1'b1;
@@ -300,6 +408,8 @@ module slv_monitor
                     end begin
                         wdata_error <= 1'b0;
                     end
+                end else begin
+                    wsideband_error <= 1'b0;
                 end
             end
         end
@@ -366,8 +476,10 @@ module slv_monitor
 
     assign bvalid = ~b_empty & bvalid_lfsr[0];
     assign bresp_exp = gen_resp(awaddr_b/*+SLV_ADDR*/);
+    assign buser_exp = gen_buser(awaddr_b/*+SLV_ADDR*/);
     assign bresp = bresp_exp[1:0];
     assign bid = (bvalid) ?  awid_b : {AXI_ID_W{1'b0}};
+    assign buser = buser_exp[0+:AXI_BUSER_W];
 
     // Monitor BRESP channel to detect timeout
     always @ (posedge aclk or negedge aresetn) begin
@@ -430,20 +542,55 @@ module slv_monitor
         .lfsr    (ar_lfsr)
     );
 
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            arsideband_error <= 1'b0;
+        end else if (srst) begin
+            arsideband_error <= 1'b0;
+        end else begin
+            
+            if (arvalid && arready) begin
+                if (arsize != exp_arsize[2:0])
+                    arsideband_error <= 1'b1;
+
+                if (arburst != exp_arburst[1:0])
+                    arsideband_error <= 1'b1;
+
+                if (arlock != exp_arlock[1:0])
+                    arsideband_error <= 1'b1;
+
+                if (arcache != exp_arcache[3:0])
+                    arsideband_error <= 1'b1;
+
+                if (arprot != exp_arprot[2:0])
+                    arsideband_error <= 1'b1;
+
+                if (arqos != exp_arqos[3:0])
+                    arsideband_error <= 1'b1;
+
+                if (arregion != exp_arregion[3:0])
+                    arsideband_error <= 1'b1;
+
+                if (USER_SUPPORT>0 && aruser != exp_aruser[AXI_AUSER_W-1:0])
+                    arsideband_error <= 1'b1;
+
+            end else begin
+                arsideband_error <= 1'b0;
+            end
+        end
+
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    assign rresp_exp = gen_resp(araddr/*+SLV_ADDR*/);
-    assign rdata_exp = gen_resp(araddr/*+SLV_ADDR*/);
-    assign r_fifo_i = {arid, rresp_exp[1:0], rdata_exp};
-
     axicb_scfifo
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (2),
-        .DATA_WIDTH (AXI_ID_W+2+AXI_DATA_W)
+        .DATA_WIDTH (AXI_ID_W+AXI_ADDR_W)
     )
     rfifo
     (
@@ -451,10 +598,10 @@ module slv_monitor
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  (r_fifo_i),
+        .data_in  ({arid,araddr}),
         .push     (arvalid & arready),
         .full     (r_full),
-        .data_out (r_fifo_o),
+        .data_out ({arid_r,araddr_r}),
         .pull     (rvalid & rready),
         .empty    (r_empty)
     );
@@ -491,10 +638,15 @@ module slv_monitor
     .lfsr    (r_lfsr)
     );
 
+    assign rresp_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
+    assign rdata_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
+    assign ruser_exp = gen_ruser(araddr_r/*+SLV_ADDR*/);
+
     assign rvalid = ~r_empty & rvalid_lfsr[0];
-    assign rdata = r_fifo_o[0+:AXI_DATA_W];
-    assign rresp = r_fifo_o[AXI_DATA_W+:2];
-    assign rid = r_fifo_o[AXI_DATA_W+2+:AXI_ID_W];
+    assign rdata = rdata_exp[0+:AXI_DATA_W];
+    assign rresp = rresp_exp[0+:2];
+    assign rid = arid_r;
+    assign ruser = ruser_exp[0+:AXI_RUSER_W];
     assign rlast = 1'b1;
 
     // Monitor RRESP channel to detect timeout

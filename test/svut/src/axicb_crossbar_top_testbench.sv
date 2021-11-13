@@ -31,11 +31,11 @@ module axicb_crossbar_top_testbench();
     parameter SLV_PIPELINE = `SLV_PIPELINE;
     parameter STRB_MODE = 1;
     parameter AXI_SIGNALING = `AXI_SIGNALING;
-    parameter USER_SUPPORT = 0;
-    parameter AUSER_W = 1;
-    parameter WUSER_W = 1;
-    parameter BUSER_W = 1;
-    parameter RUSER_W = 1;
+    parameter USER_SUPPORT = `USER_SUPPORT;
+    parameter AXI_AUSER_W = 4;
+    parameter AXI_WUSER_W = 4;
+    parameter AXI_BUSER_W = 4;
+    parameter AXI_RUSER_W = 4;
     parameter TIMEOUT_VALUE = `TIMEOUT;
     parameter TIMEOUT_ENABLE = 1;
     parameter MST0_CDC = `MST0_CDC;
@@ -106,15 +106,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst0_awqos;
     logic [4             -1:0] mst0_awregion;
     logic [AXI_ID_W      -1:0] mst0_awid;
+    logic [AXI_AUSER_W   -1:0] mst0_awuser;
     logic                      mst0_wvalid;
     logic                      mst0_wready;
     logic                      mst0_wlast;
     logic [AXI_DATA_W    -1:0] mst0_wdata;
     logic [AXI_DATA_W/8  -1:0] mst0_wstrb;
+    logic [AXI_WUSER_W   -1:0] mst0_wuser;
     logic                      mst0_bvalid;
     logic                      mst0_bready;
     logic [AXI_ID_W      -1:0] mst0_bid;
     logic [2             -1:0] mst0_bresp;
+    logic [AXI_BUSER_W   -1:0] mst0_buser;
     logic                      mst0_arvalid;
     logic                      mst0_arready;
     logic [AXI_ADDR_W    -1:0] mst0_araddr;
@@ -127,12 +130,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst0_arqos;
     logic [4             -1:0] mst0_arregion;
     logic [AXI_ID_W      -1:0] mst0_arid;
+    logic [AXI_AUSER_W   -1:0] mst0_aruser;
     logic                      mst0_rvalid;
     logic                      mst0_rready;
     logic [AXI_ID_W      -1:0] mst0_rid;
     logic [2             -1:0] mst0_rresp;
     logic [AXI_DATA_W    -1:0] mst0_rdata;
     logic                      mst0_rlast;
+    logic [AXI_RUSER_W   -1:0] mst0_ruser;
     logic                      mst1_aclk;
     logic                      mst1_aresetn;
     logic                      mst1_srst;
@@ -148,15 +153,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst1_awqos;
     logic [4             -1:0] mst1_awregion;
     logic [AXI_ID_W      -1:0] mst1_awid;
+    logic [AXI_AUSER_W   -1:0] mst1_awuser;
     logic                      mst1_wvalid;
     logic                      mst1_wready;
     logic                      mst1_wlast;
     logic [AXI_DATA_W    -1:0] mst1_wdata;
     logic [AXI_DATA_W/8  -1:0] mst1_wstrb;
+    logic [AXI_WUSER_W   -1:0] mst1_wuser;
     logic                      mst1_bvalid;
     logic                      mst1_bready;
     logic [AXI_ID_W      -1:0] mst1_bid;
     logic [2             -1:0] mst1_bresp;
+    logic [AXI_BUSER_W   -1:0] mst1_buser;
     logic                      mst1_arvalid;
     logic                      mst1_arready;
     logic [AXI_ADDR_W    -1:0] mst1_araddr;
@@ -169,12 +177,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst1_arqos;
     logic [4             -1:0] mst1_arregion;
     logic [AXI_ID_W      -1:0] mst1_arid;
+    logic [AXI_AUSER_W   -1:0] mst1_aruser;
     logic                      mst1_rvalid;
     logic                      mst1_rready;
     logic [AXI_ID_W      -1:0] mst1_rid;
     logic [2             -1:0] mst1_rresp;
     logic [AXI_DATA_W    -1:0] mst1_rdata;
     logic                      mst1_rlast;
+    logic [AXI_RUSER_W   -1:0] mst1_ruser;
     logic                      mst2_aclk;
     logic                      mst2_aresetn;
     logic                      mst2_srst;
@@ -190,15 +200,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst2_awqos;
     logic [4             -1:0] mst2_awregion;
     logic [AXI_ID_W      -1:0] mst2_awid;
+    logic [AXI_AUSER_W   -1:0] mst2_awuser;
     logic                      mst2_wvalid;
     logic                      mst2_wready;
     logic                      mst2_wlast;
     logic [AXI_DATA_W    -1:0] mst2_wdata;
     logic [AXI_DATA_W/8  -1:0] mst2_wstrb;
+    logic [AXI_WUSER_W   -1:0] mst2_wuser;
     logic                      mst2_bvalid;
     logic                      mst2_bready;
     logic [AXI_ID_W      -1:0] mst2_bid;
     logic [2             -1:0] mst2_bresp;
+    logic [AXI_BUSER_W   -1:0] mst2_buser;
     logic                      mst2_arvalid;
     logic                      mst2_arready;
     logic [AXI_ADDR_W    -1:0] mst2_araddr;
@@ -211,12 +224,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst2_arqos;
     logic [4             -1:0] mst2_arregion;
     logic [AXI_ID_W      -1:0] mst2_arid;
+    logic [AXI_AUSER_W   -1:0] mst2_aruser;
     logic                      mst2_rvalid;
     logic                      mst2_rready;
     logic [AXI_ID_W      -1:0] mst2_rid;
     logic [2             -1:0] mst2_rresp;
     logic [AXI_DATA_W    -1:0] mst2_rdata;
     logic                      mst2_rlast;
+    logic [AXI_RUSER_W   -1:0] mst2_ruser;
     logic                      mst3_aclk;
     logic                      mst3_aresetn;
     logic                      mst3_srst;
@@ -232,15 +247,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst3_awqos;
     logic [4             -1:0] mst3_awregion;
     logic [AXI_ID_W      -1:0] mst3_awid;
+    logic [AXI_AUSER_W   -1:0] mst3_awuser;
     logic                      mst3_wvalid;
     logic                      mst3_wready;
     logic                      mst3_wlast;
     logic [AXI_DATA_W    -1:0] mst3_wdata;
     logic [AXI_DATA_W/8  -1:0] mst3_wstrb;
+    logic [AXI_WUSER_W   -1:0] mst3_wuser;
     logic                      mst3_bvalid;
     logic                      mst3_bready;
     logic [AXI_ID_W      -1:0] mst3_bid;
     logic [2             -1:0] mst3_bresp;
+    logic [AXI_BUSER_W   -1:0] mst3_buser;
     logic                      mst3_arvalid;
     logic                      mst3_arready;
     logic [AXI_ADDR_W    -1:0] mst3_araddr;
@@ -253,12 +271,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] mst3_arqos;
     logic [4             -1:0] mst3_arregion;
     logic [AXI_ID_W      -1:0] mst3_arid;
+    logic [AXI_AUSER_W   -1:0] mst3_aruser;
     logic                      mst3_rvalid;
     logic                      mst3_rready;
     logic [AXI_ID_W      -1:0] mst3_rid;
     logic [2             -1:0] mst3_rresp;
     logic [AXI_DATA_W    -1:0] mst3_rdata;
     logic                      mst3_rlast;
+    logic [AXI_RUSER_W   -1:0] mst3_ruser;
     logic                      slv0_aclk;
     logic                      slv0_aresetn;
     logic                      slv0_srst;
@@ -274,15 +294,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv0_awqos;
     logic [4             -1:0] slv0_awregion;
     logic [AXI_ID_W      -1:0] slv0_awid;
+    logic [AXI_AUSER_W   -1:0] slv0_awuser;
     logic                      slv0_wvalid;
     logic                      slv0_wready;
     logic                      slv0_wlast;
     logic [AXI_DATA_W    -1:0] slv0_wdata;
     logic [AXI_DATA_W/8  -1:0] slv0_wstrb;
+    logic [AXI_WUSER_W   -1:0] slv0_wuser;
     logic                      slv0_bvalid;
     logic                      slv0_bready;
     logic [AXI_ID_W      -1:0] slv0_bid;
     logic [2             -1:0] slv0_bresp;
+    logic [AXI_BUSER_W   -1:0] slv0_buser;
     logic                      slv0_arvalid;
     logic                      slv0_arready;
     logic [AXI_ADDR_W    -1:0] slv0_araddr;
@@ -295,12 +318,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv0_arqos;
     logic [4             -1:0] slv0_arregion;
     logic [AXI_ID_W      -1:0] slv0_arid;
+    logic [AXI_AUSER_W   -1:0] slv0_aruser;
     logic                      slv0_rvalid;
     logic                      slv0_rready;
     logic [AXI_ID_W      -1:0] slv0_rid;
     logic [2             -1:0] slv0_rresp;
     logic [AXI_DATA_W    -1:0] slv0_rdata;
     logic                      slv0_rlast;
+    logic [AXI_RUSER_W   -1:0] slv0_ruser;
     logic                      slv1_aclk;
     logic                      slv1_aresetn;
     logic                      slv1_srst;
@@ -316,15 +341,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv1_awqos;
     logic [4             -1:0] slv1_awregion;
     logic [AXI_ID_W      -1:0] slv1_awid;
+    logic [AXI_AUSER_W   -1:0] slv1_awuser;
     logic                      slv1_wvalid;
     logic                      slv1_wready;
     logic                      slv1_wlast;
     logic [AXI_DATA_W    -1:0] slv1_wdata;
     logic [AXI_DATA_W/8  -1:0] slv1_wstrb;
+    logic [AXI_WUSER_W   -1:0] slv1_wuser;
     logic                      slv1_bvalid;
     logic                      slv1_bready;
     logic [AXI_ID_W      -1:0] slv1_bid;
     logic [2             -1:0] slv1_bresp;
+    logic [AXI_BUSER_W   -1:0] slv1_buser;
     logic                      slv1_arvalid;
     logic                      slv1_arready;
     logic [AXI_ADDR_W    -1:0] slv1_araddr;
@@ -337,12 +365,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv1_arqos;
     logic [4             -1:0] slv1_arregion;
     logic [AXI_ID_W      -1:0] slv1_arid;
+    logic [AXI_AUSER_W   -1:0] slv1_aruser;
     logic                      slv1_rvalid;
     logic                      slv1_rready;
     logic [AXI_ID_W      -1:0] slv1_rid;
     logic [2             -1:0] slv1_rresp;
     logic [AXI_DATA_W    -1:0] slv1_rdata;
     logic                      slv1_rlast;
+    logic [AXI_RUSER_W   -1:0] slv1_ruser;
     logic                      slv2_aclk;
     logic                      slv2_aresetn;
     logic                      slv2_srst;
@@ -358,15 +388,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv2_awqos;
     logic [4             -1:0] slv2_awregion;
     logic [AXI_ID_W      -1:0] slv2_awid;
+    logic [AXI_AUSER_W   -1:0] slv2_awuser;
     logic                      slv2_wvalid;
     logic                      slv2_wready;
     logic                      slv2_wlast;
     logic [AXI_DATA_W    -1:0] slv2_wdata;
     logic [AXI_DATA_W/8  -1:0] slv2_wstrb;
+    logic [AXI_WUSER_W   -1:0] slv2_wuser;
     logic                      slv2_bvalid;
     logic                      slv2_bready;
     logic [AXI_ID_W      -1:0] slv2_bid;
     logic [2             -1:0] slv2_bresp;
+    logic [AXI_BUSER_W   -1:0] slv2_buser;
     logic                      slv2_arvalid;
     logic                      slv2_arready;
     logic [AXI_ADDR_W    -1:0] slv2_araddr;
@@ -379,12 +412,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv2_arqos;
     logic [4             -1:0] slv2_arregion;
     logic [AXI_ID_W      -1:0] slv2_arid;
+    logic [AXI_AUSER_W   -1:0] slv2_aruser;
     logic                      slv2_rvalid;
     logic                      slv2_rready;
     logic [AXI_ID_W      -1:0] slv2_rid;
     logic [2             -1:0] slv2_rresp;
     logic [AXI_DATA_W    -1:0] slv2_rdata;
     logic                      slv2_rlast;
+    logic [AXI_RUSER_W   -1:0] slv2_ruser;
     logic                      slv3_aclk;
     logic                      slv3_aresetn;
     logic                      slv3_srst;
@@ -400,15 +435,18 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv3_awqos;
     logic [4             -1:0] slv3_awregion;
     logic [AXI_ID_W      -1:0] slv3_awid;
+    logic [AXI_AUSER_W   -1:0] slv3_awuser;
     logic                      slv3_wvalid;
     logic                      slv3_wready;
     logic                      slv3_wlast;
     logic [AXI_DATA_W    -1:0] slv3_wdata;
     logic [AXI_DATA_W/8  -1:0] slv3_wstrb;
+    logic [AXI_WUSER_W   -1:0] slv3_wuser;
     logic                      slv3_bvalid;
     logic                      slv3_bready;
     logic [AXI_ID_W      -1:0] slv3_bid;
     logic [2             -1:0] slv3_bresp;
+    logic [AXI_BUSER_W   -1:0] slv3_buser;
     logic                      slv3_arvalid;
     logic                      slv3_arready;
     logic [AXI_ADDR_W    -1:0] slv3_araddr;
@@ -421,12 +459,14 @@ module axicb_crossbar_top_testbench();
     logic [4             -1:0] slv3_arqos;
     logic [4             -1:0] slv3_arregion;
     logic [AXI_ID_W      -1:0] slv3_arid;
+    logic [AXI_AUSER_W   -1:0] slv3_aruser;
     logic                      slv3_rvalid;
     logic                      slv3_rready;
     logic [AXI_ID_W      -1:0] slv3_rid;
     logic [2             -1:0] slv3_rresp;
     logic [AXI_DATA_W    -1:0] slv3_rdata;
     logic                      slv3_rlast;
+    logic [AXI_RUSER_W   -1:0] slv3_ruser;
 
     integer                    nb_reqs;
     integer                    timeout;
@@ -487,10 +527,10 @@ module axicb_crossbar_top_testbench();
     .STRB_MODE          (STRB_MODE),
     .AXI_SIGNALING      (AXI_SIGNALING),
     .USER_SUPPORT       (USER_SUPPORT),
-    .AUSER_W            (AUSER_W),
-    .WUSER_W            (WUSER_W),
-    .BUSER_W            (BUSER_W),
-    .RUSER_W            (RUSER_W),
+    .AXI_AUSER_W        (AXI_AUSER_W),
+    .AXI_WUSER_W        (AXI_WUSER_W),
+    .AXI_BUSER_W        (AXI_BUSER_W),
+    .AXI_RUSER_W        (AXI_RUSER_W),
     .TIMEOUT_VALUE      (TIMEOUT_VALUE),
     .TIMEOUT_ENABLE     (TIMEOUT_ENABLE),
     .MST0_CDC           (MST0_CDC),
@@ -558,15 +598,18 @@ module axicb_crossbar_top_testbench();
     .slv0_awqos      (mst0_awqos),
     .slv0_awregion   (mst0_awregion),
     .slv0_awid       (mst0_awid),
+    .slv0_awuser     (mst0_awuser),
     .slv0_wvalid     (mst0_wvalid),
     .slv0_wready     (mst0_wready),
     .slv0_wlast      (mst0_wlast),
     .slv0_wdata      (mst0_wdata),
     .slv0_wstrb      (mst0_wstrb),
+    .slv0_wuser      (mst0_wuser),
     .slv0_bvalid     (mst0_bvalid),
     .slv0_bready     (mst0_bready),
     .slv0_bid        (mst0_bid),
     .slv0_bresp      (mst0_bresp),
+    .slv0_buser      (mst0_buser),
     .slv0_arvalid    (mst0_arvalid),
     .slv0_arready    (mst0_arready),
     .slv0_araddr     (mst0_araddr),
@@ -579,12 +622,14 @@ module axicb_crossbar_top_testbench();
     .slv0_arqos      (mst0_arqos),
     .slv0_arregion   (mst0_arregion),
     .slv0_arid       (mst0_arid),
+    .slv0_aruser     (mst0_aruser),
     .slv0_rvalid     (mst0_rvalid),
     .slv0_rready     (mst0_rready),
     .slv0_rid        (mst0_rid),
     .slv0_rresp      (mst0_rresp),
     .slv0_rdata      (mst0_rdata),
     .slv0_rlast      (mst0_rlast),
+    .slv0_ruser      (mst0_ruser),
     .slv1_aclk       (mst1_aclk),
     .slv1_aresetn    (mst1_aresetn),
     .slv1_srst       (mst1_srst),
@@ -600,15 +645,18 @@ module axicb_crossbar_top_testbench();
     .slv1_awqos      (mst1_awqos),
     .slv1_awregion   (mst1_awregion),
     .slv1_awid       (mst1_awid),
+    .slv1_awuser     (mst1_awuser),
     .slv1_wvalid     (mst1_wvalid),
     .slv1_wready     (mst1_wready),
     .slv1_wlast      (mst1_wlast),
     .slv1_wdata      (mst1_wdata),
     .slv1_wstrb      (mst1_wstrb),
+    .slv1_wuser      (mst1_wuser),
     .slv1_bvalid     (mst1_bvalid),
     .slv1_bready     (mst1_bready),
     .slv1_bid        (mst1_bid),
     .slv1_bresp      (mst1_bresp),
+    .slv1_buser      (mst1_buser),
     .slv1_arvalid    (mst1_arvalid),
     .slv1_arready    (mst1_arready),
     .slv1_araddr     (mst1_araddr),
@@ -621,12 +669,14 @@ module axicb_crossbar_top_testbench();
     .slv1_arqos      (mst1_arqos),
     .slv1_arregion   (mst1_arregion),
     .slv1_arid       (mst1_arid),
+    .slv1_aruser     (mst1_aruser),
     .slv1_rvalid     (mst1_rvalid),
     .slv1_rready     (mst1_rready),
     .slv1_rid        (mst1_rid),
     .slv1_rresp      (mst1_rresp),
     .slv1_rdata      (mst1_rdata),
     .slv1_rlast      (mst1_rlast),
+    .slv1_ruser      (mst1_ruser),
     .slv2_aclk       (mst2_aclk),
     .slv2_aresetn    (mst2_aresetn),
     .slv2_srst       (mst2_srst),
@@ -642,15 +692,18 @@ module axicb_crossbar_top_testbench();
     .slv2_awqos      (mst2_awqos),
     .slv2_awregion   (mst2_awregion),
     .slv2_awid       (mst2_awid),
+    .slv2_awuser     (mst2_awuser),
     .slv2_wvalid     (mst2_wvalid),
     .slv2_wready     (mst2_wready),
     .slv2_wlast      (mst2_wlast),
     .slv2_wdata      (mst2_wdata),
     .slv2_wstrb      (mst2_wstrb),
+    .slv2_wuser      (mst2_wuser),
     .slv2_bvalid     (mst2_bvalid),
     .slv2_bready     (mst2_bready),
     .slv2_bid        (mst2_bid),
     .slv2_bresp      (mst2_bresp),
+    .slv2_buser      (mst2_buser),
     .slv2_arvalid    (mst2_arvalid),
     .slv2_arready    (mst2_arready),
     .slv2_araddr     (mst2_araddr),
@@ -663,12 +716,14 @@ module axicb_crossbar_top_testbench();
     .slv2_arqos      (mst2_arqos),
     .slv2_arregion   (mst2_arregion),
     .slv2_arid       (mst2_arid),
+    .slv2_aruser     (mst2_aruser),
     .slv2_rvalid     (mst2_rvalid),
     .slv2_rready     (mst2_rready),
     .slv2_rid        (mst2_rid),
     .slv2_rresp      (mst2_rresp),
     .slv2_rdata      (mst2_rdata),
     .slv2_rlast      (mst2_rlast),
+    .slv2_ruser      (mst2_ruser),
     .slv3_aclk       (mst3_aclk),
     .slv3_aresetn    (mst3_aresetn),
     .slv3_srst       (mst3_srst),
@@ -684,15 +739,18 @@ module axicb_crossbar_top_testbench();
     .slv3_awqos      (mst3_awqos),
     .slv3_awregion   (mst3_awregion),
     .slv3_awid       (mst3_awid),
+    .slv3_awuser     (mst3_awuser),
     .slv3_wvalid     (mst3_wvalid),
     .slv3_wready     (mst3_wready),
     .slv3_wlast      (mst3_wlast),
     .slv3_wdata      (mst3_wdata),
     .slv3_wstrb      (mst3_wstrb),
+    .slv3_wuser      (mst3_wuser),
     .slv3_bvalid     (mst3_bvalid),
     .slv3_bready     (mst3_bready),
     .slv3_bid        (mst3_bid),
     .slv3_bresp      (mst3_bresp),
+    .slv3_buser      (mst3_buser),
     .slv3_arvalid    (mst3_arvalid),
     .slv3_arready    (mst3_arready),
     .slv3_araddr     (mst3_araddr),
@@ -705,12 +763,14 @@ module axicb_crossbar_top_testbench();
     .slv3_arqos      (mst3_arqos),
     .slv3_arregion   (mst3_arregion),
     .slv3_arid       (mst3_arid),
+    .slv3_aruser     (mst3_aruser),
     .slv3_rvalid     (mst3_rvalid),
     .slv3_rready     (mst3_rready),
     .slv3_rid        (mst3_rid),
     .slv3_rresp      (mst3_rresp),
     .slv3_rdata      (mst3_rdata),
     .slv3_rlast      (mst3_rlast),
+    .slv3_ruser      (mst3_ruser),
     .mst0_aclk       (slv0_aclk),
     .mst0_aresetn    (slv0_aresetn),
     .mst0_srst       (slv0_srst),
@@ -726,15 +786,18 @@ module axicb_crossbar_top_testbench();
     .mst0_awqos      (slv0_awqos),
     .mst0_awregion   (slv0_awregion),
     .mst0_awid       (slv0_awid),
+    .mst0_awuser     (slv0_awuser),
     .mst0_wvalid     (slv0_wvalid),
     .mst0_wready     (slv0_wready),
     .mst0_wlast      (slv0_wlast),
     .mst0_wdata      (slv0_wdata),
     .mst0_wstrb      (slv0_wstrb),
+    .mst0_wuser      (slv0_wuser),
     .mst0_bvalid     (slv0_bvalid),
     .mst0_bready     (slv0_bready),
     .mst0_bid        (slv0_bid),
     .mst0_bresp      (slv0_bresp),
+    .mst0_buser      (slv0_buser),
     .mst0_arvalid    (slv0_arvalid),
     .mst0_arready    (slv0_arready),
     .mst0_araddr     (slv0_araddr),
@@ -747,12 +810,14 @@ module axicb_crossbar_top_testbench();
     .mst0_arqos      (slv0_arqos),
     .mst0_arregion   (slv0_arregion),
     .mst0_arid       (slv0_arid),
+    .mst0_aruser     (slv0_aruser),
     .mst0_rvalid     (slv0_rvalid),
     .mst0_rready     (slv0_rready),
     .mst0_rid        (slv0_rid),
     .mst0_rresp      (slv0_rresp),
     .mst0_rdata      (slv0_rdata),
     .mst0_rlast      (slv0_rlast),
+    .mst0_ruser      (slv0_ruser),
     .mst1_aclk       (slv1_aclk),
     .mst1_aresetn    (slv1_aresetn),
     .mst1_srst       (slv1_srst),
@@ -768,14 +833,17 @@ module axicb_crossbar_top_testbench();
     .mst1_awqos      (slv1_awqos),
     .mst1_awregion   (slv1_awregion),
     .mst1_awid       (slv1_awid),
+    .mst1_awuser     (slv1_awuser),
     .mst1_wvalid     (slv1_wvalid),
     .mst1_wready     (slv1_wready),
     .mst1_wlast      (slv1_wlast),
     .mst1_wdata      (slv1_wdata),
     .mst1_wstrb      (slv1_wstrb),
+    .mst1_wuser      (slv1_wuser),
     .mst1_bvalid     (slv1_bvalid),
     .mst1_bready     (slv1_bready),
     .mst1_bid        (slv1_bid),
+    .mst1_buser      (slv1_buser),
     .mst1_bresp      (slv1_bresp),
     .mst1_arvalid    (slv1_arvalid),
     .mst1_arready    (slv1_arready),
@@ -789,12 +857,14 @@ module axicb_crossbar_top_testbench();
     .mst1_arqos      (slv1_arqos),
     .mst1_arregion   (slv1_arregion),
     .mst1_arid       (slv1_arid),
+    .mst1_aruser     (slv1_aruser),
     .mst1_rvalid     (slv1_rvalid),
     .mst1_rready     (slv1_rready),
     .mst1_rid        (slv1_rid),
     .mst1_rresp      (slv1_rresp),
     .mst1_rdata      (slv1_rdata),
     .mst1_rlast      (slv1_rlast),
+    .mst1_ruser      (slv1_ruser),
     .mst2_aclk       (slv2_aclk),
     .mst2_aresetn    (slv2_aresetn),
     .mst2_srst       (slv2_srst),
@@ -810,15 +880,18 @@ module axicb_crossbar_top_testbench();
     .mst2_awqos      (slv2_awqos),
     .mst2_awregion   (slv2_awregion),
     .mst2_awid       (slv2_awid),
+    .mst2_awuser     (slv2_awuser),
     .mst2_wvalid     (slv2_wvalid),
     .mst2_wready     (slv2_wready),
     .mst2_wlast      (slv2_wlast),
     .mst2_wdata      (slv2_wdata),
     .mst2_wstrb      (slv2_wstrb),
+    .mst2_wuser      (slv2_wuser),
     .mst2_bvalid     (slv2_bvalid),
     .mst2_bready     (slv2_bready),
     .mst2_bid        (slv2_bid),
     .mst2_bresp      (slv2_bresp),
+    .mst2_buser      (slv2_buser),
     .mst2_arvalid    (slv2_arvalid),
     .mst2_arready    (slv2_arready),
     .mst2_araddr     (slv2_araddr),
@@ -831,12 +904,14 @@ module axicb_crossbar_top_testbench();
     .mst2_arqos      (slv2_arqos),
     .mst2_arregion   (slv2_arregion),
     .mst2_arid       (slv2_arid),
+    .mst2_aruser     (slv2_aruser),
     .mst2_rvalid     (slv2_rvalid),
     .mst2_rready     (slv2_rready),
     .mst2_rid        (slv2_rid),
     .mst2_rresp      (slv2_rresp),
     .mst2_rdata      (slv2_rdata),
     .mst2_rlast      (slv2_rlast),
+    .mst2_ruser      (slv2_ruser),
     .mst3_aclk       (slv3_aclk),
     .mst3_aresetn    (slv3_aresetn),
     .mst3_srst       (slv3_srst),
@@ -852,15 +927,18 @@ module axicb_crossbar_top_testbench();
     .mst3_awqos      (slv3_awqos),
     .mst3_awregion   (slv3_awregion),
     .mst3_awid       (slv3_awid),
+    .mst3_awuser     (slv3_awuser),
     .mst3_wvalid     (slv3_wvalid),
     .mst3_wready     (slv3_wready),
     .mst3_wlast      (slv3_wlast),
     .mst3_wdata      (slv3_wdata),
     .mst3_wstrb      (slv3_wstrb),
+    .mst3_wuser      (slv3_wuser),
     .mst3_bvalid     (slv3_bvalid),
     .mst3_bready     (slv3_bready),
     .mst3_bid        (slv3_bid),
     .mst3_bresp      (slv3_bresp),
+    .mst3_buser      (slv3_buser),
     .mst3_arvalid    (slv3_arvalid),
     .mst3_arready    (slv3_arready),
     .mst3_araddr     (slv3_araddr),
@@ -873,12 +951,14 @@ module axicb_crossbar_top_testbench();
     .mst3_arqos      (slv3_arqos),
     .mst3_arregion   (slv3_arregion),
     .mst3_arid       (slv3_arid),
+    .mst3_aruser     (slv3_aruser),
     .mst3_rvalid     (slv3_rvalid),
     .mst3_rready     (slv3_rready),
     .mst3_rid        (slv3_rid),
     .mst3_rresp      (slv3_rresp),
     .mst3_rdata      (slv3_rdata),
-    .mst3_rlast      (slv3_rlast)
+    .mst3_rlast      (slv3_rlast),
+    .mst3_ruser      (slv3_ruser)
     );
 
 
@@ -890,6 +970,11 @@ module axicb_crossbar_top_testbench();
     .MST_ID          (MST0_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
+    .USER_SUPPORT    (USER_SUPPORT),
+    .AXI_AUSER_W     (AXI_AUSER_W),
+    .AXI_WUSER_W     (AXI_WUSER_W),
+    .AXI_BUSER_W     (AXI_BUSER_W),
+    .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hCCCCCCCC)
@@ -915,15 +1000,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (mst0_awqos),
     .awregion (mst0_awregion),
     .awid     (mst0_awid),
+    .awuser   (mst0_awuser),
     .wvalid   (mst0_wvalid),
     .wready   (mst0_wready),
     .wlast    (mst0_wlast),
     .wdata    (mst0_wdata),
     .wstrb    (mst0_wstrb),
+    .wuser    (mst0_wuser),
     .bvalid   (mst0_bvalid),
     .bready   (mst0_bready),
     .bid      (mst0_bid),
     .bresp    (mst0_bresp),
+    .buser    (mst0_buser),
     .arvalid  (mst0_arvalid),
     .arready  (mst0_arready),
     .araddr   (mst0_araddr),
@@ -936,12 +1024,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (mst0_arqos),
     .arregion (mst0_arregion),
     .arid     (mst0_arid),
+    .aruser   (mst0_aruser),
     .rvalid   (mst0_rvalid),
     .rready   (mst0_rready),
     .rid      (mst0_rid),
     .rresp    (mst0_rresp),
     .rdata    (mst0_rdata),
-    .rlast    (mst0_rlast)
+    .rlast    (mst0_rlast),
+    .ruser    (mst0_ruser)
     );
 
     mst_driver
@@ -952,6 +1042,11 @@ module axicb_crossbar_top_testbench();
     .MST_ID          (MST1_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
+    .USER_SUPPORT    (USER_SUPPORT),
+    .AXI_AUSER_W     (AXI_AUSER_W),
+    .AXI_WUSER_W     (AXI_WUSER_W),
+    .AXI_BUSER_W     (AXI_BUSER_W),
+    .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hEEEEEEEE)
@@ -977,15 +1072,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (mst1_awqos),
     .awregion (mst1_awregion),
     .awid     (mst1_awid),
+    .awuser   (mst1_awuser),
     .wvalid   (mst1_wvalid),
     .wready   (mst1_wready),
     .wlast    (mst1_wlast),
     .wdata    (mst1_wdata),
     .wstrb    (mst1_wstrb),
+    .wuser    (mst1_wuser),
     .bvalid   (mst1_bvalid),
     .bready   (mst1_bready),
     .bid      (mst1_bid),
     .bresp    (mst1_bresp),
+    .buser    (mst1_buser),
     .arvalid  (mst1_arvalid),
     .arready  (mst1_arready),
     .araddr   (mst1_araddr),
@@ -998,12 +1096,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (mst1_arqos),
     .arregion (mst1_arregion),
     .arid     (mst1_arid),
+    .aruser   (mst1_aruser),
     .rvalid   (mst1_rvalid),
     .rready   (mst1_rready),
     .rid      (mst1_rid),
     .rresp    (mst1_rresp),
     .rdata    (mst1_rdata),
-    .rlast    (mst1_rlast)
+    .rlast    (mst1_rlast),
+    .ruser    (mst1_ruser)
     );
 
     mst_driver
@@ -1014,6 +1114,11 @@ module axicb_crossbar_top_testbench();
     .MST_ID          (MST2_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
+    .USER_SUPPORT    (USER_SUPPORT),
+    .AXI_AUSER_W     (AXI_AUSER_W),
+    .AXI_WUSER_W     (AXI_WUSER_W),
+    .AXI_BUSER_W     (AXI_BUSER_W),
+    .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hAAAAAAAA)
@@ -1039,15 +1144,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (mst2_awqos),
     .awregion (mst2_awregion),
     .awid     (mst2_awid),
+    .awuser   (mst2_awuser),
     .wvalid   (mst2_wvalid),
     .wready   (mst2_wready),
     .wlast    (mst2_wlast),
     .wdata    (mst2_wdata),
     .wstrb    (mst2_wstrb),
+    .wuser    (mst2_wuser),
     .bvalid   (mst2_bvalid),
     .bready   (mst2_bready),
     .bid      (mst2_bid),
     .bresp    (mst2_bresp),
+    .buser    (mst2_buser),
     .arvalid  (mst2_arvalid),
     .arready  (mst2_arready),
     .araddr   (mst2_araddr),
@@ -1060,12 +1168,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (mst2_arqos),
     .arregion (mst2_arregion),
     .arid     (mst2_arid),
+    .aruser   (mst2_aruser),
     .rvalid   (mst2_rvalid),
     .rready   (mst2_rready),
     .rid      (mst2_rid),
     .rresp    (mst2_rresp),
     .rdata    (mst2_rdata),
-    .rlast    (mst2_rlast)
+    .rlast    (mst2_rlast),
+    .ruser    (mst2_ruser)
     );
 
     mst_driver
@@ -1076,6 +1186,11 @@ module axicb_crossbar_top_testbench();
     .MST_ID          (MST3_ID_MASK),
     .MST_OSTDREQ_NUM (16),
     .AXI_SIGNALING   (AXI_SIGNALING),
+    .USER_SUPPORT    (USER_SUPPORT),
+    .AXI_AUSER_W     (AXI_AUSER_W),
+    .AXI_WUSER_W     (AXI_WUSER_W),
+    .AXI_BUSER_W     (AXI_BUSER_W),
+    .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('h55555555)
@@ -1101,15 +1216,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (mst3_awqos),
     .awregion (mst3_awregion),
     .awid     (mst3_awid),
+    .awuser   (mst3_awuser),
     .wvalid   (mst3_wvalid),
     .wready   (mst3_wready),
     .wlast    (mst3_wlast),
     .wdata    (mst3_wdata),
     .wstrb    (mst3_wstrb),
+    .wuser    (mst3_wuser),
     .bvalid   (mst3_bvalid),
     .bready   (mst3_bready),
     .bid      (mst3_bid),
     .bresp    (mst3_bresp),
+    .buser    (mst3_buser),
     .arvalid  (mst3_arvalid),
     .arready  (mst3_arready),
     .araddr   (mst3_araddr),
@@ -1122,12 +1240,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (mst3_arqos),
     .arregion (mst3_arregion),
     .arid     (mst3_arid),
+    .aruser   (mst3_aruser),
     .rvalid   (mst3_rvalid),
     .rready   (mst3_rready),
     .rid      (mst3_rid),
     .rresp    (mst3_rresp),
     .rdata    (mst3_rdata),
-    .rlast    (mst3_rlast)
+    .rlast    (mst3_rlast),
+    .ruser    (mst3_ruser)
     );
 
 
@@ -1139,6 +1259,11 @@ module axicb_crossbar_top_testbench();
     .AXI_DATA_W     (AXI_DATA_W),
     .CHECK_REPORT   (CHECK_REPORT),
     .AXI_SIGNALING  (AXI_SIGNALING),
+    .USER_SUPPORT   (USER_SUPPORT),
+    .AXI_AUSER_W    (AXI_AUSER_W),
+    .AXI_WUSER_W    (AXI_WUSER_W),
+    .AXI_BUSER_W    (AXI_BUSER_W),
+    .AXI_RUSER_W    (AXI_RUSER_W),
     .SLV_ADDR       (SLV0_START_ADDR),
     .TIMEOUT        (`OR_TIMEOUT),
     .KEY            ('hABCDEF0)
@@ -1161,15 +1286,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (slv0_awqos),
     .awregion (slv0_awregion),
     .awid     (slv0_awid),
+    .awuser   (slv0_awuser),
     .wvalid   (slv0_wvalid),
     .wready   (slv0_wready),
     .wlast    (slv0_wlast),
     .wdata    (slv0_wdata),
     .wstrb    (slv0_wstrb),
+    .wuser    (slv0_wuser),
     .bvalid   (slv0_bvalid),
     .bready   (slv0_bready),
     .bid      (slv0_bid),
     .bresp    (slv0_bresp),
+    .buser    (slv0_buser),
     .arvalid  (slv0_arvalid),
     .arready  (slv0_arready),
     .araddr   (slv0_araddr),
@@ -1182,12 +1310,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (slv0_arqos),
     .arregion (slv0_arregion),
     .arid     (slv0_arid),
+    .aruser   (slv0_aruser),
     .rvalid   (slv0_rvalid),
     .rready   (slv0_rready),
     .rid      (slv0_rid),
     .rresp    (slv0_rresp),
     .rdata    (slv0_rdata),
-    .rlast    (slv0_rlast)
+    .rlast    (slv0_rlast),
+    .ruser    (slv0_ruser)
     );
 
     slv_monitor
@@ -1198,6 +1328,11 @@ module axicb_crossbar_top_testbench();
     .AXI_DATA_W     (AXI_DATA_W),
     .CHECK_REPORT   (CHECK_REPORT),
     .AXI_SIGNALING  (AXI_SIGNALING),
+    .USER_SUPPORT   (USER_SUPPORT),
+    .AXI_AUSER_W    (AXI_AUSER_W),
+    .AXI_WUSER_W    (AXI_WUSER_W),
+    .AXI_BUSER_W    (AXI_BUSER_W),
+    .AXI_RUSER_W    (AXI_RUSER_W),
     .SLV_ADDR       (SLV1_START_ADDR),
     .TIMEOUT        (`OR_TIMEOUT),
     .KEY            ('hA1C5EF0)
@@ -1220,15 +1355,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (slv1_awqos),
     .awregion (slv1_awregion),
     .awid     (slv1_awid),
+    .awuser   (slv1_awuser),
     .wvalid   (slv1_wvalid),
     .wready   (slv1_wready),
     .wlast    (slv1_wlast),
     .wdata    (slv1_wdata),
     .wstrb    (slv1_wstrb),
+    .wuser    (slv1_wuser),
     .bvalid   (slv1_bvalid),
     .bready   (slv1_bready),
     .bid      (slv1_bid),
     .bresp    (slv1_bresp),
+    .buser    (slv1_buser),
     .arvalid  (slv1_arvalid),
     .arready  (slv1_arready),
     .araddr   (slv1_araddr),
@@ -1241,13 +1379,15 @@ module axicb_crossbar_top_testbench();
     .arqos    (slv1_arqos),
     .arregion (slv1_arregion),
     .arid     (slv1_arid),
+    .aruser   (slv1_aruser),
     .rvalid   (slv1_rvalid),
     .rready   (slv1_rready),
     .rid      (slv1_rid),
     .rresp    (slv1_rresp),
     .rdata    (slv1_rdata),
-    .rlast    (slv1_rlast)
-);
+    .rlast    (slv1_rlast),
+    .ruser    (slv1_ruser)
+    );
 
     slv_monitor
     #(
@@ -1257,6 +1397,11 @@ module axicb_crossbar_top_testbench();
     .AXI_DATA_W     (AXI_DATA_W),
     .CHECK_REPORT   (CHECK_REPORT),
     .AXI_SIGNALING  (AXI_SIGNALING),
+    .USER_SUPPORT   (USER_SUPPORT),
+    .AXI_AUSER_W    (AXI_AUSER_W),
+    .AXI_WUSER_W    (AXI_WUSER_W),
+    .AXI_BUSER_W    (AXI_BUSER_W),
+    .AXI_RUSER_W    (AXI_RUSER_W),
     .SLV_ADDR       (SLV2_START_ADDR),
     .TIMEOUT        (`OR_TIMEOUT),
     .KEY            ('hABCDEF5)
@@ -1279,15 +1424,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (slv2_awqos),
     .awregion (slv2_awregion),
     .awid     (slv2_awid),
+    .awuser   (slv2_awuser),
     .wvalid   (slv2_wvalid),
     .wready   (slv2_wready),
     .wlast    (slv2_wlast),
     .wdata    (slv2_wdata),
     .wstrb    (slv2_wstrb),
+    .wuser    (slv2_wuser),
     .bvalid   (slv2_bvalid),
     .bready   (slv2_bready),
     .bid      (slv2_bid),
     .bresp    (slv2_bresp),
+    .buser    (slv2_buser),
     .arvalid  (slv2_arvalid),
     .arready  (slv2_arready),
     .araddr   (slv2_araddr),
@@ -1300,12 +1448,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (slv2_arqos),
     .arregion (slv2_arregion),
     .arid     (slv2_arid),
+    .aruser   (slv2_aruser),
     .rvalid   (slv2_rvalid),
     .rready   (slv2_rready),
     .rid      (slv2_rid),
     .rresp    (slv2_rresp),
     .rdata    (slv2_rdata),
-    .rlast    (slv2_rlast)
+    .rlast    (slv2_rlast),
+    .ruser    (slv2_ruser)
 );
 
     slv_monitor
@@ -1316,6 +1466,11 @@ module axicb_crossbar_top_testbench();
     .AXI_DATA_W     (AXI_DATA_W),
     .CHECK_REPORT   (CHECK_REPORT),
     .AXI_SIGNALING  (AXI_SIGNALING),
+    .USER_SUPPORT   (USER_SUPPORT),
+    .AXI_AUSER_W    (AXI_AUSER_W),
+    .AXI_WUSER_W    (AXI_WUSER_W),
+    .AXI_BUSER_W    (AXI_BUSER_W),
+    .AXI_RUSER_W    (AXI_RUSER_W),
     .SLV_ADDR       (SLV3_START_ADDR),
     .TIMEOUT        (`OR_TIMEOUT),
     .KEY            ('hADCDEF0)
@@ -1338,15 +1493,18 @@ module axicb_crossbar_top_testbench();
     .awqos    (slv3_awqos),
     .awregion (slv3_awregion),
     .awid     (slv3_awid),
+    .awuser   (slv3_awuser),
     .wvalid   (slv3_wvalid),
     .wready   (slv3_wready),
     .wlast    (slv3_wlast),
     .wdata    (slv3_wdata),
     .wstrb    (slv3_wstrb),
+    .wuser    (slv3_wuser),
     .bvalid   (slv3_bvalid),
     .bready   (slv3_bready),
     .bid      (slv3_bid),
     .bresp    (slv3_bresp),
+    .buser    (slv3_buser),
     .arvalid  (slv3_arvalid),
     .arready  (slv3_arready),
     .araddr   (slv3_araddr),
@@ -1359,12 +1517,14 @@ module axicb_crossbar_top_testbench();
     .arqos    (slv3_arqos),
     .arregion (slv3_arregion),
     .arid     (slv3_arid),
+    .aruser   (slv3_aruser),
     .rvalid   (slv3_rvalid),
     .rready   (slv3_rready),
     .rid      (slv3_rid),
     .rresp    (slv3_rresp),
     .rdata    (slv3_rdata),
-    .rlast    (slv3_rlast)
+    .rlast    (slv3_rlast),
+    .ruser    (slv3_ruser)
 );
 
 
@@ -1382,6 +1542,7 @@ module axicb_crossbar_top_testbench();
     initial slv1_aclk = 0;
     initial slv2_aclk = 0;
     initial slv3_aclk = 0;
+
     always #2 aclk = ~aclk;
     always #2 mst0_aclk = ~mst0_aclk;
     always #2 mst1_aclk = ~mst1_aclk;

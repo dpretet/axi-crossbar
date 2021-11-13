@@ -32,6 +32,14 @@ module axicb_mst_if
         // Size of an outstanding request in dataphase
         parameter SLV_OSTDREQ_SIZE = 1,
 
+        // USER fields transport enabling (0 deactivate, 1 activate)
+        parameter USER_SUPPORT = 0,
+        // USER fields width in bits
+        parameter AXI_AUSER_W = 0,
+        parameter AXI_WUSER_W = 0,
+        parameter AXI_BUSER_W = 0,
+        parameter AXI_RUSER_W = 0,
+
         // Input channels' width (concatenated)
         parameter AWCH_W = 8,
         parameter WCH_W = 8,
@@ -76,15 +84,18 @@ module axicb_mst_if
         output logic [4             -1:0] o_awqos,
         output logic [4             -1:0] o_awregion,
         output logic [AXI_ID_W      -1:0] o_awid,
+        output logic [AXI_AUSER_W   -1:0] o_awuser,
         output logic                      o_wvalid,
         input  logic                      o_wready,
         output logic                      o_wlast,
         output logic [AXI_DATA_W    -1:0] o_wdata,
         output logic [AXI_DATA_W/8  -1:0] o_wstrb,
+        output logic [AXI_WUSER_W   -1:0] o_wuser,
         input  logic                      o_bvalid,
         output logic                      o_bready,
         input  logic [AXI_ID_W      -1:0] o_bid,
         input  logic [2             -1:0] o_bresp,
+        input  logic [AXI_BUSER_W   -1:0] o_buser,
         output logic                      o_arvalid,
         input  logic                      o_arready,
         output logic [AXI_ADDR_W    -1:0] o_araddr,
@@ -97,12 +108,14 @@ module axicb_mst_if
         output logic [4             -1:0] o_arqos,
         output logic [4             -1:0] o_arregion,
         output logic [AXI_ID_W      -1:0] o_arid,
+        output logic [AXI_AUSER_W   -1:0] o_aruser,
         input  logic                      o_rvalid,
         output logic                      o_rready,
         input  logic [AXI_ID_W      -1:0] o_rid,
         input  logic [2             -1:0] o_rresp,
         input  logic [AXI_DATA_W    -1:0] o_rdata,
-        input  logic                      o_rlast
+        input  logic                      o_rlast,
+        input  logic [AXI_RUSER_W   -1:0] o_ruser
     );
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -110,7 +123,10 @@ module axicb_mst_if
     ///////////////////////////////////////////////////////////////////////////////
 
     logic [AWCH_W        -1:0] awch;
+    logic [WCH_W         -1:0] wch;
+    logic [BCH_W         -1:0] bch;
     logic [ARCH_W        -1:0] arch;
+    logic [RCH_W         -1:0] rch;
 
     generate
 
@@ -214,7 +230,7 @@ module axicb_mst_if
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (w_rinc),
-    .rdata   ({o_wlast, o_wstrb, o_wdata}),
+    .rdata   ({o_wlast, wch}),
     .rempty  (w_empty),
     .arempty ()
     );
@@ -240,7 +256,7 @@ module axicb_mst_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (b_winc),
-    .wdata   ({o_bresp, o_bid}),
+    .wdata   (bch),
     .wfull   (b_full),
     .awfull  (),
     .rclk    (i_aclk),
@@ -304,7 +320,7 @@ module axicb_mst_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (r_winc),
-    .wdata   ({o_rlast, o_rresp, o_rdata, o_rid}),
+    .wdata   ({o_rlast, rch}),
     .wfull   (r_full),
     .awfull  (),
     .rclk    (i_aclk),
@@ -391,7 +407,7 @@ module axicb_mst_if
     .data_in  ({i_wlast, i_wch}),
     .push     (i_wvalid),
     .full     (w_full),
-    .data_out ({o_wlast, o_wstrb, o_wdata}),
+    .data_out ({o_wlast, wch}),
     .pull     (o_wready),
     .empty    (w_empty)
     );
@@ -414,7 +430,7 @@ module axicb_mst_if
     .aresetn  (o_aresetn),
     .srst     (o_srst),
     .flush    (1'b0),
-    .data_in  ({o_bresp, o_bid}),
+    .data_in  (bch),
     .push     (o_bvalid),
     .full     (b_full),
     .data_out (i_bch),
@@ -468,7 +484,7 @@ module axicb_mst_if
     .aresetn  (o_aresetn),
     .srst     (o_srst),
     .flush    (1'b0),
-    .data_in  ({o_rlast, o_rresp, o_rdata, o_rid}),
+    .data_in  ({o_rlast, rch}),
     .push     (o_rvalid),
     .full     (r_full),
     .data_out ({i_rlast,i_rch}),
@@ -494,11 +510,11 @@ module axicb_mst_if
     assign i_wready = o_wready;
     assign o_wlast = i_wlast;
 
-    assign {o_wstrb, o_wdata} = i_wch;
+    assign wch = i_wch;
 
     assign i_bvalid = o_bvalid;
     assign o_bready = i_bready;
-    assign i_bch = {o_bresp, o_bid};
+    assign i_bch = bch;
 
     assign o_arvalid = i_arvalid;
     assign i_arready = o_arready;
@@ -507,7 +523,7 @@ module axicb_mst_if
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
     assign i_rlast = o_rlast;
-    assign i_rch = {o_rresp, o_rdata, o_rid};
+    assign i_rch = rch;
 
     end
     endgenerate
@@ -516,50 +532,129 @@ module axicb_mst_if
 
     if (AXI_SIGNALING==0) begin : AXI4LITE_MODE
 
-        assign {
-            o_awid,
-            o_awprot,
-            o_awaddr
-        } = awch;
+        if (USER_SUPPORT>0 && AXI_AUSER_W>0) begin: AUSER_ON
 
-        assign {
-            o_arid,
-            o_arprot,
-            o_araddr
-        }  = arch;
+            assign {
+                o_awuser,
+                o_awid,
+                o_awprot,
+                o_awaddr
+            } = awch;
 
-    end else begin : AXI4_MODE
+            assign {
+                o_aruser,
+                o_arid,
+                o_arprot,
+                o_araddr
+            }  = arch;
 
-        assign {
-            o_awid,
-            o_awregion,
-            o_awqos,
-            o_awprot,
-            o_awcache,
-            o_awlock,
-            o_awburst,
-            o_awsize,
-            o_awlen,
-            o_awaddr
-        } = awch;
+            end else begin: AUSER_OFF
 
-        assign {
-            o_arid,
-            o_arregion,
-            o_arqos,
-            o_arprot,
-            o_arcache,
-            o_arlock,
-            o_arburst,
-            o_arsize,
-            o_arlen,
-            o_araddr
-        } = arch;
+            assign {
+                o_awid,
+                o_awprot,
+                o_awaddr
+            } = awch;
+
+            assign {
+                o_arid,
+                o_arprot,
+                o_araddr
+            }  = arch;
+
+            end
+
+        end else begin : AXI4_MODE
+
+            if (USER_SUPPORT>0 && AXI_AUSER_W>0) begin: AUSER_ON
+
+            assign {
+                o_awuser,
+                o_awid,
+                o_awregion,
+                o_awqos,
+                o_awprot,
+                o_awcache,
+                o_awlock,
+                o_awburst,
+                o_awsize,
+                o_awlen,
+                o_awaddr
+            } = awch;
+
+            assign {
+                o_aruser,
+                o_arid,
+                o_arregion,
+                o_arqos,
+                o_arprot,
+                o_arcache,
+                o_arlock,
+                o_arburst,
+                o_arsize,
+                o_arlen,
+                o_araddr
+            } = arch;
+
+            end else begin: AUSER_OFF
+
+            assign {
+                o_awid,
+                o_awregion,
+                o_awqos,
+                o_awprot,
+                o_awcache,
+                o_awlock,
+                o_awburst,
+                o_awsize,
+                o_awlen,
+                o_awaddr
+            } = awch;
+
+            assign {
+                o_arid,
+                o_arregion,
+                o_arqos,
+                o_arprot,
+                o_arcache,
+                o_arlock,
+                o_arburst,
+                o_arsize,
+                o_arlen,
+                o_araddr
+            } = arch;
+        end
 
     end
+
+    endgenerate
+
+    generate
+
+        if (USER_SUPPORT>0 && AXI_WUSER_W>0) begin: WUSER_ON
+            assign{o_wuser, o_wstrb, o_wdata} = wch;
+        end else begin: WUSER_OFF
+            assign {o_wstrb, o_wdata} = wch;
+        end
+
+    endgenerate
+
+    generate
+        if (USER_SUPPORT>0 && AXI_BUSER_W>0) begin: BUSER_ON
+            assign bch = {o_buser, o_bresp, o_bid};
+        end else begin: BUSER_OFF
+            assign bch = {o_bresp, o_bid};
+        end
+    endgenerate
+
+    generate
+        if (USER_SUPPORT>0 && AXI_RUSER_W>0) begin: RUSER_ON
+            assign rch = {o_ruser, o_rresp, o_rdata, o_rid};
+        end else begin: RUSER_OFF
+            assign rch = {o_rresp, o_rdata, o_rid};
+        end
     endgenerate
 
 endmodule
 
 `resetall
-
