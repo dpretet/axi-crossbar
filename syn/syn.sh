@@ -4,9 +4,7 @@
 # -o pipefail: causes a pipeline to fail if any command fails
 set -e -o pipefail
 
-# read design modules
-# SRCS="-I../rtl/ -I../deps/svlogger  \
-SRCS="  \
+SRCS="\
 ../deps/dcfifo/src/vlog/async_fifo.v \
 ../deps/dcfifo/src/vlog/fifo_2mem.v \
 ../deps/dcfifo/src/vlog/fifomem_dp.v \
@@ -25,9 +23,12 @@ SRCS="  \
 ../rtl/axicb_scfifo_ram.sv \
 ../rtl/axicb_slv_if.sv \
 ../rtl/axicb_slv_switch.sv \
-../rtl/axicb_switch_top.sv "
+../rtl/axicb_switch_top.sv"
 
-yosys -DARTY -p "scratchpad -set xilinx_dsp.multonly 1" \
-       -p "synth_xilinx -nowidelut -flatten -abc9 -arch xc7 -top axicb_crossbar_top" $SRCS | tee syn.log
+yosys -DARTY \
+      -p "scratchpad -set xilinx_dsp.multonly 1" \
+      -p "verilog_defaults -add -I../rtl" \
+      -p "synth_xilinx -nowidelut -flatten -abc9 -arch xc7 -top axicb_crossbar_top " \
+      $SRCS | tee syn.log
 
-exit 0
+exit

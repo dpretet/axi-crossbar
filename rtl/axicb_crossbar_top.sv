@@ -12,6 +12,8 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
+`include "axicb_checker.sv"
+
 module axicb_crossbar_top
 
     #(
@@ -622,6 +624,39 @@ module axicb_crossbar_top
         input  logic                      mst3_rlast,
         input  logic [AXI_RUSER_W   -1:0] mst3_ruser
     );
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parameters setup checks
+    ///////////////////////////////////////////////////////////////////////////
+
+    initial begin
+
+        `CHECKER((MST0_OSTDREQ_NUM>0 && MST0_OSTDREQ_SIZE==0),
+            "MST0 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((MST1_OSTDREQ_NUM>0 && MST1_OSTDREQ_SIZE==0),
+            "MST1 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((MST2_OSTDREQ_NUM>0 && MST2_OSTDREQ_SIZE==0),
+            "MST2 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((MST3_OSTDREQ_NUM>0 && MST3_OSTDREQ_SIZE==0),
+            "MST3 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((SLV0_OSTDREQ_NUM>0 && SLV0_OSTDREQ_SIZE==0),
+            "SLV0 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((SLV1_OSTDREQ_NUM>0 && SLV1_OSTDREQ_SIZE==0),
+            "SLV1 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((SLV2_OSTDREQ_NUM>0 && SLV2_OSTDREQ_SIZE==0),
+            "SLV2 is setup with oustanding request but their size must be greater than 0");
+
+        `CHECKER((SLV3_OSTDREQ_NUM>0 && SLV3_OSTDREQ_SIZE==0),
+            "SLV3 is setup with oustanding request but their size must be greater than 0");
+
+    end
 
 
     ///////////////////////////////////////////////////////////////////////////
