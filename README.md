@@ -11,10 +11,28 @@ A crossbar is common piece of logic to connect for instance in a SOC the
 processor(s) with the peripherals like memories, IOs, coprocessors...
 
 
-<p align="center">
-  <!--img width="100" height="100" src=""-->
-  <img src="./doc/assets/top-overview.png">
-</p>
+```
+    ┌─────────────┬───┬──────────────────────────┬───┬─────────────┐
+    │             │ S │                          │ S │             │
+    │             └───┘                          └───┘             │
+    │ ┌───────────────────────────┐  ┌───────────────────────────┐ │
+    │ │      Slave Interface      │  │      Slave Interface      │ │
+    │ └───────────────────────────┘  └───────────────────────────┘ │
+    │               │                              │               │
+    │               ▼                              ▼               │
+    │ ┌──────────────────────────────────────────────────────────┐ │
+    │ │                         Crossbar                         │ │
+    │ └──────────────────────────────────────────────────────────┘ │
+    │               │                              │               │
+    │               ▼                              ▼               │
+    │ ┌───────────────────────────┐  ┌───────────────────────────┐ │
+    │ │     Master Interface      │  │     Master Interface      │ │
+    │ └───────────────────────────┘  └───────────────────────────┘ │
+    │             ┌───┐                          ┌───┐             │
+    │             │ M │                          │ M │             │
+    └─────────────┴───┴──────────────────────────┴───┴─────────────┘
+```
+
 
 Features
 
@@ -49,22 +67,31 @@ Features
 
 ## Implementation Details
 
-- All interfaces share the same address / data / ID width
+- Interfaces share the same address / data / ID width
     - Address width configurable, any width
     - Data width configurable, any width
     - ID width configurable, any width
+- Advanced clock/reset network
+    - Support both aynchronous and synchronous reset schema
+    - Can handle clock domain crossing if needed, the core being fueled by its
+      own clock domain
 - Route read/write requests by address decoding. All slave agents are mapped
   into the memory space with a start/end address range.
 - Route read & write completion by ID decoding. All master agents have an ID
   mask used to identified the route to drive back a completion
-- Timeout behaqves as following:
+- Configurable routing across the infrastructure
+    - A master can be restricted to a memory map subset
+    - An acccess to a forbidden area is completed by a DECERR
+- Timeout behaves as following:
     - A shared counter implements a millisecond / microsecond time reference,
       configurable based on the platform clock speed
-    - A request timeout leads the completion to response with DECERR
+    - A request timeout leads the completion to response with SLVERR
     - A completion timeout leads the switching logic circuit to empty the
       completer response (up to RLAST assertion for the R channel, else simply
       handshake the B channel)
 
+Futher details can be found in the architetcure [chapter](doc/architecture.md) 
+and the IO/Parameter [chapter](doc/io_paremeter.md)
 
 ## Development plan
 
@@ -83,7 +110,7 @@ Inbox (possible next devs)
 - Interface datapath width conversion
 - AXI4/AXI4-lite converter
 - Read-only or Write-only master to save gate count
-- 4KB boundary crossing checking, supporting splitting mechanism
+- 4KB boundary crossing checking, supported by a splitting mechanism
 
 
 ## License
