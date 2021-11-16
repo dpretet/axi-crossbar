@@ -130,6 +130,7 @@ module axicb_slv_if
     logic [BCH_W         -1:0] bch;
     logic [ARCH_W        -1:0] arch;
     logic [RCH_W         -1:0] rch;
+    logic                      wlast;
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -263,6 +264,14 @@ module axicb_slv_if
     endgenerate
 
     generate
+        if (AXI_SIGNALING==0) begin: AXI4_LITE_WLAST
+            assign wlast = 1'b1;
+        end else begin: AXI4_WLAST
+            assign wlast = i_wlast;
+        end
+    endgenerate
+
+    generate
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
@@ -358,7 +367,7 @@ module axicb_slv_if
     .wclk    (i_aclk),
     .wrst_n  (i_aresetn),
     .winc    (w_winc),
-    .wdata   ({i_wlast, wch}),
+    .wdata   ({wlast, wch}),
     .wfull   (w_full),
     .awfull  (),
     .rclk    (o_aclk),
@@ -526,6 +535,7 @@ module axicb_slv_if
     // Write Data Channel
     ///////////////////////////////////////////////////////////////////////////
 
+
     axicb_scfifo
     #(
     .PASS_THRU  (PASS_THRU),
@@ -538,7 +548,7 @@ module axicb_slv_if
     .aresetn  (i_aresetn),
     .srst     (i_srst),
     .flush    (1'b0),
-    .data_in  ({i_wlast, wch}),
+    .data_in  ({wlast, wch}),
     .push     (i_wvalid),
     .full     (w_full),
     .data_out ({o_wlast, o_wch}),
@@ -643,7 +653,7 @@ module axicb_slv_if
 
     assign o_wvalid = i_wvalid;
     assign i_wready = o_wready;
-    assign o_wlast = i_wlast;
+    assign o_wlast = wlast;
 
     assign o_wch = wch;
 

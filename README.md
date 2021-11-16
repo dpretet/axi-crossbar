@@ -1,4 +1,4 @@
-# AXI Crossbar
+# AMBA AXI Crossbar
 
 ## Overview
 
@@ -8,7 +8,7 @@ A crossbar is a circuit connecting multiple master and slave agents, mapped
 across a memory space. The core consists of a collection of switches, routing
 the master requests to the slaves and driving back completions to the agents.
 A crossbar is common piece of logic to connect for instance in a SOC the
-processor(s) with the peripherals like memories, IOs, coprocessors...
+processor(s) with its peripherals like memories, IOs, co-processors...
 
 
 ```
@@ -45,20 +45,13 @@ Features
 - Round-robin arbitration
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
-- Timeout support per AXI channel & per interface
-- Switching logic IO interfaces can be pipelined to achieve timing closure easier
-- Full-STRB vs Partial-STRB mode
-    - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
-      all other dataphases are fully activated (WSTRBs=1)
-    - Full-STRB mode transports the complete STRBs dataphases as driven by a master
-    - Useful to save gate count
+- Timeout support, configurable per agent interface
 - AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
-    - The mode applies to global infrastructure
-- Master routes to a slave can be defined to restrict slave access
-    - Permits to create enclosed and secured memory map
-    - Access a forbidden memory zone returns a DECERR reponse in completion channel
+    - The selected mode applies to global infrastructure
+- Masters routing can be defined to restrict slaves access
+    - Easily create enclosed and secured memory map
     - Useful to save gate count
 - USER signal support
     - Configurable for each channel (AW, AR, W, B, R)
@@ -76,30 +69,25 @@ Features
     - Can handle clock domain crossing if needed, the core being fueled by its
       own clock domain
 - Route read/write requests by address decoding. All slave agents are mapped
-  into the memory space with a start/end address range.
+  into the memory space across a start/end address range.
 - Route read & write completion by ID decoding. All master agents have an ID
   mask used to identified the route to drive back a completion
 - Configurable routing across the infrastructure
     - A master can be restricted to a memory map subset
     - An acccess to a forbidden area is completed by a DECERR
-- Timeout behaves as following:
-    - A shared counter implements a millisecond / microsecond time reference,
-      configurable based on the platform clock speed
-    - A request timeout leads the completion to response with SLVERR
-    - A completion timeout leads the switching logic circuit to empty the
-      completer response (up to RLAST assertion for the R channel, else simply
-      handshake the B channel)
+- Switching logic IO interfaces can be pipelined to achieve timing closure easier
 
 Futher details can be found in the architetcure [chapter](doc/architecture.md) 
-and the IO/Parameter [chapter](doc/io_paremeter.md)
+and the IOs/Parameters [chapter](doc/io_parameter.md)
+
 
 ## Development plan
 
 Limitations (current dev stage)
 
-- No timeout support
+- Issue #4: support DECERR when targeting unmapped memory space
 - No master routing tables
-- Full-STRB mode only
+- No timeout support
 
 Inbox (possible next devs)
 
@@ -110,6 +98,11 @@ Inbox (possible next devs)
 - Interface datapath width conversion
 - AXI4/AXI4-lite converter
 - Read-only or Write-only master to save gate count
+- Full-STRB vs Partial-STRB mode
+    - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
+      all other dataphases are fully activated (WSTRBs=1)
+    - Full-STRB mode transports the complete STRBs dataphases as driven by a master
+    - Useful to save gate count
 - 4KB boundary crossing checking, supported by a splitting mechanism
 
 
