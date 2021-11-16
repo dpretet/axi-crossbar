@@ -127,6 +127,7 @@ module axicb_mst_if
     logic [BCH_W         -1:0] bch;
     logic [ARCH_W        -1:0] arch;
     logic [RCH_W         -1:0] rch;
+    logic                      rlast;
 
     generate
 
@@ -320,7 +321,7 @@ module axicb_mst_if
     .wclk    (o_aclk),
     .wrst_n  (o_aresetn),
     .winc    (r_winc),
-    .wdata   ({o_rlast, rch}),
+    .wdata   ({rlast, rch}),
     .wfull   (r_full),
     .awfull  (),
     .rclk    (i_aclk),
@@ -484,7 +485,7 @@ module axicb_mst_if
     .aresetn  (o_aresetn),
     .srst     (o_srst),
     .flush    (1'b0),
-    .data_in  ({o_rlast, rch}),
+    .data_in  ({rlast, rch}),
     .push     (o_rvalid),
     .full     (r_full),
     .data_out ({i_rlast,i_rch}),
@@ -522,7 +523,7 @@ module axicb_mst_if
 
     assign i_rvalid = o_rvalid;
     assign o_rready = i_rready;
-    assign i_rlast = o_rlast;
+    assign i_rlast = rlast;
     assign i_rch = rch;
 
     end
@@ -652,6 +653,14 @@ module axicb_mst_if
             assign rch = {o_ruser, o_rresp, o_rdata, o_rid};
         end else begin: RUSER_OFF
             assign rch = {o_rresp, o_rdata, o_rid};
+        end
+    endgenerate
+
+    generate
+        if (AXI_SIGNALING==0) begin: AXI4_LITE_RLAST
+            assign rlast = 1'b1;
+        end else begin: AXI4_RLAST
+            assign rlast = o_rlast;
         end
     endgenerate
 
