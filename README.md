@@ -7,7 +7,7 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 A crossbar is a circuit connecting multiple master and slave agents, mapped
 across a memory space. The core consists of a collection of switches, routing
 the master requests to the slaves and driving back completions to the agents.
-A crossbar is common piece of logic to connect for instance in a SOC the
+A crossbar is a common piece of logic to connect for instance in a SOC the
 processor(s) with its peripherals like memories, IOs, co-processors...
 
 
@@ -38,11 +38,11 @@ Features
 
 - 4x4 master/slave interfaces
 - Master/slave buffering capability, configurable per interface
-    - Outstanding request number configurable
-    - Request payload configurable per interface (AXI3 vs AXI4 vs AXI4-lite seamless support)
+    - Outstanding request number and payload configurable
+    - Seamless support of AXI4 vs AXI4-lite
 - CDC support in master & slave interface. Convert an interface's clock domain
   from/to the crossbar inner clock domain
-- Round-robin arbitration
+- Round-robin fair share
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
 - Timeout support, configurable per agent interface
@@ -77,8 +77,9 @@ Features
     - An acccess to a forbidden area is completed by a DECERR
 - Switching logic IO interfaces can be pipelined to achieve timing closure easier
 
-Futher details can be found in the architetcure [chapter](doc/architecture.md) 
-and the IOs/Parameters [chapter](doc/io_parameter.md)
+Further details can be found in:
+- the architecture [chapter](doc/architecture.md)
+- the IOs/Parameters [chapter](doc/io_parameter.md)
 
 
 ## Development plan
