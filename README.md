@@ -82,12 +82,21 @@ Further details can be found in:
 - the IOs/Parameters [chapter](doc/io_parameter.md)
 
 
+## Verification environment
+
+The core is verified with a testbench relying on (pseudo) random driver and
+monitor to inject some traffic and verify its correctness. Please refer to the
+[dedicated chapter](./test/svut/README.md) for futher details and find hints
+to integrate the core in your own development. The flow relies on:
+
+- [Icarus Verilog 11](https://github.com/steveicarus/iverilog) as simulator
+- [SVUT](https://github.com/dpretet/svut) to configure and execute Icarus
+
+
 ## Development plan
 
 Limitations (current dev stage)
 
-- Issue #4: support DECERR when targeting unmapped memory space
-- No master routing tables
 - No timeout support
 
 Inbox (possible next devs)

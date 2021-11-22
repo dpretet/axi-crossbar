@@ -21,8 +21,7 @@ module axicb_mst_if
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 1: Restricted AXI4 (INCR mode, ADDR, ALEN)
-        //   - 2: Complete
+        //   - 2: AXI4
         parameter AXI_SIGNALING = 0,
 
         // Implement CDC output stage
@@ -537,29 +536,29 @@ module axicb_mst_if
 
             assign {
                 o_awuser,
-                o_awid,
                 o_awprot,
+                o_awid,
                 o_awaddr
             } = awch;
 
             assign {
                 o_aruser,
-                o_arid,
                 o_arprot,
+                o_arid,
                 o_araddr
             }  = arch;
 
             end else begin: AUSER_OFF
 
             assign {
-                o_awid,
                 o_awprot,
+                o_awid,
                 o_awaddr
             } = awch;
 
             assign {
-                o_arid,
                 o_arprot,
+                o_arid,
                 o_araddr
             }  = arch;
 
@@ -571,7 +570,6 @@ module axicb_mst_if
 
             assign {
                 o_awuser,
-                o_awid,
                 o_awregion,
                 o_awqos,
                 o_awprot,
@@ -580,12 +578,12 @@ module axicb_mst_if
                 o_awburst,
                 o_awsize,
                 o_awlen,
+                o_awid,
                 o_awaddr
             } = awch;
 
             assign {
                 o_aruser,
-                o_arid,
                 o_arregion,
                 o_arqos,
                 o_arprot,
@@ -594,13 +592,13 @@ module axicb_mst_if
                 o_arburst,
                 o_arsize,
                 o_arlen,
+                o_arid,
                 o_araddr
             } = arch;
 
             end else begin: AUSER_OFF
 
             assign {
-                o_awid,
                 o_awregion,
                 o_awqos,
                 o_awprot,
@@ -609,11 +607,11 @@ module axicb_mst_if
                 o_awburst,
                 o_awsize,
                 o_awlen,
+                o_awid,
                 o_awaddr
             } = awch;
 
             assign {
-                o_arid,
                 o_arregion,
                 o_arqos,
                 o_arprot,
@@ -622,6 +620,7 @@ module axicb_mst_if
                 o_arburst,
                 o_arsize,
                 o_arlen,
+                o_arid,
                 o_araddr
             } = arch;
         end
@@ -650,9 +649,9 @@ module axicb_mst_if
 
     generate
         if (USER_SUPPORT>0 && AXI_RUSER_W>0) begin: RUSER_ON
-            assign rch = {o_ruser, o_rresp, o_rdata, o_rid};
+            assign rch = {o_ruser, o_rdata, o_rresp, o_rid};
         end else begin: RUSER_OFF
-            assign rch = {o_rresp, o_rdata, o_rid};
+            assign rch = {o_rdata, o_rresp, o_rid};
         end
     endgenerate
 

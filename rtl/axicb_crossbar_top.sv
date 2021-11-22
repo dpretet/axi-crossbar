@@ -97,8 +97,8 @@ module axicb_crossbar_top
         parameter MST0_OSTDREQ_NUM = 4,
         parameter MST0_OSTDREQ_SIZE = 1,
         parameter MST0_PRIORITY = 0,
-        parameter MST0_ROUTES = 4'b1_1_1_1,
-        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
+        parameter [SLV_NB-1:0] MST0_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h10,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 1 configuration
@@ -108,8 +108,8 @@ module axicb_crossbar_top
         parameter MST1_OSTDREQ_NUM = 4,
         parameter MST1_OSTDREQ_SIZE = 1,
         parameter MST1_PRIORITY = 0,
-        parameter MST1_ROUTES = 4'b1_1_1_1,
-        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
+        parameter [SLV_NB-1:0] MST1_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h20,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 2 configuration
@@ -119,8 +119,8 @@ module axicb_crossbar_top
         parameter MST2_OSTDREQ_NUM = 4,
         parameter MST2_OSTDREQ_SIZE = 1,
         parameter MST2_PRIORITY = 0,
-        parameter MST2_ROUTES = 4'b1_1_1_1,
-        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20,
+        parameter [SLV_NB-1:0] MST2_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h30,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 3 configuration
@@ -130,8 +130,8 @@ module axicb_crossbar_top
         parameter MST3_OSTDREQ_NUM = 4,
         parameter MST3_OSTDREQ_SIZE = 1,
         parameter MST3_PRIORITY = 0,
-        parameter MST3_ROUTES = 4'b1_1_1_1,
-        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30,
+        parameter [SLV_NB-1:0] MST3_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h40,
 
 
         ///////////////////////////////////////////////////////////////////////
@@ -656,6 +656,14 @@ module axicb_crossbar_top
         `CHECKER((SLV3_OSTDREQ_NUM>0 && SLV3_OSTDREQ_SIZE==0),
             "SLV3 is setup with oustanding request but their size must be greater than 0");
 
+        `CHECKER((MST0_ID_MASK==0), "MST0 mask ID must be greater than 0");
+
+        `CHECKER((MST1_ID_MASK==0), "MST1 mask ID must be greater than 0");
+
+        `CHECKER((MST2_ID_MASK==0), "MST2 mask ID must be greater than 0");
+
+        `CHECKER((MST3_ID_MASK==0), "MST3 mask ID must be greater than 0");
+
     end
 
 
@@ -671,8 +679,8 @@ module axicb_crossbar_top
 
     localparam RUSER_W = (USER_SUPPORT > 0) ? AXI_RUSER_W : 0;
 
-    localparam AWCH_W =                      // AXI4-lite signaling
-                        (AXI_SIGNALING==0) ? AXI_ADDR_W + AXI_ID_W + 3 + AUSER_W :
+                                             // AXI4-lite signaling
+    localparam AWCH_W = (AXI_SIGNALING==0) ? AXI_ADDR_W + AXI_ID_W + 3 + AUSER_W :
                                              // AXI4 signaling
                                              AXI_ADDR_W + AXI_ID_W + 30 + AUSER_W;
 
@@ -683,6 +691,11 @@ module axicb_crossbar_top
     localparam ARCH_W = AWCH_W;
 
     localparam RCH_W = AXI_DATA_W + AXI_ID_W + 2 + RUSER_W;
+
+    localparam MST_ROUTES = {MST3_ROUTES,
+                             MST2_ROUTES,
+                             MST1_ROUTES,
+                             MST0_ROUTES};
 
     logic [MST_NB            -1:0] i_awvalid;
     logic [MST_NB            -1:0] i_awready;
@@ -1117,6 +1130,7 @@ module axicb_crossbar_top
     .AXI_ADDR_W         (AXI_ADDR_W),
     .AXI_ID_W           (AXI_ID_W),
     .AXI_DATA_W         (AXI_DATA_W),
+    .AXI_SIGNALING      (AXI_SIGNALING),
     .MST_NB             (MST_NB),
     .SLV_NB             (SLV_NB),
     .MST_PIPELINE       (MST_PIPELINE),
@@ -1126,6 +1140,7 @@ module axicb_crossbar_top
     .MST1_ID_MASK       (MST1_ID_MASK),
     .MST2_ID_MASK       (MST2_ID_MASK),
     .MST3_ID_MASK       (MST3_ID_MASK),
+    .MST_ROUTES         (MST_ROUTES),
     .MST0_PRIORITY      (MST0_PRIORITY),
     .MST1_PRIORITY      (MST1_PRIORITY),
     .MST2_PRIORITY      (MST2_PRIORITY),

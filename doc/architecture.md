@@ -200,18 +200,19 @@ agent could be identified with `0x20` and another one with `0x30`. The user must
 takes care the ID generated for a request doesn't conflict with an ID from
 another agent, thus the ID numbering rolls off. In the setup above, the agent 0
 can't issue ID bigger than `0x1F` which will mis-route completion back to it and
-route it to the agent 1. The core doesn't track such wrong configuration.
+route it to the agent 1. The core doesn't track such wrong configuration. The 
+must use a mask greater than 0.
 
 Each slave is assigned into an address map (start & end address) across the
 global memory map. To route a request, the switching logic decodes the address
 to select the slave agent targeted and so the master interface to source. For
 instance, slave agent 0 could be mapped over the addresses `0x000` up to
-`0x0FF`. Next slave agent between `0x100` and `0x1FF`. The user must ensure the
-address mapping can be covered by the address bus width; the user needs to take
-care to configure correctly the mapping and avoid any address overlap between
-slaves which will lead to mis-routing. The core doesn't track such wrong
-configurations.
-
+`0x0FF`. Next slave agent between `0x100` and `0x1FF`. In case the request
+tries to target a memory space not mapped to a slave, the agent will receive a
+`DECERR` completion. The user must ensure the address mapping can be covered
+by the address bus width; the user needs to take care to configure correctly
+the mapping and avoid any address overlap between slaves which will lead to
+mis-routing. The core doesn't track such wrong configurations. 
 
 ## Switching Logic Architecture
 
@@ -349,7 +350,7 @@ t++      ...
 
 To balance granting, masters can be prioritzed (from 0 to 3). An activated
 highest priority layer prevent computation of lowest priority layers (here,
-priority 1 for req 2, 0 for others):
+priority 2 for req 2, 0 for others):
 
 ```
          req    mask   grant   next mask (p2) next mask (p0)
@@ -374,8 +375,7 @@ enable to route to the slave agent 0 (master interface 0), bit `1` to the slave
 agent 1 and so on. This setup physically isolates agents from each others and
 can't be overridden once the core is implemented. If a master agent tries to
 access a restricted zone of the memory map, its slave switch will handshake the
-request, will not transmit it and then
-complete the request with a `DECERR`.
+request, will not transmit it and then complete the request with a `DECERR`.
 
 
 ### Timeout Events Handling

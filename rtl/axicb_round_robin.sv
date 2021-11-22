@@ -44,6 +44,11 @@ module axicb_round_robin
     logic [REQ_NB    -1:0] grant_p2;
     logic [REQ_NB    -1:0] grant_p3;
 
+    logic p0 = REQ0_PRIORITY;
+    logic p1 = REQ1_PRIORITY;
+    logic p2 = REQ2_PRIORITY;
+    logic p3 = REQ3_PRIORITY;
+
     assign req_p0[0] = (REQ0_PRIORITY==0) ? req[0] : 1'b0;
     assign req_p0[1] = (REQ1_PRIORITY==0) ? req[1] : 1'b0;
     assign req_p0[2] = (REQ2_PRIORITY==0) ? req[2] : 1'b0;

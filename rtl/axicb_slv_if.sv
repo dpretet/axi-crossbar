@@ -24,7 +24,7 @@ module axicb_slv_if
 
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 1: Complete
+        //   - 1: AXI4
         parameter AXI_SIGNALING = 0,
 
         // Implement CDC input stage
@@ -145,29 +145,29 @@ module axicb_slv_if
 
         assign awch = {
             i_awuser,
-            i_awid,
             i_awprot,
+            i_awid,
             i_awaddr
         };
 
         assign arch = {
             i_aruser,
-            i_arid,
             i_arprot,
+            i_arid,
             i_araddr
         };
 
         end else begin: AUSER_OFF
 
         assign awch = {
-            i_awid,
             i_awprot,
+            i_awid,
             i_awaddr
         };
 
         assign arch = {
-            i_arid,
             i_arprot,
+            i_arid,
             i_araddr
         };
 
@@ -179,7 +179,6 @@ module axicb_slv_if
 
         assign awch = {
             i_awuser,
-            i_awid,
             i_awregion,
             i_awqos,
             i_awprot,
@@ -188,12 +187,12 @@ module axicb_slv_if
             i_awburst,
             i_awsize,
             i_awlen,
+            i_awid,
             i_awaddr
         };
 
         assign arch = {
             i_aruser,
-            i_arid,
             i_arregion,
             i_arqos,
             i_arprot,
@@ -202,13 +201,13 @@ module axicb_slv_if
             i_arburst,
             i_arsize,
             i_arlen,
+            i_arid,
             i_araddr
         };
 
         end else begin: AUSER_OFF
 
         assign awch = {
-            i_awid,
             i_awregion,
             i_awqos,
             i_awprot,
@@ -217,11 +216,11 @@ module axicb_slv_if
             i_awburst,
             i_awsize,
             i_awlen,
+            i_awid,
             i_awaddr
         };
 
         assign arch = {
-            i_arid,
             i_arregion,
             i_arqos,
             i_arprot,
@@ -230,6 +229,7 @@ module axicb_slv_if
             i_arburst,
             i_arsize,
             i_arlen,
+            i_arid,
             i_araddr
         };
 
@@ -238,13 +238,11 @@ module axicb_slv_if
     endgenerate
 
     generate
-
         if (USER_SUPPORT>0 && AXI_WUSER_W>0) begin: WUSER_ON
             assign wch = {i_wuser, i_wstrb, i_wdata};
         end else begin: WUSER_OFF
             assign wch = {i_wstrb, i_wdata};
         end
-
     endgenerate
 
     generate
@@ -257,9 +255,9 @@ module axicb_slv_if
 
     generate
         if (USER_SUPPORT>0 && AXI_RUSER_W>0) begin: RUSER_ON
-            assign {i_ruser, i_rresp, i_rdata, i_rid} = rch;
+            assign {i_ruser, i_rdata, i_rresp, i_rid} = rch;
         end else begin: RUSER_OFF
-            assign {i_rresp, i_rdata, i_rid} = rch;
+            assign {i_rdata, i_rresp, i_rid} = rch;
         end
     endgenerate
 

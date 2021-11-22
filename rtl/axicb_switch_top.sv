@@ -14,6 +14,11 @@ module axicb_switch_top
         // Data width in bits
         parameter AXI_DATA_W = 8,
 
+        // AXI Signals Supported:
+        //   - 0: AXI4-lite
+        //   - 1: AXI4
+        parameter AXI_SIGNALING = 0,
+
         // Number of master(s)
         parameter MST_NB = 4,
         // Number of slave(s)
@@ -25,6 +30,9 @@ module axicb_switch_top
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
         
+        // Routes to the slaves allowed per master
+        parameter [MST_NB*SLV_NB -1:0] MST_ROUTES = 16'hFFFF,
+
         // Masters ID mask
         parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
         parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
@@ -246,7 +254,10 @@ module axicb_switch_top
         axicb_slv_switch 
         #(
             .AXI_ADDR_W      (AXI_ADDR_W),
+            .AXI_ID_W        (AXI_ID_W),
+            .AXI_SIGNALING   (AXI_SIGNALING),
             .SLV_NB          (SLV_NB),
+            .MST_ROUTES      (MST_ROUTES[i*SLV_NB+:SLV_NB]),
             .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
             .SLV0_START_ADDR (SLV0_START_ADDR),
             .SLV0_END_ADDR   (SLV0_END_ADDR),

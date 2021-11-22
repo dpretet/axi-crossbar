@@ -42,25 +42,25 @@ module axicb_crossbar_top_testbench();
     parameter MST0_OSTDREQ_NUM = `MST0_OSTDREQ_NUM;
     parameter MST0_OSTDREQ_SIZE = `MST0_OSTDREQ_SIZE;
     parameter MST0_PRIORITY = `MST0_PRIORITY;
-    parameter MST0_ROUTES = 4'b1_1_1_1;
+    parameter MST0_ROUTES = `MST0_ROUTES;
     parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h10;
     parameter MST1_CDC = `MST1_CDC;
     parameter MST1_OSTDREQ_NUM = `MST1_OSTDREQ_NUM;
     parameter MST1_OSTDREQ_SIZE = `MST1_OSTDREQ_SIZE;
     parameter MST1_PRIORITY = `MST1_PRIORITY;
-    parameter MST1_ROUTES = 4'b1_1_1_1;
+    parameter MST1_ROUTES = `MST1_ROUTES;
     parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h20;
     parameter MST2_CDC = `MST2_CDC;
     parameter MST2_OSTDREQ_NUM = `MST2_OSTDREQ_NUM;
     parameter MST2_OSTDREQ_SIZE = `MST2_OSTDREQ_SIZE;
     parameter MST2_PRIORITY = `MST2_PRIORITY;
-    parameter MST2_ROUTES = 4'b1_1_1_1;
+    parameter MST2_ROUTES = `MST2_ROUTES;
     parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h40;
     parameter MST3_CDC = `MST3_CDC;
     parameter MST3_OSTDREQ_NUM = `MST3_OSTDREQ_NUM;
     parameter MST3_OSTDREQ_SIZE = `MST3_OSTDREQ_SIZE;
     parameter MST3_PRIORITY = `MST3_PRIORITY;
-    parameter MST3_ROUTES = 4'b1_1_1_1;
+    parameter MST3_ROUTES = `MST3_ROUTES;
     parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h80;
     parameter SLV0_CDC = `SLV0_CDC;
     parameter SLV0_START_ADDR = `SLV0_START_ADDR;
@@ -474,41 +474,6 @@ module axicb_crossbar_top_testbench();
     logic [AXI_ADDR_W    -1:0] addr_max;
 
     string                     tsname;
-
-    //////////////////////////////////////////////////////////////////////////
-    // Monitor the execution to state if the testcase is successfull or not
-    //////////////////////////////////////////////////////////////////////////
-    task wait_end_of_execution();
-
-        fork
-        begin
-            while (timeout<`TIMEOUT) begin
-                @(posedge aclk);
-                timeout = timeout + 1;
-            end
-            `ASSERT((timeout<`TIMEOUT), "Testcase reached timeout");
-        end
-        begin
-            while (nb_reqs<`MAX_TRAFFIC) begin
-                @(posedge aclk);
-                if (mst0_bvalid && mst0_bready)
-                    nb_reqs = nb_reqs + 1;
-            end
-            `INFO("Full traffic has been injected by the drivers");
-        end
-        begin
-            while (|error===1'b0) begin
-                @(posedge aclk);
-            end
-            `ASSERT((|error===1'b0), "Error detected during execution");
-            `ERROR("Encountered issues during execution");
-            $display("Errors: %x", error);
-        end
-        join_any
-
-        disable fork;
-
-    endtask
 
 
     //////////////////////////////////////////////////////////////////////////
@@ -975,6 +940,15 @@ module axicb_crossbar_top_testbench();
     .AXI_WUSER_W     (AXI_WUSER_W),
     .AXI_BUSER_W     (AXI_BUSER_W),
     .AXI_RUSER_W     (AXI_RUSER_W),
+    .MST_ROUTES      (MST0_ROUTES),
+    .SLV0_START_ADDR (SLV0_START_ADDR),
+    .SLV0_END_ADDR   (SLV0_END_ADDR),
+    .SLV1_START_ADDR (SLV1_START_ADDR),
+    .SLV1_END_ADDR   (SLV1_END_ADDR),
+    .SLV2_START_ADDR (SLV2_START_ADDR),
+    .SLV2_END_ADDR   (SLV2_END_ADDR),
+    .SLV3_START_ADDR (SLV3_START_ADDR),
+    .SLV3_END_ADDR   (SLV3_END_ADDR),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hCCCCCCCC)
@@ -1048,6 +1022,15 @@ module axicb_crossbar_top_testbench();
     .AXI_BUSER_W     (AXI_BUSER_W),
     .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
+    .MST_ROUTES      (MST1_ROUTES),
+    .SLV0_START_ADDR (SLV0_START_ADDR),
+    .SLV0_END_ADDR   (SLV0_END_ADDR),
+    .SLV1_START_ADDR (SLV1_START_ADDR),
+    .SLV1_END_ADDR   (SLV1_END_ADDR),
+    .SLV2_START_ADDR (SLV2_START_ADDR),
+    .SLV2_END_ADDR   (SLV2_END_ADDR),
+    .SLV3_START_ADDR (SLV3_START_ADDR),
+    .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hEEEEEEEE)
     )
@@ -1120,6 +1103,15 @@ module axicb_crossbar_top_testbench();
     .AXI_BUSER_W     (AXI_BUSER_W),
     .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
+    .MST_ROUTES      (MST2_ROUTES),
+    .SLV0_START_ADDR (SLV0_START_ADDR),
+    .SLV0_END_ADDR   (SLV0_END_ADDR),
+    .SLV1_START_ADDR (SLV1_START_ADDR),
+    .SLV1_END_ADDR   (SLV1_END_ADDR),
+    .SLV2_START_ADDR (SLV2_START_ADDR),
+    .SLV2_END_ADDR   (SLV2_END_ADDR),
+    .SLV3_START_ADDR (SLV3_START_ADDR),
+    .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('hAAAAAAAA)
     )
@@ -1192,6 +1184,15 @@ module axicb_crossbar_top_testbench();
     .AXI_BUSER_W     (AXI_BUSER_W),
     .AXI_RUSER_W     (AXI_RUSER_W),
     .CHECK_REPORT    (CHECK_REPORT),
+    .MST_ROUTES      (MST3_ROUTES),
+    .SLV0_START_ADDR (SLV0_START_ADDR),
+    .SLV0_END_ADDR   (SLV0_END_ADDR),
+    .SLV1_START_ADDR (SLV1_START_ADDR),
+    .SLV1_END_ADDR   (SLV1_END_ADDR),
+    .SLV2_START_ADDR (SLV2_START_ADDR),
+    .SLV2_END_ADDR   (SLV2_END_ADDR),
+    .SLV3_START_ADDR (SLV3_START_ADDR),
+    .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
     .KEY             ('h55555555)
     )
@@ -1599,15 +1600,52 @@ module axicb_crossbar_top_testbench();
         slv1_aresetn = 1;
         slv2_aresetn = 1;
         slv3_aresetn = 1;
-        #100;
+        repeat (10) @(posedge aclk);
     end
     endtask
 
     task teardown(msg="");
     begin
+        mst_en = 'b0;
         repeat (20) @(posedge aclk);
     end
     endtask
+
+    //////////////////////////////////////////////////////////////////////////
+    // Monitor the execution to state if the testcase is successfull or not
+    //////////////////////////////////////////////////////////////////////////
+    task wait_end_of_execution();
+
+        fork
+        begin
+            while (timeout<`TIMEOUT) begin
+                @(posedge aclk);
+                timeout = timeout + 1;
+            end
+            `ASSERT((timeout<`TIMEOUT), "Testcase reached timeout");
+        end
+        begin
+            while (nb_reqs<`MAX_TRAFFIC) begin
+                @(posedge aclk);
+                if (mst0_bvalid && mst0_bready)
+                    nb_reqs = nb_reqs + 1;
+            end
+            `INFO("Full traffic has been injected by the drivers");
+        end
+        begin
+
+            while (error===8'b0) begin
+                @(posedge aclk);
+            end
+            `ASSERT((error===8'b0), "Error detected during execution");
+            $display("Errors: %x", error);
+        end
+        join_any
+
+        disable fork;
+
+    endtask
+
 
     // Format testsuite name to string
     initial begin

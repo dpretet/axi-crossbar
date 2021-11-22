@@ -19,6 +19,7 @@ module mst_driver
 
         // ID assigned to the master
         parameter MST_ID = 'h10,
+        parameter MST_ROUTES = 4'b1_1_1_1,
 
         // Maximum number of OR that can be issued
         parameter MST_OSTDREQ_NUM = 4,
@@ -37,9 +38,20 @@ module mst_driver
         parameter AXI_WUSER_W = 4,
         parameter AXI_BUSER_W = 4,
         parameter AXI_RUSER_W = 4,
+
         // Timeout value used outstanding request monitoring
         // and channels handshakes
         parameter TIMEOUT = 100,
+
+        // Slaves mapping in the memory space
+        parameter SLV0_START_ADDR = 0,
+        parameter SLV0_END_ADDR = 4095,
+        parameter SLV1_START_ADDR = 0,
+        parameter SLV1_END_ADDR = 4095,
+        parameter SLV2_START_ADDR = 0,
+        parameter SLV2_END_ADDR = 4095,
+        parameter SLV3_START_ADDR = 0,
+        parameter SLV3_END_ADDR = 4095,
 
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
@@ -108,25 +120,34 @@ module mst_driver
     logic [32                          -1:0] awvalid_lfsr;
     logic [32                          -1:0] wvalid_lfsr;
     logic [8                           -1:0] awlen_w;
-    logic [8                           -1:0] wbeat;
+    logic [8                           -1:0] wlen;
     logic [AXI_DATA_W                  -1:0] wdata_w;
-    logic [AXI_DATA_W                  -1:0] wdata_r;
+    logic [AXI_DATA_W                  -1:0] next_wdata;
     logic [32                          -1:0] arvalid_lfsr;
     logic [32                          -1:0] bready_lfsr;
     logic [32                          -1:0] rready_lfsr;
     logic [MST_OSTDREQ_NUM             -1:0] wr_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] wr_orreq_id;
-    logic [MST_OSTDREQ_NUM*2           -1:0] wr_orreq_resp;
+    logic [MST_OSTDREQ_NUM*2           -1:0] wr_orreq_bresp;
     logic [MST_OSTDREQ_NUM*AXI_BUSER_W -1:0] wr_orreq_buser;
     logic [MST_OSTDREQ_NUM             -1:0] rd_orreq;
     logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] rd_orreq_id;
     logic [MST_OSTDREQ_NUM*AXI_DATA_W  -1:0] rd_orreq_rdata;
     logic [MST_OSTDREQ_NUM*2           -1:0] rd_orreq_rresp;
     logic [MST_OSTDREQ_NUM*AXI_RUSER_W -1:0] rd_orreq_ruser;
-    logic                                    bresp_error;
-    logic                                    rresp_error;
-    logic                                    wor_error;
-    logic                                    ror_error;
+    logic [MST_OSTDREQ_NUM*8           -1:0] rd_orreq_rlen;
+    logic [MST_OSTDREQ_NUM*8           -1:0] rlen;
+    logic [MST_OSTDREQ_NUM             -1:0] bresp_error;
+    logic [MST_OSTDREQ_NUM             -1:0] buser_error;
+    logic [MST_OSTDREQ_NUM             -1:0] rresp_error;
+    logic [MST_OSTDREQ_NUM             -1:0] ruser_error;
+    logic [MST_OSTDREQ_NUM             -1:0] wor_error;
+    logic [MST_OSTDREQ_NUM             -1:0] ror_error;
+    logic [MST_OSTDREQ_NUM             -1:0] rlen_error;
+    logic [MST_OSTDREQ_NUM             -1:0] rid_error;
+    logic [MST_OSTDREQ_NUM             -1:0] bid_error;
+    logic [MST_OSTDREQ_NUM             -1:0] wr_orreq_mr;
+    logic [MST_OSTDREQ_NUM             -1:0] rd_orreq_mr;
     integer                                  wr_orreq_timeout[MST_OSTDREQ_NUM-1:0];
     integer                                  rd_orreq_timeout[MST_OSTDREQ_NUM-1:0];
     integer                                  awtimer;
@@ -152,6 +173,36 @@ module mst_driver
                   `SVL_VERBOSE_DEBUG,
                   `SVL_ROUTE_ALL);
     end
+
+    function automatic integer gen_resp(input integer value);
+        gen_resp = gen_resp_for_master(
+            MST_ROUTES,
+            SLV0_START_ADDR,
+            SLV0_END_ADDR,
+            SLV1_START_ADDR,
+            SLV1_END_ADDR,
+            SLV2_START_ADDR,
+            SLV2_END_ADDR,
+            SLV3_START_ADDR,
+            SLV3_END_ADDR,
+            value
+        );
+    endfunction
+
+    function automatic integer req_is_misroute(input integer value);
+        req_is_misroute = is_misroute(
+            MST_ROUTES,
+            SLV0_START_ADDR,
+            SLV0_END_ADDR,
+            SLV1_START_ADDR,
+            SLV1_END_ADDR,
+            SLV2_START_ADDR,
+            SLV2_END_ADDR,
+            SLV3_START_ADDR,
+            SLV3_END_ADDR,
+            value
+        );
+    endfunction
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address & Data Channels
@@ -246,7 +297,10 @@ module mst_driver
                     (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
-    assign awlen = {3'h0, awaddr[4:0]};
+    generate
+    if (AXI_SIGNALING>0) assign awlen = {3'h0, awaddr[4:0]};
+    else assign awlen = 8'b0;
+    endgenerate
 
     axicb_scfifo
     #(
@@ -272,20 +326,20 @@ module mst_driver
     if (AXI_SIGNALING > 0) begin
 
         assign wvalid = wvalid_lfsr[0] & en & ~w_empty_r;
-        assign wdata = (wbeat==8'h0) ? wdata_w : wdata_r;
+        assign wdata = (wlen==8'h0) ? wdata_w : next_wdata;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
-        assign wlast = (wbeat==awlen_w) ? 1'b1 : 1'b0;
+        assign wlast = (wlen==awlen_w) ? 1'b1 : 1'b0;
         assign wuser = gen_auser(wdata_w);
 
         always @ (posedge aclk or negedge aresetn) begin
             if (~aresetn) begin
-                wbeat <= 8'h0;
-                wdata_r <= {AXI_DATA_W{1'b0}};
+                wlen <= 8'h0;
+                next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
             end else if (srst) begin
-                wbeat <= 8'h0;
-                wdata_r <= {AXI_DATA_W{1'b0}};
+                wlen <= 8'h0;
+                next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
             end else if (en) begin
@@ -295,20 +349,20 @@ module mst_driver
 
                 // Was empty, but now it's filled with new request
                 if (!w_empty && w_empty_r) begin
-                    wdata_r <= wdata_w;
+                    next_wdata <= wdata_w;
                 // FIFO is filled and last request has been fully transmitted
-                end else if (!w_empty && wbeat==8'h0 && wlast_r==1'b1) begin
-                    wdata_r <= next_data(wdata_w);
+                end else if (!w_empty && wlen==8'h0 && wlast_r==1'b1) begin
+                    next_wdata <= next_data(wdata_w);
                 // Under a request processing
                 end else if (wvalid && wready) begin
-                    wdata_r <= next_data(wdata);
+                    next_wdata <= next_data(wdata);
                 end
 
                 if (!w_empty) begin
-                    if (wvalid && wready && wbeat==awlen_w) wbeat <= 8'h0;
-                    else if (wvalid && wready) wbeat <= wbeat + 1;
+                    if (wvalid && wready && wlen==awlen_w) wlen <= 8'h0;
+                    else if (wvalid && wready) wlen <= wlen + 1;
                 end else begin
-                    wbeat <= 8'h0;
+                    wlen <= 8'h0;
                 end
             end
         end
@@ -319,6 +373,7 @@ module mst_driver
         assign wdata = wdata_w;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = 1'b1;
+        assign wuser = gen_auser(wdata_w);
 
     end
     endgenerate
@@ -374,10 +429,13 @@ module mst_driver
 
             wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            wr_orreq_bresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
-            bresp_error <= 1'b0;
-            wor_error <= 1'b0;
+            wr_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
+            bresp_error <= {MST_OSTDREQ_NUM{1'b0}};
+            buser_error <= {MST_OSTDREQ_NUM{1'b0}};
+            bid_error <= {MST_OSTDREQ_NUM{1'b0}};
+            wor_error <= {MST_OSTDREQ_NUM{1'b0}};
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
@@ -387,34 +445,38 @@ module mst_driver
 
             wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
             wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            wr_orreq_resp <= {MST_OSTDREQ_NUM*2{1'b0}};
+            wr_orreq_bresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
-            bresp_error <= 1'b0;
-            wor_error <= 1'b0;
+            wr_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
+            bresp_error <= {MST_OSTDREQ_NUM{1'b0}};
+            buser_error <= {MST_OSTDREQ_NUM{1'b0}};
+            wor_error <= {MST_OSTDREQ_NUM{1'b0}};
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
             end
 
-        end else begin
-
-            if (bvalid && bready) begin
-                if ((bid&MST_ID) != MST_ID) begin
-                    $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid);
-                    log.error(msg);
-                    @(posedge aclk);
-                    $finish();
-                end
-            end
+        end else if (en) begin
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+
+                if (bvalid && bready) begin
+                    if ((bid&MST_ID) != MST_ID) begin
+                        $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid);
+                        log.error(msg);
+                        bid_error[i] <= 1'b1;
+                    end else begin
+                        bid_error[i] <= 1'b0;
+                    end
+                end
 
                 // Store the OR request on address channel handshake
                 if (awvalid && awready && i==awid_cnt) begin
                     wr_orreq[i] <= 1'b1;
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= awid;
-                    wr_orreq_resp[i*2+:2] <= gen_resp(awaddr);
+                    wr_orreq_bresp[i*2+:2] <= gen_resp(awaddr);
                     wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= gen_buser(awaddr);
+                    wr_orreq_mr[i] <= req_is_misroute(awaddr);
                 end
 
                 // Release the OR on response handshake
@@ -424,40 +486,47 @@ module mst_driver
 
                     wr_orreq[i] <= 1'b0;
                     wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
-                    wr_orreq_resp[i*2+:2] <= 2'b0;
+                    wr_orreq_bresp[i*2+:2] <= 2'b0;
+                    wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= {AXI_BUSER_W{1'b0}};
 
-                    if (wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] !== buser && 
-                        USER_SUPPORT && CHECK_REPORT
-                    ) begin
-                        log.error("BUSER doesn't match expected value");
-                        bresp_error <= 1'b1;
-                    end
-
-                    if (wr_orreq_resp[i*2+:2] !== bresp && CHECK_REPORT) begin
+                    if (wr_orreq_bresp[i*2+:2] !== bresp && CHECK_REPORT) begin
                         log.error("BRESP doesn't match expected value");
                         $sformat(msg, "  - BID: %x", bid); log.error(msg);
                         $sformat(msg, "  - BRESP: %x", bresp); log.error(msg);
-                        $sformat(msg, "  - Expected BRESP: %x", wr_orreq_resp[i*2+:2]); log.error(msg);
-                        bresp_error <= 1'b1;
+                        $sformat(msg, "  - Expected BRESP: %x", wr_orreq_bresp[i*2+:2]); log.error(msg);
+                        bresp_error[i] <= 1'b1;
+                    end else begin
+
+                        if (wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] !== buser &&
+                            !wr_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT
+                        ) begin
+                            log.error("BUSER doesn't match expected value");
+                            $sformat(msg, "  - BID: %x", bid); log.error(msg);
+                            $sformat(msg, "  - BUSER: %x", buser); log.error(msg);
+                            $sformat(msg, "  - Expected BUSER: %x", wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W]); log.error(msg);
+                            buser_error[i] <= 1'b1;
+                        end
+
                     end
 
                 end else begin
-                    bresp_error <= 1'b0;
+                    bresp_error[i] <= 1'b0;
+                    buser_error[i] <= 1'b0;
                 end
 
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
-                        $sformat(msg, "Write OR %x reached timeout (MST_ID: %0x)", i, MST_ID);
+                        $sformat(msg, "Write OR %0x reached timeout (MST_ID: %0x)", i, MST_ID);
                         log.error(msg);
-                        wor_error <= 1'b1;
+                        wor_error[i] <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
                         wr_orreq_timeout[i] <= wr_orreq_timeout[i] + 1;
                     end
                 end else begin
                     wr_orreq_timeout[i] <= 0;
-                    wor_error <= 1'b0;
+                    wor_error[i] <= 1'b0;
                 end
             end
         end
@@ -577,7 +646,7 @@ module mst_driver
         end
     end
 
-    // Limit the address ragne to target possibly a particular slave
+    // Limit the address range to target possibly a particular slave
     // Always use aligned address
     assign araddr = (ar_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {araddr_ramp} :
                     (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {araddr_ramp} :
@@ -585,7 +654,10 @@ module mst_driver
 
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
-    assign arlen = {3'h0, araddr[4:0]};
+    generate
+    if (AXI_SIGNALING>0) assign arlen = {3'h0, araddr[4:0]};
+    else assign arlen = 8'b0;
+    endgenerate
 
     ///////////////////////////////////////////////////////////////////////////
     // Monitor AR channel to detect timeout
@@ -666,8 +738,15 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
-            rresp_error <= 1'b0;
-            ror_error <= 1'b0;
+            rd_orreq_rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+            rresp_error <= {MST_OSTDREQ_NUM{1'b0}};
+            ruser_error <= {MST_OSTDREQ_NUM{1'b0}};
+            ror_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rlen_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rid_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rd_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
+            rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
@@ -679,22 +758,20 @@ module mst_driver
             rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
             rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
             rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
-            rresp_error <= 1'b0;
-            ror_error <= 1'b0;
+            rd_orreq_rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+            rresp_error <= {MST_OSTDREQ_NUM{1'b0}};
+            ruser_error <= {MST_OSTDREQ_NUM{1'b0}};
+            ror_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rlen_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rid_error <= {MST_OSTDREQ_NUM{1'b0}};
+            rd_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
+            rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
 
-        end else begin
-
-            if (rvalid && rready) begin
-                if ((rid&MST_ID) != MST_ID) begin
-                    $sformat(msg, "Received a completion not addressed to the right master (RID=%0x)", rid);
-                    log.error(msg);
-                    @(posedge aclk);
-                    $finish();
-                end
-            end
+        end else if (en) begin
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
 
@@ -702,57 +779,98 @@ module mst_driver
                 if (arvalid && arready && i==arid_cnt) begin
                     rd_orreq[i] <= 1'b1;
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= arid;
-                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= gen_resp(araddr);
+                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= gen_data(araddr);
                     rd_orreq_rresp[i*2+:2] <= gen_resp(araddr);
+                    rd_orreq_rlen[i*8+:8] <= arlen;
                     rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] <= gen_ruser(araddr);
+                    rd_orreq_mr[i] <= req_is_misroute(araddr);
+                // And release the OR when handshaking with RLAST
+                end else if (rvalid && rready && rlast && 
+                             rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid) 
+                begin
+                    rd_orreq[i] <= 1'b0;
+                end
+
+                // Check the completion is supposed to reach this master
+                if (rvalid && rready) begin
+                    if ((rid&MST_ID) != MST_ID) begin
+                        $sformat(msg, "Received a completion not addressed to the right master (RID=%0x)", rid);
+                        log.error(msg);
+                        rid_error[i] <= 1'b1;
+                    end else begin
+                        rid_error[i] <= 1'b0;
+                    end
                 end
 
                 // Release the OR once read data channel hanshakes
-                if (rvalid && rready && rlast && rd_orreq[i] &&
+                if (rvalid && rready && rd_orreq[i] &&
                     rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
                 begin
 
-                    rd_orreq[i] <= 1'b0;
-                    rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
-                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= {AXI_DATA_W{1'b0}};
-                    rd_orreq_rresp[i*2+:2] <= 2'b0;
+                    if (rlast) begin
+                        rlen[i*8+:8] <= 0;
+                    end else begin
+                        rlen[i*8+:8] <= rlen[i*8+:8] + 1;
+                    end
+
+                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= next_data(rdata);
 
                     if (rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] != ruser &&
-                        USER_SUPPORT && CHECK_REPORT)
+                        !rd_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT)
                     begin
                         log.error("RUSER doesn't match expected value");
-                        rresp_error <= 1'b1;
+                        ruser_error[i] <= 1'b1;
                     end
 
                     if (rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] != rdata &&
-                        rd_orreq_rresp[i*2+:2] != rresp &&
+                        !rd_orreq_mr[i] && CHECK_REPORT)
+                    begin
+                        log.error("RDATA doesn't match the expected value:");
+                        $sformat(msg, "  - RID: %x", rid); log.error(msg);
+                        $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
+                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]); log.error(msg);
+                        rresp_error[i] <= 1'b1;
+                    end
+
+                    if (rd_orreq_rresp[i*2+:2] != rresp &&
                         CHECK_REPORT)
                     begin
-                        log.error("RRESP/RDATA don't match expected values");
+                        log.error("RRESP doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RRESP: %x", rresp); log.error(msg);
                         $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]); log.error(msg);
-                        $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
-                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]); log.error(msg);
-                        rresp_error <= 1'b1;
+                        rresp_error[i] <= 1'b1;
                     end
+
+                    if (rlast && rd_orreq_rlen[i*8+:8] != rlen[i*8+:8] &&
+                        CHECK_REPORT)
+                    begin
+                        log.error("ARLEN doesn't match the expected beats:");
+                        $sformat(msg, "  - RID: %x", rid); log.error(msg);
+                        $sformat(msg, "  - ARLEN: %x", rlen[i*8+:8]); log.error(msg);
+                        $sformat(msg, "  - Expected ARLEN: %x", rd_orreq_rlen[i*8+:8]); log.error(msg);
+                        rlen_error[i] <= 1'b1;
+                    end
+
                 end else begin
-                    rresp_error <= 1'b0;
+                    rresp_error[i] <= 1'b0;
+                    ruser_error[i] <= 1'b0;
+                    rlen_error[i] <= 1'b0;
                 end
 
                 // Manage OR timeout
                 if (rd_orreq[i]) begin
                     if (rd_orreq_timeout[i]==TIMEOUT) begin
-                        $sformat(msg, "ERROR: Read OR %x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
+                        $sformat(msg, "ERROR: Read OR %0x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
                         log.error(msg);
-                        ror_error <= 1'b1;
+                        ror_error[i] <= 1'b1;
                     end
                     if (rd_orreq_timeout[i]<=TIMEOUT) begin
                         rd_orreq_timeout[i] <= rd_orreq_timeout[i] + 1;
                     end
                 end else begin
                     rd_orreq_timeout[i] <= 0;
-                    ror_error <= 1'b0;
+                    ror_error[i] <= 1'b0;
                 end
             end
         end
@@ -761,10 +879,9 @@ module mst_driver
     // Error report to the testbench
     assign error = (en) ?
 
-                    bresp_error | rresp_error | wor_error | ror_error |
-                    awtimeout | wtimeout | artimeout :
-
-                    1'b0;
+                    (|bresp_error | |buser_error | |rresp_error | |ruser_error |
+                    |wor_error | |ror_error | |bid_error | |rid_error | |rlen_error |
+                    awtimeout | wtimeout | artimeout) : 1'b0;
 
 endmodule
 

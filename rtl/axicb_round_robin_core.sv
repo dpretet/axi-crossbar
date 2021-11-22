@@ -48,7 +48,7 @@
 //     activated highest priority layer prevent computation of lowest
 //     priority layers.
 //
-//     (here, priority 1 for req 2, 0 for others)
+//     (here, priority 2 for req 2, 0 for others)
 //
 //         req    mask   grant   next-mask (p2) next-mask (p0)
 //

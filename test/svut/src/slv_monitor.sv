@@ -41,6 +41,16 @@ module slv_monitor
         // Offset of the emulated slave
         parameter SLV_ADDR = 0,
 
+        // Slaves mapping in the memory space
+        parameter SLV0_START_ADDR = 0,
+        parameter SLV0_END_ADDR = 4095,
+        parameter SLV1_START_ADDR = 0,
+        parameter SLV1_END_ADDR = 4095,
+        parameter SLV2_START_ADDR = 0,
+        parameter SLV2_END_ADDR = 4095,
+        parameter SLV3_START_ADDR = 0,
+        parameter SLV3_END_ADDR = 4095,
+
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
     )(
@@ -112,6 +122,8 @@ module slv_monitor
     logic [32                          -1:0] buser_exp;
     logic                                    r_full;
     logic                                    r_empty;
+    logic                                    r_empty_r;
+    logic                                    rlast_r;
     logic [32                          -1:0] rdata_exp;
     logic [32                          -1:0] rresp_exp;
     logic [32                          -1:0] ruser_exp;
@@ -131,6 +143,11 @@ module slv_monitor
     logic                                    wlen_error;
     logic [AXI_ADDR_W                  -1:0] araddr_r;
     logic [AXI_ID_W                    -1:0] arid_r;
+    logic [8                           -1:0] arlen_r;
+    logic [8                           -1:0] rlen;
+    logic [AXI_DATA_W                  -1:0] next_rdata;
+    logic [AXI_DATA_W                  -1:0] rdata_r;
+
 
     logic                                    awsideband_error;
     logic                                    wsideband_error;
@@ -157,6 +174,7 @@ module slv_monitor
     logic [4                           -1:0] exp_arregion;
     logic [AXI_AUSER_W                 -1:0] exp_aruser;
 
+
     // Logger setup
     svlogger log;
     string svlogger_name;
@@ -171,6 +189,9 @@ module slv_monitor
     assign error = btimeout | rtimeout | wdata_error | wlen_error |
                    awsideband_error | wsideband_error | arsideband_error;
 
+    function automatic integer gen_resp(input integer value);
+        gen_resp = gen_resp_for_slave(value);
+    endfunction
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address channel
@@ -586,26 +607,6 @@ module slv_monitor
     // Read Response channel
     ///////////////////////////////////////////////////////////////////////////
 
-    axicb_scfifo
-    #(
-        .PASS_THRU  (0),
-        .ADDR_WIDTH (2),
-        .DATA_WIDTH (AXI_ID_W+AXI_ADDR_W)
-    )
-    rfifo
-    (
-        .aclk     (aclk),
-        .aresetn  (aresetn),
-        .srst     (srst),
-        .flush    (1'b0),
-        .data_in  ({arid,araddr}),
-        .push     (arvalid & arready),
-        .full     (r_full),
-        .data_out ({arid_r,araddr_r}),
-        .pull     (rvalid & rready),
-        .empty    (r_empty)
-    );
-
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
@@ -638,18 +639,85 @@ module slv_monitor
     .lfsr    (r_lfsr)
     );
 
-    assign rresp_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
-    assign rdata_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
-    assign ruser_exp = gen_ruser(araddr_r/*+SLV_ADDR*/);
+    axicb_scfifo
+    #(
+        .PASS_THRU  (0),
+        .ADDR_WIDTH (2),
+        .DATA_WIDTH (AXI_ID_W+AXI_ADDR_W+8+AXI_DATA_W)
+    )
+    rfifo
+    (
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .flush    (1'b0),
+        .data_in  ({gen_data(araddr),arlen,arid,araddr}),
+        .push     (arvalid & arready),
+        .full     (r_full),
+        .data_out ({rdata_r,arlen_r,arid_r,araddr_r}),
+        .pull     (rvalid & rready & rlast),
+        .empty    (r_empty)
+    );
 
-    assign rvalid = ~r_empty & rvalid_lfsr[0];
-    assign rdata = rdata_exp[0+:AXI_DATA_W];
-    assign rresp = rresp_exp[0+:2];
     assign rid = arid_r;
+    assign rresp_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
+    assign rresp = rresp_exp[0+:2];
+    assign ruser_exp = gen_ruser(araddr_r/*+SLV_ADDR*/);
     assign ruser = ruser_exp[0+:AXI_RUSER_W];
-    assign rlast = 1'b1;
 
-    // Monitor RRESP channel to detect timeout
+    generate
+    if (AXI_SIGNALING > 0) begin
+
+        assign rvalid = rvalid_lfsr[0] & (~r_empty_r & ~r_empty);
+        assign rdata = (rlen==8'h0) ? rdata_r : next_rdata;
+        assign rlast = (rlen==arlen_r) ? 1'b1 : 1'b0;
+
+        always @ (posedge aclk or negedge aresetn) begin
+            if (~aresetn) begin
+                rlen <= 8'h0;
+                next_rdata <= {AXI_DATA_W{1'b0}};
+                r_empty_r <= 1'b0;
+                rlast_r <= 1'b0;
+            end else if (srst) begin
+                rlen <= 8'h0;
+                next_rdata <= {AXI_DATA_W{1'b0}};
+                r_empty_r <= 1'b0;
+                rlast_r <= 1'b0;
+            end else begin
+
+                r_empty_r <= r_empty;
+                rlast_r <= rlast;
+
+                // Was empty, but now it's filled with new request
+                if (!r_empty && r_empty_r) begin
+                    next_rdata <= rdata_r;
+                // FIFO is filled and last request has been fully transmitted
+                end else if (!r_empty && rlen==8'h0 && rlast_r==1'b1) begin
+                    next_rdata <= next_data(rdata_r);
+                // Under a request processing
+                end else if (rvalid && rready) begin
+                    next_rdata <= next_data(rdata);
+                end
+
+                if (!r_empty) begin
+                    if (rvalid && rready && rlen==arlen_r) rlen <= 8'h0;
+                    else if (rvalid && rready) rlen <= rlen + 1;
+                end else begin
+                    rlen <= 8'h0;
+                end
+            end
+        end
+
+    end else begin
+
+        assign rvalid = rvalid_lfsr[0] & ~r_empty;
+        assign rdata = rdata_r;
+        assign rlast = 1'b1;
+
+    end
+    endgenerate
+
+    // Monitor RDATA channel to detect timeout
     always @ (posedge aclk or negedge aresetn) begin
         if (~aresetn) begin
             rtimer <= 0;
@@ -664,6 +732,7 @@ module slv_monitor
                 rtimer <= 0;
             end
             if (rtimer >= TIMEOUT) begin
+                log.error("R Channel reached timeout");
                 rtimeout <= 1'b1;
             end else begin
                 rtimeout <= 1'b0;
