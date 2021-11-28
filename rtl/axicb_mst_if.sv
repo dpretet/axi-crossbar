@@ -24,6 +24,11 @@ module axicb_mst_if
         //   - 2: AXI4
         parameter AXI_SIGNALING = 0,
 
+        // Keep aboslute address in crossbar memory map
+        parameter KEEP_BASE_ADDR = 0,
+        // Base address
+        parameter BASE_ADDR = 0,
+
         // Implement CDC output stage
         parameter SLV_CDC = 0,
         // Maximum number of requests a slave can store
@@ -127,6 +132,8 @@ module axicb_mst_if
     logic [ARCH_W        -1:0] arch;
     logic [RCH_W         -1:0] rch;
     logic                      rlast;
+    logic [AXI_ADDR_W    -1:0] awaddr;
+    logic [AXI_ADDR_W    -1:0] araddr;
 
     generate
 
@@ -538,14 +545,14 @@ module axicb_mst_if
                 o_awuser,
                 o_awprot,
                 o_awid,
-                o_awaddr
+                awaddr
             } = awch;
 
             assign {
                 o_aruser,
                 o_arprot,
                 o_arid,
-                o_araddr
+                araddr
             }  = arch;
 
             end else begin: AUSER_OFF
@@ -553,13 +560,13 @@ module axicb_mst_if
             assign {
                 o_awprot,
                 o_awid,
-                o_awaddr
+                awaddr
             } = awch;
 
             assign {
                 o_arprot,
                 o_arid,
-                o_araddr
+                araddr
             }  = arch;
 
             end
@@ -579,7 +586,7 @@ module axicb_mst_if
                 o_awsize,
                 o_awlen,
                 o_awid,
-                o_awaddr
+                awaddr
             } = awch;
 
             assign {
@@ -593,7 +600,7 @@ module axicb_mst_if
                 o_arsize,
                 o_arlen,
                 o_arid,
-                o_araddr
+                araddr
             } = arch;
 
             end else begin: AUSER_OFF
@@ -608,7 +615,7 @@ module axicb_mst_if
                 o_awsize,
                 o_awlen,
                 o_awid,
-                o_awaddr
+                awaddr
             } = awch;
 
             assign {
@@ -621,11 +628,23 @@ module axicb_mst_if
                 o_arsize,
                 o_arlen,
                 o_arid,
-                o_araddr
+                araddr
             } = arch;
         end
 
     end
+
+    endgenerate
+
+    generate
+
+        if (KEEP_BASE_ADDR>0) begin: KEEP_BASE_ADDRESS
+            assign o_awaddr = awaddr;
+            assign o_araddr = araddr;
+        end else begin: REMOVE_BASE_ADDRESS
+            assign o_awaddr = awaddr - BASE_ADDR[0+:AXI_ADDR_W];
+            assign o_araddr = araddr - BASE_ADDR[0+:AXI_ADDR_W];
+        end
 
     endgenerate
 

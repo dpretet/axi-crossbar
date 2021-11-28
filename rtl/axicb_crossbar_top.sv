@@ -149,6 +149,9 @@ module axicb_crossbar_top
         //
         //   - SLVx_END_ADDR: End address allocated to the slave, in byte
         //
+        //   - SLVx_KEEP_BASE_ADDR: Keep the absolute address of the slave in
+        //     the memory map. Default to 0.
+        //
         // The size of a slave's internal buffer is equal to:
         //
         //   AXI_DATA_W * SLVx_OSTDREQ_NUM * SLVx_OSTDREQ_SIZE (in bits)
@@ -169,6 +172,7 @@ module axicb_crossbar_top
         parameter SLV0_END_ADDR = 4095,
         parameter SLV0_OSTDREQ_NUM = 4,
         parameter SLV0_OSTDREQ_SIZE = 1,
+        parameter SLV0_KEEP_BASE_ADDR = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Slave 1 configuration
@@ -179,6 +183,7 @@ module axicb_crossbar_top
         parameter SLV1_END_ADDR = 8191,
         parameter SLV1_OSTDREQ_NUM = 4,
         parameter SLV1_OSTDREQ_SIZE = 1,
+        parameter SLV1_KEEP_BASE_ADDR = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Slave 2 configuration
@@ -189,6 +194,7 @@ module axicb_crossbar_top
         parameter SLV2_END_ADDR = 12287,
         parameter SLV2_OSTDREQ_NUM = 4,
         parameter SLV2_OSTDREQ_SIZE = 1,
+        parameter SLV2_KEEP_BASE_ADDR = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Slave 3 configuration
@@ -198,7 +204,8 @@ module axicb_crossbar_top
         parameter SLV3_START_ADDR = 12288,
         parameter SLV3_END_ADDR = 16383,
         parameter SLV3_OSTDREQ_NUM = 4,
-        parameter SLV3_OSTDREQ_SIZE = 1
+        parameter SLV3_OSTDREQ_SIZE = 1,
+        parameter SLV3_KEEP_BASE_ADDR = 0
     )(
         ///////////////////////////////////////////////////////////////////////
         // Interconnect global interface
@@ -1216,6 +1223,8 @@ module axicb_crossbar_top
     .SLV_OSTDREQ_NUM  (SLV0_OSTDREQ_NUM),
     .SLV_OSTDREQ_SIZE (SLV0_OSTDREQ_SIZE),
     .USER_SUPPORT     (USER_SUPPORT),
+    .KEEP_BASE_ADDR   (SLV0_KEEP_BASE_ADDR),
+    .BASE_ADDR        (SLV0_START_ADDR),
     .AXI_AUSER_W      (AXI_AUSER_W),
     .AXI_WUSER_W      (AXI_WUSER_W),
     .AXI_BUSER_W      (AXI_BUSER_W),
@@ -1312,6 +1321,8 @@ module axicb_crossbar_top
     .SLV_OSTDREQ_NUM  (SLV1_OSTDREQ_NUM),
     .SLV_OSTDREQ_SIZE (SLV1_OSTDREQ_SIZE),
     .USER_SUPPORT     (USER_SUPPORT),
+    .KEEP_BASE_ADDR   (SLV1_KEEP_BASE_ADDR),
+    .BASE_ADDR        (SLV1_START_ADDR),
     .AXI_AUSER_W      (AXI_AUSER_W),
     .AXI_WUSER_W      (AXI_WUSER_W),
     .AXI_BUSER_W      (AXI_BUSER_W),
@@ -1408,6 +1419,8 @@ module axicb_crossbar_top
     .SLV_OSTDREQ_NUM  (SLV2_OSTDREQ_NUM),
     .SLV_OSTDREQ_SIZE (SLV2_OSTDREQ_SIZE),
     .USER_SUPPORT     (USER_SUPPORT),
+    .KEEP_BASE_ADDR   (SLV2_KEEP_BASE_ADDR),
+    .BASE_ADDR        (SLV2_START_ADDR),
     .AXI_AUSER_W      (AXI_AUSER_W),
     .AXI_WUSER_W      (AXI_WUSER_W),
     .AXI_BUSER_W      (AXI_BUSER_W),
@@ -1503,6 +1516,8 @@ module axicb_crossbar_top
     .SLV_CDC          (SLV3_CDC),
     .SLV_OSTDREQ_NUM  (SLV3_OSTDREQ_NUM),
     .SLV_OSTDREQ_SIZE (SLV3_OSTDREQ_SIZE),
+    .KEEP_BASE_ADDR   (SLV3_KEEP_BASE_ADDR),
+    .BASE_ADDR        (SLV3_START_ADDR),
     .USER_SUPPORT     (USER_SUPPORT),
     .AXI_AUSER_W      (AXI_AUSER_W),
     .AXI_WUSER_W      (AXI_WUSER_W),

@@ -101,6 +101,13 @@ Limitations (current dev stage)
 
 Inbox (possible next devs)
 
+- Error injection in the core and tesbench
+- Implement statistics in testbench to track misrouting, address distribution,
+  master granting, ...
+- New Checkers:
+    - Check address overlap (start+end vs next slave start address)
+    - Check address range bigger than address bus width
+    - ID overlap: mask ID + OR number supported up to next slave ID
 - Address translation service
 - Number of master and slave agents configurable
 - RTL generator to support any number of master / slave agents
