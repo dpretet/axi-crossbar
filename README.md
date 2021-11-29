@@ -101,6 +101,7 @@ Limitations (current dev stage)
 
 Inbox (possible next devs)
 
+- Add an AXI4-lite only top level
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
   master granting, ...
