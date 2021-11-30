@@ -101,7 +101,7 @@ Limitations (current dev stage)
 
 Inbox (possible next devs)
 
-- Add an AXI4-lite only top level
+- Read-only or Write-only master to save gate count
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
   master granting, ...
@@ -115,7 +115,6 @@ Inbox (possible next devs)
 - Completion reordering to support of out-of-order responses
 - Interface datapath width conversion
 - AXI4/AXI4-lite converter
-- Read-only or Write-only master to save gate count
 - Full-STRB vs Partial-STRB mode
     - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
       all other dataphases are fully activated (WSTRBs=1)

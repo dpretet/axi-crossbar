@@ -82,6 +82,11 @@ module axicb_crossbar_top
         //                    determine which master to route back the
         //                    BRESP/RRESP completions.
         //
+        //   - MSTx_RW: Slect if the interface is 
+        //         - Read/Write (=0)
+        //         - Read-only (=1) 
+        //         - Write-only (=2)
+        //
         // The size of a master's internal buffer is equal to:
         //
         // SIZE = AXI_DATA_W * MSTx_OSTDREQ_NUM * MSTx_OSTDREQ_SIZE (in bits)
@@ -99,6 +104,7 @@ module axicb_crossbar_top
         parameter MST0_PRIORITY = 0,
         parameter [SLV_NB-1:0] MST0_ROUTES = 4'b1_1_1_1,
         parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h10,
+        parameter MST0_RW = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 1 configuration
@@ -110,6 +116,7 @@ module axicb_crossbar_top
         parameter MST1_PRIORITY = 0,
         parameter [SLV_NB-1:0] MST1_ROUTES = 4'b1_1_1_1,
         parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h20,
+        parameter MST1_RW = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 2 configuration
@@ -121,6 +128,7 @@ module axicb_crossbar_top
         parameter MST2_PRIORITY = 0,
         parameter [SLV_NB-1:0] MST2_ROUTES = 4'b1_1_1_1,
         parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h30,
+        parameter MST2_RW = 0,
 
         ///////////////////////////////////////////////////////////////////////
         // Master 3 configuration
@@ -132,6 +140,7 @@ module axicb_crossbar_top
         parameter MST3_PRIORITY = 0,
         parameter [SLV_NB-1:0] MST3_ROUTES = 4'b1_1_1_1,
         parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h40,
+        parameter MST3_RW = 0,
 
 
         ///////////////////////////////////////////////////////////////////////
