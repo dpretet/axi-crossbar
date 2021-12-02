@@ -805,7 +805,7 @@ module axicb_crossbar_lite_top
     .mst0_rid      (mst0_rid),
     .mst0_rresp    (mst0_rresp),
     .mst0_rdata    (mst0_rdata),
-    .mst0_rlast    (),
+    .mst0_rlast    (1'b1),
     .mst0_ruser    (mst0_ruser),
     .mst1_aclk     (mst1_aclk),
     .mst1_aresetn  (mst1_aresetn),
@@ -852,7 +852,7 @@ module axicb_crossbar_lite_top
     .mst1_rid      (mst1_rid),
     .mst1_rresp    (mst1_rresp),
     .mst1_rdata    (mst1_rdata),
-    .mst1_rlast    (),
+    .mst1_rlast    (1'b1),
     .mst1_ruser    (mst1_ruser),
     .mst2_aclk     (mst2_aclk),
     .mst2_aresetn  (mst2_aresetn),
@@ -899,7 +899,7 @@ module axicb_crossbar_lite_top
     .mst2_rid      (mst2_rid),
     .mst2_rresp    (mst2_rresp),
     .mst2_rdata    (mst2_rdata),
-    .mst2_rlast    (),
+    .mst2_rlast    (1'b1),
     .mst2_ruser    (mst2_ruser),
     .mst3_aclk     (mst3_aclk),
     .mst3_aresetn  (mst3_aresetn),
@@ -946,7 +946,7 @@ module axicb_crossbar_lite_top
     .mst3_rid      (mst3_rid),
     .mst3_rresp    (mst3_rresp),
     .mst3_rdata    (mst3_rdata),
-    .mst3_rlast    (),
+    .mst3_rlast    (1'b1),
     .mst3_ruser    (mst3_ruser)
     );
 
