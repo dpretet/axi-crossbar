@@ -200,7 +200,7 @@ agent could be identified with `0x20` and another one with `0x30`. The user must
 takes care the ID generated for a request doesn't conflict with an ID from
 another agent, thus the ID numbering rolls off. In the setup above, the agent 0
 can't issue ID bigger than `0x1F` which will mis-route completion back to it and
-route it to the agent 1. The core doesn't track such wrong configuration. The 
+route it to the agent 1. The core doesn't track such wrong configuration. The
 must use a mask greater than 0.
 
 Each slave is assigned into an address map (start & end address) across the
@@ -212,7 +212,7 @@ tries to target a memory space not mapped to a slave, the agent will receive a
 `DECERR` completion. The user must ensure the address mapping can be covered
 by the address bus width; the user needs to take care to configure correctly
 the mapping and avoid any address overlap between slaves which will lead to
-mis-routing. The core doesn't track such wrong configurations. 
+mis-routing. The core doesn't track such wrong configurations.
 
 ## Switching Logic Architecture
 
@@ -284,15 +284,15 @@ completion are routed back to the requester by decoding the ID.
 
    AW Channels       W Channels        B channels        AR Channels        R Channels
 
-   │        │        │        │        │        │        ▲        ▲        ▲        ▲
+   │        │        │        │        ▲        ▲        │        │        ▲        ▲
    │        │        │        │        │        │        │        │        │        │
-   ▼        ▼        ▼        ▼        ▼        ▼        │        │        │        │
+   ▼        ▼        ▼        ▼        │        │        ▼        ▼        │        │
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │arbiter+switch│  │arbiter+switch│  │arbiter+switch│  │decoder+router│  │decoder+router│
 └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-        │                 │                 │                ▲                 ▲
+        │                 │                 ▲                │                 ▲
         │                 │                 │                │                 │
-        ▼                 ▼                 ▼                │                 │
+        ▼                 ▼                 │                ▼                 │
 
 
                                     To master interface
