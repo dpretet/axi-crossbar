@@ -11,11 +11,11 @@ module axicb_scfifo_ram
         parameter DATA_WIDTH = 8,
         parameter FFD_EN = 0
     )(
-        input  logic                  aclk,
-        input  logic                  wr_en,
-        input  logic [ADDR_WIDTH-1:0] addr_in,
-        input  logic [DATA_WIDTH-1:0] data_in,
-        input  logic [ADDR_WIDTH-1:0] addr_out,
+        input  wire                   aclk,
+        input  wire                   wr_en,
+        input  wire  [ADDR_WIDTH-1:0] addr_in,
+        input  wire  [DATA_WIDTH-1:0] data_in,
+        input  wire  [ADDR_WIDTH-1:0] addr_out,
         output logic [DATA_WIDTH-1:0] data_out
     );
 

@@ -21,11 +21,11 @@ module axicb_round_robin
         parameter REQ2_PRIORITY = 0,
         parameter REQ3_PRIORITY = 0
     )(
-        input  logic                  aclk,
-        input  logic                  aresetn,
-        input  logic                  srst,
-        input  logic                  en,
-        input  logic [REQ_NB    -1:0] req,
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   en,
+        input  wire  [REQ_NB    -1:0] req,
         output logic [REQ_NB    -1:0] grant
     );
 

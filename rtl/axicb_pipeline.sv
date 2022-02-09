@@ -12,14 +12,14 @@ module axicb_pipeline
         // Number of pipeline stage
         parameter NB_PIPELINE = 1
     )(
-        input  logic                      aclk,
-        input  logic                      aresetn,
-        input  logic                      srst,
-        input  logic                      i_valid,
+        input  wire                       aclk,
+        input  wire                       aresetn,
+        input  wire                       srst,
+        input  wire                       i_valid,
         output logic                      i_ready,
-        input  logic [DATA_BUS_W    -1:0] i_data,
+        input  wire  [DATA_BUS_W    -1:0] i_data,
         output logic                      o_valid,
-        input  logic                      o_ready,
+        input  wire                       o_ready,
         output logic [DATA_BUS_W    -1:0] o_data
     );
 

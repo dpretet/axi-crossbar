@@ -32,15 +32,15 @@ module axicb_scfifo
         // Data stream width
         parameter DATA_WIDTH = 8
     )(
-        input  logic                  aclk,
-        input  logic                  aresetn,
-        input  logic                  srst,
-        input  logic                  flush,
-        input  logic [DATA_WIDTH-1:0] data_in,
-        input  logic                  push,
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   flush,
+        input  wire  [DATA_WIDTH-1:0] data_in,
+        input  wire                   push,
         output logic                  full,
         output logic [DATA_WIDTH-1:0] data_out,
-        input  logic                  pull,
+        input  wire                   pull,
         output logic                  empty
     );
 
