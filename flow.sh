@@ -94,27 +94,6 @@ main() {
 
         set +e
 
-        printinfo "Start SVLINT"
-        svlint rtl/*
-
-        printinfo "Start Verilator lint"
-        verilator --lint-only +1800-2017ext+sv \
-            -Wall -Wpedantic -cdc \
-            -Wno-VARHIDDEN \
-            -Wno-PINCONNECTEMPTY \
-            -Wno-TIMESCALEMOD \
-            -I./rtl\
-            ./rtl/axicb_mst_if.sv\
-            ./rtl/axicb_slv_if.sv\
-            ./rtl/axicb_slv_switch.sv\
-            ./rtl/axicb_pipeline.sv\
-            ./rtl/axicb_mst_switch.sv\
-            ./rtl/axicb_switch_top.sv\
-            ./rtl/axicb_round_robin.sv\
-            ./rtl/axicb_round_robin_core.sv\
-            ./rtl/axicb_crossbar_top.sv\
-            --top-module axicb_crossbar_top
-
         printinfo "Start Verilator lint"
         verilator --lint-only +1800-2017ext+sv \
             -Wall -Wpedantic -cdc \
@@ -137,8 +116,9 @@ main() {
         set -e
     fi
     if [[ $1 == "sim" ]]; then
+        source script/setup.sh
         cd $CURDIR/test/svut
-        ./run.sh -m 10000 -t 100000
+        ./run.sh -m 1000 -t 100000
         exit $?
     fi
 

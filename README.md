@@ -1,5 +1,13 @@
 # AMBA AXI Crossbar
 
+[![GitHub license](https://img.shields.io/github/license/dpretet/axi-crossbar)](https://github.com/dpretet/axi-crossbar/blob/master/LICENSE)
+![Github Actions](https://github.com/dpretet/axi-crossbar/actions/workflows/ci.yaml/badge.svg)
+[![GitHub issues](https://img.shields.io/github/issues/dpretet/axi-crossbar)](https://github.com/dpretet/axi-crossbar/issues)
+[![GitHub stars](https://img.shields.io/github/stars/dpretet/axi-crossbar)](https://github.com/dpretet/axi-crossbar/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/dpretet/axi-crossbar)](https://github.com/dpretet/axi-crossbar/network)
+[![Twitter](https://img.shields.io/twitter/url/https/github.com/dpretet/axi-crossbar?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fdpretet%2Faxi-crossbar)
+
+
 ## Overview
 
 An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.

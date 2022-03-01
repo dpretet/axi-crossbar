@@ -1,0 +1,20 @@
+name: FRISCV
+on: [push]
+jobs:
+  lint-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt install verilator
+      - run: ./flow.sh lint
+  sim-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get update
+      - run: sudo apt install iverilog
+      - run: sudo apt install verilator
+      - run: iverilog -V
+      - run: verilator -V
+      - run: git submodule update --init --recursive
+      - run: ./flow.sh sim

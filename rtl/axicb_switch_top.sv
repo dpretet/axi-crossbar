@@ -29,7 +29,7 @@ module axicb_switch_top
 
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
-        
+
         // Routes to the slaves allowed per master
         parameter [MST_NB*SLV_NB -1:0] MST_ROUTES = 16'hFFFF,
 
@@ -104,6 +104,8 @@ module axicb_switch_top
         input  wire  [SLV_NB*RCH_W      -1:0] o_rch
     );
 
+    genvar i, j;
+
     // master <> slave logic routing
     logic [MST_NB*SLV_NB            -1:0] slv_awvalid;
     logic [MST_NB*SLV_NB            -1:0] slv_awready;
@@ -141,7 +143,8 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<MST_NB;i=i+1) begin: SLV_SWITCHS_GEN
+
+    for (i=0;i<MST_NB;i=i+1) begin: SLV_SWITCHS_GEN
 
         logic                          pipe_awvalid;
         logic                          pipe_awready;
@@ -161,7 +164,7 @@ module axicb_switch_top
         logic                          pipe_rlast;
         logic [RCH_W             -1:0] pipe_rch;
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (AWCH_W),
             .NB_PIPELINE (SLV_PIPELINE)
@@ -179,7 +182,7 @@ module axicb_switch_top
             .o_data  (pipe_awch)
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (WCH_W+1),
             .NB_PIPELINE (SLV_PIPELINE)
@@ -197,7 +200,7 @@ module axicb_switch_top
             .o_data  ({pipe_wlast, pipe_wch})
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (BCH_W),
             .NB_PIPELINE (SLV_PIPELINE)
@@ -215,7 +218,7 @@ module axicb_switch_top
             .o_data  (i_bch[i*BCH_W+:BCH_W])
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (ARCH_W),
             .NB_PIPELINE (SLV_PIPELINE)
@@ -233,7 +236,7 @@ module axicb_switch_top
             .o_data  (pipe_arch)
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (RCH_W+1),
             .NB_PIPELINE (SLV_PIPELINE)
@@ -251,7 +254,7 @@ module axicb_switch_top
             .o_data  ({i_rlast[i],i_rch[i*RCH_W+:RCH_W]})
         );
 
-        axicb_slv_switch 
+        axicb_slv_switch
         #(
             .AXI_ADDR_W      (AXI_ADDR_W),
             .AXI_ID_W        (AXI_ID_W),
@@ -273,7 +276,7 @@ module axicb_switch_top
             .ARCH_W          (ARCH_W),
             .RCH_W           (RCH_W)
         )
-        slv_switch 
+        slv_switch
         (
             .aclk      (aclk),
             .aresetn   (aresetn),
@@ -321,7 +324,7 @@ module axicb_switch_top
     // Reorder the valid/ready handshakes:
     //
     // slave interface uses awvalid[0,1,2,3,...] to target master interface 0,
-    // master interface 1, master interface 2, master interface 3 ... 
+    // master interface 1, master interface 2, master interface 3 ...
     //
     // master interfaces must receive awvalid[0] of slv_if0 + awvalid[0] of
     // slv_if1 ...
@@ -337,9 +340,9 @@ module axicb_switch_top
     generate
 
     // Parse all slave agents, thus output master interfaces
-    for (genvar i=0;i<SLV_NB;i=i+1) begin: REORDERING_TO_MST
+    for (i=0;i<SLV_NB;i=i+1) begin: REORDERING_TO_MST
         // Parse all master agents, thus input slave interfaces
-        for (genvar j=0;j<MST_NB;j=j+1) begin: SLV_IF_PARSING
+        for (j=0;j<MST_NB;j=j+1) begin: SLV_IF_PARSING
             assign mst_awvalid[i*SLV_NB+j] = slv_awvalid[j*MST_NB+i];
             assign mst_wvalid[i*SLV_NB+j] = slv_wvalid[j*MST_NB+i];
             assign mst_wlast[i*SLV_NB+j] = slv_wlast[j*MST_NB+i];
@@ -350,9 +353,9 @@ module axicb_switch_top
     end
 
     // Parse all master agents, thus input slave interfaces
-    for (genvar i=0;i<MST_NB;i=i+1) begin: REORDERING_TO_SLV
+    for (i=0;i<MST_NB;i=i+1) begin: REORDERING_TO_SLV
         // Parse all slave agents, thus output master interfaces
-        for (genvar j=0;j<SLV_NB;j=j+1) begin: MST_IF_PARSING
+        for (j=0;j<SLV_NB;j=j+1) begin: MST_IF_PARSING
             assign slv_awready[i*MST_NB+j] = mst_awready[j*SLV_NB+i];
             assign slv_wready[i*MST_NB+j] = mst_wready[j*SLV_NB+i];
             assign slv_bvalid[i*MST_NB+j] = mst_bvalid[j*SLV_NB+i];
@@ -370,7 +373,8 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    for (genvar i=0;i<SLV_NB;i=i+1) begin: MST_SWITCHS_GEN
+
+    for (i=0;i<SLV_NB;i=i+1) begin: MST_SWITCHS_GEN
 
         logic                          pipe_awvalid;
         logic                          pipe_awready;
@@ -390,7 +394,7 @@ module axicb_switch_top
         logic                          pipe_rlast;
         logic [RCH_W             -1:0] pipe_rch;
 
-        axicb_mst_switch 
+        axicb_mst_switch
         #(
             .AXI_ID_W       (AXI_ID_W),
             .AXI_DATA_W     (AXI_DATA_W),
@@ -451,7 +455,7 @@ module axicb_switch_top
             .o_rch     (pipe_rch)
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (AWCH_W),
             .NB_PIPELINE (MST_PIPELINE)
@@ -469,7 +473,7 @@ module axicb_switch_top
             .o_data  (o_awch[i*AWCH_W+:AWCH_W])
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (WCH_W+1),
             .NB_PIPELINE (MST_PIPELINE)
@@ -488,7 +492,7 @@ module axicb_switch_top
         );
 
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (BCH_W),
             .NB_PIPELINE (MST_PIPELINE)
@@ -507,7 +511,7 @@ module axicb_switch_top
         );
 
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (ARCH_W),
             .NB_PIPELINE (MST_PIPELINE)
@@ -525,7 +529,7 @@ module axicb_switch_top
             .o_data  (o_arch[i*ARCH_W+:ARCH_W])
         );
 
-        axicb_pipeline 
+        axicb_pipeline
         #(
             .DATA_BUS_W  (RCH_W+1),
             .NB_PIPELINE (MST_PIPELINE)
