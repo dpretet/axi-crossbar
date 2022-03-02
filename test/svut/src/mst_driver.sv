@@ -5,7 +5,9 @@
 `default_nettype none
 
 `include "functions.sv"
+`ifndef NODEBUG
 `include "svlogger.sv"
+`endif
 
 module mst_driver
 
@@ -161,6 +163,7 @@ module mst_driver
     logic                                    w_empty_r;
     logic                                    wlast_r;
 
+    `ifndef NODEBUG
     // Logger setup
 
     svlogger log;
@@ -173,6 +176,7 @@ module mst_driver
                   `SVL_VERBOSE_DEBUG,
                   `SVL_ROUTE_ALL);
     end
+    `endif
 
     function automatic integer gen_resp(input integer value);
         gen_resp = gen_resp_for_master(
@@ -400,7 +404,9 @@ module mst_driver
                 awtimer <= 0;
             end
             if (awtimer >= TIMEOUT) begin
+                `ifndef NODEBUG
                 log.error("AW Channel reached timeout");
+                `endif
                 awtimeout <= 1'b1;
             end else begin
                 awtimeout <= 1'b0;
@@ -412,7 +418,9 @@ module mst_driver
             end
             if (wtimer >= TIMEOUT) begin
                 wtimeout <= 1'b1;
+                `ifndef NODEBUG
                 log.error("W Channel reached timeout");
+                `endif
             end else begin
                 wtimeout <= 1'b0;
             end
@@ -462,8 +470,10 @@ module mst_driver
 
                 if (bvalid && bready) begin
                     if ((bid&MST_ID) != MST_ID) begin
+                        `ifndef NODEBUG
                         $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid);
                         log.error(msg);
+                        `endif
                         bid_error[i] <= 1'b1;
                     end else begin
                         bid_error[i] <= 1'b0;
@@ -490,20 +500,24 @@ module mst_driver
                     wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= {AXI_BUSER_W{1'b0}};
 
                     if (wr_orreq_bresp[i*2+:2] !== bresp && CHECK_REPORT) begin
+                        `ifndef NODEBUG
                         log.error("BRESP doesn't match expected value");
                         $sformat(msg, "  - BID: %x", bid); log.error(msg);
                         $sformat(msg, "  - BRESP: %x", bresp); log.error(msg);
                         $sformat(msg, "  - Expected BRESP: %x", wr_orreq_bresp[i*2+:2]); log.error(msg);
+                        `endif
                         bresp_error[i] <= 1'b1;
                     end else begin
 
                         if (wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] !== buser &&
                             !wr_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT
                         ) begin
+                            `ifndef NODEBUG
                             log.error("BUSER doesn't match expected value");
                             $sformat(msg, "  - BID: %x", bid); log.error(msg);
                             $sformat(msg, "  - BUSER: %x", buser); log.error(msg);
                             $sformat(msg, "  - Expected BUSER: %x", wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W]); log.error(msg);
+                            `endif
                             buser_error[i] <= 1'b1;
                         end
 
@@ -517,8 +531,10 @@ module mst_driver
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
                     if (wr_orreq_timeout[i]==TIMEOUT) begin
+                        `ifndef NODEBUG
                         $sformat(msg, "Write OR %0x reached timeout (MST_ID: %0x)", i, MST_ID);
                         log.error(msg);
+                        `endif
                         wor_error[i] <= 1'b1;
                     end
                     if (wr_orreq_timeout[i]<=TIMEOUT) begin
@@ -678,7 +694,9 @@ module mst_driver
             end
             if (artimer >= TIMEOUT) begin
                 artimeout <= 1'b1;
+                `ifndef NODEBUG
                 log.error("AR Channel reached timeout");
+                `endif
             end else begin
                 artimeout <= 1'b0;
             end
@@ -785,8 +803,8 @@ module mst_driver
                     rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] <= gen_ruser(araddr);
                     rd_orreq_mr[i] <= req_is_misroute(araddr);
                 // And release the OR when handshaking with RLAST
-                end else if (rvalid && rready && rlast && 
-                             rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid) 
+                end else if (rvalid && rready && rlast &&
+                             rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
                 begin
                     rd_orreq[i] <= 1'b0;
                 end
@@ -794,8 +812,10 @@ module mst_driver
                 // Check the completion is supposed to reach this master
                 if (rvalid && rready) begin
                     if ((rid&MST_ID) != MST_ID) begin
+                        `ifndef NODEBUG
                         $sformat(msg, "Received a completion not addressed to the right master (RID=%0x)", rid);
                         log.error(msg);
+                        `endif
                         rid_error[i] <= 1'b1;
                     end else begin
                         rid_error[i] <= 1'b0;
@@ -818,37 +838,45 @@ module mst_driver
                     if (rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] != ruser &&
                         !rd_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT)
                     begin
+                        `ifndef NODEBUG
                         log.error("RUSER doesn't match expected value");
+                        `endif
                         ruser_error[i] <= 1'b1;
                     end
 
                     if (rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] != rdata &&
                         !rd_orreq_mr[i] && CHECK_REPORT)
                     begin
+                        `ifndef NODEBUG
                         log.error("RDATA doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
                         $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]); log.error(msg);
+                        `endif
                         rresp_error[i] <= 1'b1;
                     end
 
                     if (rd_orreq_rresp[i*2+:2] != rresp &&
                         CHECK_REPORT)
                     begin
+                        `ifndef NODEBUG
                         log.error("RRESP doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RRESP: %x", rresp); log.error(msg);
                         $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]); log.error(msg);
+                        `endif
                         rresp_error[i] <= 1'b1;
                     end
 
                     if (rlast && rd_orreq_rlen[i*8+:8] != rlen[i*8+:8] &&
                         CHECK_REPORT)
                     begin
+                        `ifndef NODEBUG
                         log.error("ARLEN doesn't match the expected beats:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - ARLEN: %x", rlen[i*8+:8]); log.error(msg);
                         $sformat(msg, "  - Expected ARLEN: %x", rd_orreq_rlen[i*8+:8]); log.error(msg);
+                        `endif
                         rlen_error[i] <= 1'b1;
                     end
 
@@ -861,8 +889,10 @@ module mst_driver
                 // Manage OR timeout
                 if (rd_orreq[i]) begin
                     if (rd_orreq_timeout[i]==TIMEOUT) begin
+                        `ifndef NODEBUG
                         $sformat(msg, "ERROR: Read OR %0x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
                         log.error(msg);
+                        `endif
                         ror_error[i] <= 1'b1;
                     end
                     if (rd_orreq_timeout[i]<=TIMEOUT) begin

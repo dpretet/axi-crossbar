@@ -19,6 +19,7 @@ MAX_TRAFFIC=1000
 TIMEOUT=500000
 TC="./tb_config/*.cfg"
 NOVCD=0
+NODEBUG=0
 
 test_ret=0
 ret=0

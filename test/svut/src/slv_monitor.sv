@@ -5,7 +5,9 @@
 `default_nettype none
 
 `include "functions.sv"
+`ifndef NODEBUG
 `include "svlogger.sv"
+`endif
 
 module slv_monitor
 
@@ -175,7 +177,9 @@ module slv_monitor
     logic [AXI_AUSER_W                 -1:0] exp_aruser;
 
 
+    `ifndef NODEBUG
     // Logger setup
+
     svlogger log;
     string svlogger_name;
 
@@ -185,6 +189,7 @@ module slv_monitor
                   `SVL_VERBOSE_DEBUG,
                   `SVL_ROUTE_ALL);
     end
+    `endif
 
     assign error = btimeout | rtimeout | wdata_error | wlen_error |
                    awsideband_error | wsideband_error | arsideband_error;
@@ -372,12 +377,16 @@ module slv_monitor
                 if (wvalid & wready) begin
 
                     if (USER_SUPPORT>0 && wuser!=exp_wuser[AXI_WUSER_W-1:0]) begin
+                        `ifndef NODEBUG
                         log.error("ERROR: WUSER received doesn't match the expected");
+                        `endif
                         wsideband_error <= 1'b1;
                     end
 
                     if (wlast && awlen_w!=wbeat) begin
+                        `ifndef NODEBUG
                         log.error("AWLEN received doesn't match AW channel setup");
+                        `endif
                         wlen_error <= 1'b1;
                         $finish();
                     end else begin
@@ -387,7 +396,9 @@ module slv_monitor
                     if (wbeat!=0 && next_wdata!=wdata ||
                         wbeat==0 && gen_data(awaddr_w)!=wdata
                     ) begin
+                        `ifndef NODEBUG
                         log.error("ERROR: WDATA received doesn't match the expected");
+                        `endif
                         wdata_error <= 1'b1;
                         $finish();
                     end begin
@@ -418,12 +429,16 @@ module slv_monitor
                 if (wvalid & wready & wlast) begin
 
                     if (USER_SUPPORT>0 && wuser!=exp_wuser[AXI_WUSER_W-1:0]) begin
+                        `ifndef NODEBUG
                         log.error("ERROR: WUSER received doesn't match the expected");
+                        `endif
                         wsideband_error <= 1'b1;
                     end
 
                     if (gen_data(awaddr_w) != wdata) begin
+                        `ifndef NODEBUG
                         log.error("ERROR: WDATA received doesn't match the expected");
+                        `endif
                         wdata_error <= 1'b1;
                         $finish();
                     end begin
@@ -732,7 +747,9 @@ module slv_monitor
                 rtimer <= 0;
             end
             if (rtimer >= TIMEOUT) begin
+                `ifndef NODEBUG
                 log.error("R Channel reached timeout");
+                `endif
                 rtimeout <= 1'b1;
             end else begin
                 rtimeout <= 1'b0;

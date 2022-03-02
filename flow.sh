@@ -115,18 +115,21 @@ main() {
 
         set -e
     fi
+
     if [[ $1 == "sim" ]]; then
         source script/setup.sh
         cd $CURDIR/test/svut
-        ./run.sh -m 1000 -t 100000
-        exit $?
+        ./run.sh --no-debug-log --no-vcd
+        ret=$?
+        echo "Execution status: $ret"
+        exit $ret
     fi
 
     if [[ $1 == "syn" ]]; then
         printinfo "Start synthesis flow"
         cd "$CURDIR/syn"
         # ./run.sh
-        return $?
+        exit $?
     fi
 }
 

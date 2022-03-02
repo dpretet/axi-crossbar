@@ -66,6 +66,10 @@ get_args() {
                 shift
                 NOVCD=1
             ;;
+            --no-debug-log )
+                shift
+                NODEBUG=1
+            ;;
             -h | --help )
                 usage
                 exit 0
@@ -108,6 +112,11 @@ runner() {
 
     if [ $NOVCD != 0 ]; then
         DEFINES="$DEFINES;NOVCD=1"
+    fi
+
+    # Don't dump log, useful for Github actions which may use icarus 10 not supporting SVLogger
+    if [ $NODEBUG != 0 ]; then
+        DEFINES="$DEFINES;NODEBUG=1"
     fi
 
     # Run the simulation
