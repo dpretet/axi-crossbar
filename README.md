@@ -109,6 +109,7 @@ Limitations (current dev stage)
 
 Inbox (possible next devs)
 
+- Support Verilator for CI
 - Read-only or Write-only master to save gate count
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
