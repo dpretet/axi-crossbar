@@ -117,6 +117,7 @@ For both protocols, the user can configure:
 - the address bus width
 - the data bus width
 - the ID bus width
+- the USER width, per channel
 
 The configurations apply to the whole infrastructure, including the agents.
 An agent connected to the core must support for instance `32` bits addressing if
@@ -137,6 +138,23 @@ Optionally, AMBA USER signals can be supported and transported (AUSER, WUSER,
 BUSER and RUSER). These bus fields of the AMBA channels can be activated
 individually, e.g. for address channel only and configured to any width. This
 applies for both AXI4 and AXI4-lite configuration.
+
+### Ordering rules
+
+The core supports outstanding requests, and so manages traffic queues. However,
+the core doesn't support reodering to enhance traffic and so the user can be
+sure the read or the write requests will be issued to the master interface(s)
+in the same order than received on a slave interface.
+
+Read and write traffic are totally uncorrelated, no ordering can be garanteed
+between the read / write channels.
+
+The odering rules mentioned above are applicable only on a slave interface, and
+so concurrent slaves traffic can be served in a different way than the requests
+are received.
+
+The odering rules mentioned above imply device or memory regions accesses are
+managed in the same way.
 
 ### AXI4-lite specificities
 
@@ -213,6 +231,7 @@ tries to target a memory space not mapped to a slave, the agent will receive a
 by the address bus width; the user needs to take care to configure correctly
 the mapping and avoid any address overlap between slaves which will lead to
 mis-routing. The core doesn't track such wrong configurations.
+
 
 ## Switching Logic Architecture
 
@@ -364,19 +383,21 @@ t++      ...
 ```
 
 
-### Routing Table
+### Sharability & Routing Tables
 
 Each master can be configured to use only specific routes across the crossbar
 infrastructure. This feature if used can help to save gate count as will
 restrict portion of the memory map to certain agents, for security reasons or
-avoid any accidental memory corruption. By default a master can access to any
-slave. The parameter `MSTx_ROUTES` of N bits enables or not a route. Bit `0`
+avoid any accidental memory corruption. **By default a master can access to any
+slave**. The parameter `MSTx_ROUTES` of N bits enables or not a route. Bit `0`
 enable to route to the slave agent 0 (master interface 0), bit `1` to the slave
 agent 1 and so on. This setup physically isolates agents from each others and
 can't be overridden once the core is implemented. If a master agent tries to
 access a restricted zone of the memory map, its slave switch will handshake the
 request, will not transmit it and then complete the request with a `DECERR`.
 
+This option can be use to define memory region sharable or not between master
+agents.
 
 ### Timeout Events Handling
 
