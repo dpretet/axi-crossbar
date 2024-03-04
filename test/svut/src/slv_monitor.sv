@@ -66,7 +66,7 @@ module slv_monitor
         input  logic [8             -1:0] awlen,
         input  logic [3             -1:0] awsize,
         input  logic [2             -1:0] awburst,
-        input  logic [2             -1:0] awlock,
+        input  logic                      awlock,
         input  logic [4             -1:0] awcache,
         input  logic [3             -1:0] awprot,
         input  logic [4             -1:0] awqos,
@@ -90,7 +90,7 @@ module slv_monitor
         input  logic [8             -1:0] arlen,
         input  logic [3             -1:0] arsize,
         input  logic [2             -1:0] arburst,
-        input  logic [2             -1:0] arlock,
+        input  logic                      arlock,
         input  logic [4             -1:0] arcache,
         input  logic [3             -1:0] arprot,
         input  logic [4             -1:0] arqos,
@@ -158,7 +158,7 @@ module slv_monitor
     logic [8                           -1:0] exp_awlen;
     logic [3                           -1:0] exp_awsize;
     logic [2                           -1:0] exp_awburst;
-    logic [2                           -1:0] exp_awlock;
+    logic                                    exp_awlock;
     logic [4                           -1:0] exp_awcache;
     logic [3                           -1:0] exp_awprot;
     logic [4                           -1:0] exp_awqos;
@@ -169,7 +169,7 @@ module slv_monitor
     logic [8                           -1:0] exp_arlen;
     logic [3                           -1:0] exp_arsize;
     logic [2                           -1:0] exp_arburst;
-    logic [2                           -1:0] exp_arlock;
+    logic                                    exp_arlock;
     logic [4                           -1:0] exp_arcache;
     logic [3                           -1:0] exp_arprot;
     logic [4                           -1:0] exp_arqos;
@@ -260,7 +260,7 @@ module slv_monitor
                 if (awburst != exp_awburst[1:0])
                     awsideband_error <= 1'b1;
 
-                if (awlock != exp_awlock[1:0])
+                if (awlock != exp_awlock)
                     awsideband_error <= 1'b1;
 
                 if (awcache != exp_awcache[3:0])
@@ -593,7 +593,7 @@ module slv_monitor
                 if (arburst != exp_arburst[1:0])
                     arsideband_error <= 1'b1;
 
-                if (arlock != exp_arlock[1:0])
+                if (arlock != exp_arlock)
                     arsideband_error <= 1'b1;
 
                 if (arcache != exp_arcache[3:0])
