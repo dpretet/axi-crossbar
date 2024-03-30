@@ -402,6 +402,9 @@ agents.
 
 ### Timeout Events Handling
 
+CAUTION: this feature will be implemented in a future release. It's not
+yet available
+
 Timeout detection and management can be enabled and configured by interface.
 This avoids any deadlock if a slave doesn't respond to a request, or if a
 master doesn't accept a completion.

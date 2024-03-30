@@ -49,13 +49,13 @@ Features
     - Seamless support of AXI4 vs AXI4-lite
 - CDC support in master & slave interface. Convert an interface's clock domain
   from/to the crossbar inner clock domain
-- Round-robin fair share
+- Round-robin fair-share arbitration
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
 - AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
-    - The selected mode applies to global infrastructure
+    - The selected mode applies to the global infrastructure
 - Routing table can be defined to restrict slaves access
     - Easily create enclosed and secured memory map
     - Dedicate sensitive slaves only to trusted master agents
