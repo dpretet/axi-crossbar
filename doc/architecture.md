@@ -71,7 +71,7 @@ the the completions from/to the agent.
 
 ## Clock and Reset Network
 
-## Clock
+### Clock
 
 The core uses and needs a reference clock for the internal switching logic. The
 higher the frequency is, the better will be the global bandwidth and latency
@@ -86,7 +86,7 @@ The user can also use the same clock for all the interfaces. In this
 configuration, all the agents connected to the core have to use the same clock
 than the interconnect switching logic.
 
-## Reset
+### Reset
 
 The core fully supports both asynchronous and synchronous reset. The choice
 between these two options depends to the technology targeted. Most of the time,
@@ -141,20 +141,21 @@ applies for both AXI4 and AXI4-lite configuration.
 
 ### Ordering rules
 
-The core supports outstanding requests, and so manages traffic queues. However,
-the core doesn't support reodering to enhance traffic and so the user can be
-sure the read or the write requests will be issued to the master interface(s)
+The core supports outstanding requests, and so manages traffic queues.
+
+The core doesn't support reodering to enhance quality of service and so the user
+can be sure the read or write requests will be issued to the master interface(s)
 in the same order than received on a slave interface.
+
+The core doesn't support read/write completion reodering, so a master issuing
+with the same ID some requests to different slaves can't be sure the completions
+will follow the original order if the slaves don't have the same pace to complete
+a request.
 
 Read and write traffic are totally uncorrelated, no ordering can be garanteed
 between the read / write channels.
 
-The odering rules mentioned above are applicable only on a slave interface, and
-so concurrent slaves traffic can be served in a different way than the requests
-are received.
-
-The odering rules mentioned above imply device or memory regions accesses are
-managed in the same way.
+The ordering rules mentioned above apply for device or memory regions.
 
 ### AXI4-lite specificities
 

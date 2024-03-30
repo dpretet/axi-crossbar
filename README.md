@@ -15,8 +15,8 @@ An AXI4 crossbar implemented in SystemVerilog to build the foundation of a SOC.
 A crossbar is a circuit connecting multiple master and slave agents, mapped
 across a memory space. The core consists of a collection of switches, routing
 the master requests to the slaves and driving back completions to the agents.
-A crossbar is a common piece of logic to connect for instance in a SOC the
-processor(s) with its peripherals like memories, IOs, co-processors...
+A crossbar is a common piece of logic to connect in a SOC the
+processor(s) with the peripherals like memories, IOs, co-processors...
 
 
 ```
@@ -53,14 +53,13 @@ Features
 - Round-robin fair share
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
-- Timeout support, configurable per agent interface
 - AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
     - The selected mode applies to global infrastructure
-- Masters routing can be defined to restrict slaves access
+- Routing table can be defined to restrict slaves access
     - Easily create enclosed and secured memory map
-    - Useful to save gate count
+    - Dedicate sensitive slaves only to trusted master agents
 - USER signal support
     - Configurable for each channel (AW, AR, W, B, R)
     - Common to all master/slave interfaces if activated
@@ -73,7 +72,7 @@ Features
     - Data width configurable, any width
     - ID width configurable, any width
 - Advanced clock/reset network
-    - Support both aynchronous and synchronous reset schema
+    - Support both aynchronous and synchronous reset schemes
     - Can handle clock domain crossing if needed, the core being fueled by its
       own clock domain
 - Route read/write requests by address decoding. All slave agents are mapped
@@ -84,6 +83,8 @@ Features
     - A master can be restricted to a memory map subset
     - An acccess to a forbidden area is completed by a DECERR
 - Switching logic IO interfaces can be pipelined to achieve timing closure easier
+- Don't garantee completion ordering when a master targets multiple slaves with the
+  same AXI ID (!). A master should use different IDs and reorder the completion by itself
 
 Further details can be found in:
 - the architecture [chapter](doc/architecture.md)
@@ -92,7 +93,7 @@ Further details can be found in:
 
 ## Verification environment
 
-The core is verified with a testbench relying on (pseudo) random driver and
+The core is verified with a testbench relying on pseudo-random driver and
 monitor to inject some traffic and verify its correctness. Please refer to the
 [dedicated chapter](./test/svut/README.md) for futher details and find hints
 to integrate the core in your own development. The flow relies on:
@@ -103,13 +104,14 @@ to integrate the core in your own development. The flow relies on:
 
 ## Development plan
 
-Limitations (current dev stage)
+Inbox:
 
-- No timeout support
-
-Inbox (possible next devs)
-
-- Support Verilator for CI
+- Full AXI ordering support
+    - if a master if targets two slaves with the same ID, the interconnect fowards
+      the completion in the order it receives them.
+    - put in place multiple queue per ID and manage reordering
+- Timeout support in switching logic
+- Support Verilator
 - Read-only or Write-only master to save gate count
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
@@ -121,14 +123,10 @@ Inbox (possible next devs)
 - Address translation service
 - Number of master and slave agents configurable
 - RTL generator to support any number of master / slave agents
-- Completion reordering to support of out-of-order responses
 - Interface datapath width conversion
-- AXI4/AXI4-lite converter
-- Full-STRB vs Partial-STRB mode
-    - Partial-STRB mode stores only first and last phase of a write request's payload STRBs,
-      all other dataphases are fully activated (WSTRBs=1)
-    - Full-STRB mode transports the complete STRBs dataphases as driven by a master
-    - Useful to save gate count
+- AXI4-to-AXI4-lite converter
+    - split AXI4 to multiple AXI4-lite requests
+    - gather AXI4-lite completion into a single AXI completion
 - 4KB boundary crossing checking, supported by a splitting mechanism
 
 
