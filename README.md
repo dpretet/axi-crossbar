@@ -103,31 +103,33 @@ to integrate the core in your own development. The flow relies on:
 
 ## Development plan
 
-Inbox:
-
-- Full AXI ordering support
-    - if a master if targets two slaves with the same ID, the interconnect fowards
-      the completion in the order it receives them.
-    - put in place multiple queue per ID and manage reordering
+Core features:
+- Full AXI ordering support: put in place multiple queues
+  per ID and manage reordering to master interfaces
+- Read-only or write-only master to save gate count
+- Address translation service to connect multiple systems together
 - Timeout support in switching logic
-- Support Verilator
-- Read-only or Write-only master to save gate count
-- Error injection in the core and tesbench
-- Implement statistics in testbench to track misrouting, address distribution,
-  master granting, ...
-- New Checkers:
-    - Check address overlap (start+end vs next slave start address)
-    - Check address range bigger than address bus width
-    - ID overlap: mask ID + OR number supported up to next slave ID
-- Address translation service
+- Debug interface to steam out events like 4KB crossing or timeout
+
+Wizard:
 - Number of master and slave agents configurable
-- RTL generator to support any number of master / slave agents
+- RTL generator
+
+AXI Goodies:
 - Interface datapath width conversion
 - AXI4-to-AXI4-lite converter
     - split AXI4 to multiple AXI4-lite requests
     - gather AXI4-lite completion into a single AXI completion
 - 4KB boundary crossing checking, supported by a splitting mechanism
 
+Simulation:
+- Support Verilator
+- Error injection in the core and tesbench
+- Implement statistics in testbench to track misrouting, address distribution,
+  master granting, ...
+- New Checkers:
+    - Check address overlap (start+end vs next slave start address)
+    - ID overlap: mask ID + OR number supported up to next slave ID
 
 ## License
 
