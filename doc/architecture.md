@@ -384,7 +384,7 @@ t++      ...
 ```
 
 
-### Sharability & Routing Tables
+### Shareability & Routing Tables
 
 Each master can be configured to use only specific routes across the crossbar
 infrastructure. This feature if used can help to save gate count as will
@@ -397,33 +397,5 @@ can't be overridden once the core is implemented. If a master agent tries to
 access a restricted zone of the memory map, its slave switch will handshake the
 request, will not transmit it and then complete the request with a `DECERR`.
 
-This option can be use to define memory region sharable or not between master
+This option can be use to define memory region shareable or not between master
 agents.
-
-### Timeout Events Handling
-
-CAUTION: this feature will be implemented in a future release. It's not
-yet available
-
-Timeout detection and management can be enabled and configured by interface.
-This avoids any deadlock if a slave doesn't respond to a request, or if a
-master doesn't accept a completion.
-
-A pair of shared counters implement millisecond / microsecond time references,
-configurable based on the platform clock speed. A request or completion may occur
-once the low precision timer (us timer) started a new epoch, making the timeout
-more or less precise. The user needs to adjust its values to take in account this
-implementation, chosen to lower gate count.
-
-Timeout is handled as following:
-- A request timeout leads the completion to response with `SLVERR`. The slave
-  switch logic handshakes with the connected master agent to completly terminate
-  the request. This concerns either write address/data channel or read address
-  channel.
-- A completion timeout leads the switching logic circuit to empty the
-  completer response (up to RLAST assertion for the R channel). This concerns
-  write response channel and read data channel.
-
-The core's behavior ensures the agents can continue to operate, but can't ensure
-the whole system will still be operational. The user needs to correctly manage
-these situations.
