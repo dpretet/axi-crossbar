@@ -102,6 +102,9 @@ across the interfaces, are:
 If not used, `srst` needs to remain low; if not used, `aresetn` needs to
 remain high all the time.
 
+Each reset input needs to be driven when the core is under reset. If not,
+its behavior is not garanteed.
+
 Asynchronous reset is the most common option, especially because it simplifies
 the efforts of the PnR and timing analysis steps.
 
@@ -131,7 +134,7 @@ A protocol support applies to the global architecture, thus the agents connected
 The core doesn't support (yet) any protocol conversion. An AXI4-lite agent could
 be easily connected as a master agent by mapping the extra AXI4 fields to `0`.
 However, connecting it as a slave agent is more tricky and the user must ensure
-the ALEN remains to 0 and no extra information as carried for instance by ACACHE
+the ALEN remains to `0` and no extra information as carried for instance by ACACHE
 is needed.
 
 Optionally, AMBA USER signals can be supported and transported (AUSER, WUSER,
@@ -143,16 +146,17 @@ applies for both AXI4 and AXI4-lite configuration.
 
 The core supports outstanding requests, and so manages traffic queues.
 
-The core doesn't support reodering to enhance quality of service and so the user
+The core doesn't support ID reodering to enhance quality-of-service and so the user
 can be sure the read or write requests will be issued to the master interface(s)
 in the same order than received on a slave interface.
 
 The core doesn't support read/write completion reodering, so a master issuing
 with the same ID some requests to different slaves can't be sure the completions
 will follow the original order if the slaves don't have the same pace to complete
-a request.
+a request. This concern will be addressed in a future release. Today, a user needs
+to use different IDs to identify the completions' source and so the slave responding.
 
-Read and write traffic are totally uncorrelated, no ordering can be garanteed
+Read and write traffics are totally uncorrelated, no ordering can be garanteed
 between the read / write channels.
 
 The ordering rules mentioned above apply for device or memory regions.
@@ -173,7 +177,7 @@ infrastructure.  This can be helpfull to mix AXI4-lite and AXI4 agents
 together. If not used, the user needs to tied them to `0` to ensure a correct
 ordering model and select a width equals to `1` bit to save area resources.
 
-AXI4-lite doesn't support RESP with value equals to `EXOKAY` but the core
+AXI4-lite doesn't support `xRESP` with value equals to `EXOKAY` but the core
 doesn't check that. The user is responsible to drive a completion with a
 correct value according the specification.
 
@@ -181,13 +185,14 @@ AXI4-lite supports WSTRB and the core too. It doesn't manipulate this field and
 the user is responsible to drive correctly this field according the
 specification.
 
-AXI4-lite doesn't support LAST signals. The core handles them internally for
+AXI4-lite doesn't support `xLAST` signals. The core handles them internally for
 its own purpose and the user doesn't need to take care of them. The user can
 tied them to `0` or `1` or leave them unconnected.
 
-All other fields specified by AXI4 and not mentioned in this section are not
-supported by the core when AXI4-lite mode is selected. They are not used
-neither carried across the infrastructure and the user can safely ignore them.
+All other fields specified by AXI4 but not in AXI4-lite and not mentioned in
+this section are not supported by the core when AXI4-lite mode is selected.
+They are not used neither carried across the infrastructure and the user can
+safely ignore them.
 
 
 ## Outstanding Requests Support
