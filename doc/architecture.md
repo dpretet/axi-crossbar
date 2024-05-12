@@ -112,6 +112,15 @@ Further details can be found in this
 [excellent document](http://www.sunburst-design.com/papers/CummingsSNUG2003Boston_Resets.pdf)
 from the excellent Clifford Cummings.
 
+### Clock Domain Crossing
+
+The core provides a CDC stage for each master or slave interface if needed. The stage is 
+activated with `MSTx_CDC` or `SLVx_CDC`. Internally, the switching fabric uses a specific
+clock (`aclk`) to route the requests and the completions from/to the agents. The master
+and slave interfaces must activate a CDC stage if they don't use the same clock than 
+the fabric (same frequency & phase). If an agent uses the same clock than the fabric, the 
+agent must also use the same reset to ensure a clean reset sequence.
+
 
 ## AXI4 / AXI4-lite support
 

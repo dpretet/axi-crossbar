@@ -550,6 +550,5 @@ module axicb_switch_top
     end
     endgenerate
 
-    endmodule
-
-    `resetall
+endmodule
+`resetall

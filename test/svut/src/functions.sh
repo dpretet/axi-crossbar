@@ -47,7 +47,6 @@ check_status() {
 # Grab arguments and values
 #------------------------------------------------------------------------------
 get_args() {
-    # First handle the arguments
     while [ "$1" != "" ]; do
         case $1 in
             -m | --max-traffic )
@@ -63,11 +62,9 @@ get_args() {
                 TIMEOUT=$1
             ;;
             --no-vcd )
-                shift
                 NOVCD=1
             ;;
             --no-debug-log )
-                shift
                 NODEBUG=1
             ;;
             -h | --help )

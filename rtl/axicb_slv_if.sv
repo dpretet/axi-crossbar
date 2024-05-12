@@ -17,11 +17,6 @@ module axicb_slv_if
         // Number of slave
         parameter SLV_NB = 4,
 
-        // STRB support:
-        //   - 0: contiguous wstrb (store only 1st/last dataphase)
-        //   - 1: full wstrb transport
-        parameter STRB_MODE = 1,
-
         // AXI Signals Supported:
         //   - 0: AXI4-lite
         //   - 1: AXI4

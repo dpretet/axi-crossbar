@@ -13,7 +13,6 @@ following setup:
 
 - 4 masters
 - 4 slaves
-- Use a full-mode STRB
 - All masters have the same priority in arbitration stages
 - All masters can access the four slaves
 

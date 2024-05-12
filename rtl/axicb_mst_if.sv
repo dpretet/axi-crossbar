@@ -14,14 +14,9 @@ module axicb_mst_if
         // Data width in bits
         parameter AXI_DATA_W = 8,
 
-        // STRB support:
-        //   - 0: contiguous wstrb (store only 1st/last dataphase)
-        //   - 1: full wstrb transport
-        parameter STRB_MODE = 1,
-
         // AXI Signals Supported:
         //   - 0: AXI4-lite
-        //   - 2: AXI4
+        //   - 1: AXI4
         parameter AXI_SIGNALING = 0,
 
         // Keep aboslute address in crossbar memory map

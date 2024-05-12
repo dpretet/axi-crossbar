@@ -118,7 +118,7 @@ main() {
 
     if [[ $1 == "sim" ]]; then
         source script/setup.sh
-        cd $CURDIR/test/svut
+        cd "$CURDIR/test/svut"
         ./run.sh --no-debug-log --no-vcd
         ret=$?
         echo "Execution status: $ret"

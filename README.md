@@ -47,8 +47,8 @@ Features
 - Master/slave buffering capability, configurable per interface
     - Outstanding request number and payload configurable
     - Seamless support of AXI4 vs AXI4-lite
-- CDC support in master & slave interface. Convert an interface's clock domain
-  from/to the crossbar inner clock domain
+- CDC support in master & slave interface, to convert an agent clock domain
+  from/to the fabric clock domain
 - Round-robin fair-share arbitration
     - Non-blocking arbitration between requesters
     - Priority configurable per master interface
@@ -71,7 +71,7 @@ Features
     - Data width configurable, any width
     - ID width configurable, any width
 - Advanced clock/reset network
-    - Support both aynchronous and synchronous reset schemes
+    - Support both asynchronous and synchronous reset schemes
     - Can handle clock domain crossing if needed, the core being fueled by its
       own clock domain
 - Route read/write requests by address decoding. All slave agents are mapped
@@ -86,8 +86,8 @@ Features
   same AXI ID (!). A master should use different IDs and reorder the completion by itself
 
 Further details can be found in:
-- the architecture [chapter](doc/architecture.md)
-- the IOs/Parameters [chapter](doc/io_parameter.md)
+- The architecture [chapter](doc/architecture.md)
+- The IOs/parameters [chapter](doc/io_parameter.md)
 
 
 ## Verification environment

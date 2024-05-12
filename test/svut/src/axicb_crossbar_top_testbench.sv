@@ -29,7 +29,6 @@ module axicb_crossbar_top_testbench();
     parameter SLV_NB = 4;
     parameter MST_PIPELINE = `MST_PIPELINE;
     parameter SLV_PIPELINE = `SLV_PIPELINE;
-    parameter STRB_MODE = 1;
     parameter AXI_SIGNALING = `AXI_SIGNALING;
     parameter USER_SUPPORT = `USER_SUPPORT;
     parameter AXI_AUSER_W = 4;
@@ -489,7 +488,6 @@ module axicb_crossbar_top_testbench();
     .SLV_NB                 (SLV_NB),
     .MST_PIPELINE           (MST_PIPELINE),
     .SLV_PIPELINE           (SLV_PIPELINE),
-    .STRB_MODE              (STRB_MODE),
     .AXI_SIGNALING          (AXI_SIGNALING),
     .USER_SUPPORT           (USER_SUPPORT),
     .AXI_AUSER_W            (AXI_AUSER_W),
@@ -1548,15 +1546,15 @@ module axicb_crossbar_top_testbench();
     initial slv2_aclk = 0;
     initial slv3_aclk = 0;
 
-    always #2 aclk = ~aclk;
-    always #2 mst0_aclk = ~mst0_aclk;
-    always #2 mst1_aclk = ~mst1_aclk;
-    always #2 mst2_aclk = ~mst2_aclk;
-    always #2 mst3_aclk = ~mst3_aclk;
-    always #2 slv0_aclk = ~slv0_aclk;
-    always #2 slv1_aclk = ~slv1_aclk;
-    always #2 slv2_aclk = ~slv2_aclk;
-    always #2 slv3_aclk = ~slv3_aclk;
+    always #`FAB_CLK aclk = !aclk;
+    always #`MST0_CLK mst0_aclk = !mst0_aclk;
+    always #`MST1_CLK mst1_aclk = !mst1_aclk;
+    always #`MST2_CLK mst2_aclk = !mst2_aclk;
+    always #`MST3_CLK mst3_aclk = !mst3_aclk;
+    always #`SLV0_CLK slv0_aclk = !slv0_aclk;
+    always #`SLV1_CLK slv1_aclk = !slv1_aclk;
+    always #`SLV2_CLK slv2_aclk = !slv2_aclk;
+    always #`SLV3_CLK slv3_aclk = !slv3_aclk;
 
     `ifndef NOVCD
     // To dump data for visualization:

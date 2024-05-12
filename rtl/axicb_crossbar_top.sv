@@ -37,11 +37,6 @@ module axicb_crossbar_top
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
 
-        // STRB support:
-        //   - 0: contiguous wstrb (store only 1st/last dataphase)
-        //   - 1: full wstrb transport
-        parameter STRB_MODE = 1,
-
         // AXI Signals Supported:
         //   - 0: AXI4-lite
         //   - 1: AXI
@@ -82,9 +77,9 @@ module axicb_crossbar_top
         //                    determine which master to route back the
         //                    BRESP/RRESP completions.
         //
-        //   - MSTx_RW: Slect if the interface is 
+        //   - MSTx_RW: Slect if the interface is
         //         - Read/Write (=0)
-        //         - Read-only (=1) 
+        //         - Read-only (=1)
         //         - Write-only (=2)
         //
         // The size of a master's internal buffer is equal to:
@@ -759,7 +754,6 @@ module axicb_crossbar_top
     .AXI_ID_W          (AXI_ID_W),
     .AXI_DATA_W        (AXI_DATA_W),
     .SLV_NB            (SLV_NB),
-    .STRB_MODE         (STRB_MODE),
     .AXI_SIGNALING     (AXI_SIGNALING),
     .MST_CDC           (MST0_CDC),
     .MST_OSTDREQ_NUM   (MST0_OSTDREQ_NUM),
@@ -856,7 +850,6 @@ module axicb_crossbar_top
     .AXI_ID_W          (AXI_ID_W),
     .AXI_DATA_W        (AXI_DATA_W),
     .SLV_NB            (SLV_NB),
-    .STRB_MODE         (STRB_MODE),
     .AXI_SIGNALING     (AXI_SIGNALING),
     .MST_CDC           (MST1_CDC),
     .MST_OSTDREQ_NUM   (MST1_OSTDREQ_NUM),
@@ -953,7 +946,6 @@ module axicb_crossbar_top
     .AXI_ID_W          (AXI_ID_W),
     .AXI_DATA_W        (AXI_DATA_W),
     .SLV_NB            (SLV_NB),
-    .STRB_MODE         (STRB_MODE),
     .AXI_SIGNALING     (AXI_SIGNALING),
     .MST_CDC           (MST2_CDC),
     .MST_OSTDREQ_NUM   (MST2_OSTDREQ_NUM),
@@ -1050,7 +1042,6 @@ module axicb_crossbar_top
     .AXI_ID_W          (AXI_ID_W),
     .AXI_DATA_W        (AXI_DATA_W),
     .SLV_NB            (SLV_NB),
-    .STRB_MODE         (STRB_MODE),
     .AXI_SIGNALING     (AXI_SIGNALING),
     .MST_CDC           (MST3_CDC),
     .MST_OSTDREQ_NUM   (MST3_OSTDREQ_NUM),
@@ -1226,7 +1217,6 @@ module axicb_crossbar_top
     .AXI_ADDR_W       (AXI_ADDR_W),
     .AXI_ID_W         (AXI_ID_W),
     .AXI_DATA_W       (AXI_DATA_W),
-    .STRB_MODE        (STRB_MODE),
     .AXI_SIGNALING    (AXI_SIGNALING),
     .SLV_CDC          (SLV0_CDC),
     .SLV_OSTDREQ_NUM  (SLV0_OSTDREQ_NUM),
@@ -1246,9 +1236,9 @@ module axicb_crossbar_top
     )
     mst0_if
     (
-    .i_aclk       (slv0_aclk),
-    .i_aresetn    (slv0_aresetn),
-    .i_srst       (slv0_srst),
+    .i_aclk       (aclk),
+    .i_aresetn    (aresetn),
+    .i_srst       (srst),
     .i_awvalid    (o_awvalid[0]),
     .i_awready    (o_awready[0]),
     .i_awch       (o_awch[0*AWCH_W+:AWCH_W]),
@@ -1324,7 +1314,6 @@ module axicb_crossbar_top
     .AXI_ADDR_W       (AXI_ADDR_W),
     .AXI_ID_W         (AXI_ID_W),
     .AXI_DATA_W       (AXI_DATA_W),
-    .STRB_MODE        (STRB_MODE),
     .AXI_SIGNALING    (AXI_SIGNALING),
     .SLV_CDC          (SLV1_CDC),
     .SLV_OSTDREQ_NUM  (SLV1_OSTDREQ_NUM),
@@ -1344,9 +1333,9 @@ module axicb_crossbar_top
     )
     mst1_if
     (
-    .i_aclk       (slv1_aclk),
-    .i_aresetn    (slv1_aresetn),
-    .i_srst       (slv1_srst),
+    .i_aclk       (aclk),
+    .i_aresetn    (aresetn),
+    .i_srst       (srst),
     .i_awvalid    (o_awvalid[1]),
     .i_awready    (o_awready[1]),
     .i_awch       (o_awch[1*AWCH_W+:AWCH_W]),
@@ -1422,7 +1411,6 @@ module axicb_crossbar_top
     .AXI_ADDR_W       (AXI_ADDR_W),
     .AXI_ID_W         (AXI_ID_W),
     .AXI_DATA_W       (AXI_DATA_W),
-    .STRB_MODE        (STRB_MODE),
     .AXI_SIGNALING    (AXI_SIGNALING),
     .SLV_CDC          (SLV2_CDC),
     .SLV_OSTDREQ_NUM  (SLV2_OSTDREQ_NUM),
@@ -1442,9 +1430,9 @@ module axicb_crossbar_top
     )
     mst2_if
     (
-    .i_aclk       (slv2_aclk),
-    .i_aresetn    (slv2_aresetn),
-    .i_srst       (slv2_srst),
+    .i_aclk       (aclk),
+    .i_aresetn    (aresetn),
+    .i_srst       (srst),
     .i_awvalid    (o_awvalid[2]),
     .i_awready    (o_awready[2]),
     .i_awch       (o_awch[2*AWCH_W+:AWCH_W]),
@@ -1520,7 +1508,6 @@ module axicb_crossbar_top
     .AXI_ADDR_W       (AXI_ADDR_W),
     .AXI_ID_W         (AXI_ID_W),
     .AXI_DATA_W       (AXI_DATA_W),
-    .STRB_MODE        (STRB_MODE),
     .AXI_SIGNALING    (AXI_SIGNALING),
     .SLV_CDC          (SLV3_CDC),
     .SLV_OSTDREQ_NUM  (SLV3_OSTDREQ_NUM),
@@ -1540,9 +1527,9 @@ module axicb_crossbar_top
     )
     mst3_if
     (
-    .i_aclk       (slv3_aclk),
-    .i_aresetn    (slv3_aresetn),
-    .i_srst       (slv3_srst),
+    .i_aclk       (aclk),
+    .i_aresetn    (aresetn),
+    .i_srst       (srst),
     .i_awvalid    (o_awvalid[3]),
     .i_awready    (o_awready[3]),
     .i_awch       (o_awch[3*AWCH_W+:AWCH_W]),
@@ -1610,5 +1597,4 @@ module axicb_crossbar_top
     );
 
 endmodule
-
 `resetall
