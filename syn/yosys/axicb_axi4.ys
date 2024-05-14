@@ -1,0 +1,35 @@
+# read design modules
+read -incdir ../../rtl
+read -sv2012 ../../rtl/axicb_checker.sv
+read -sv2012 ../../rtl/axicb_crossbar_lite_top.sv
+read -sv2012 ../../rtl/axicb_crossbar_top.sv
+read -sv2012 ../../rtl/axicb_mst_if.sv
+read -sv2012 ../../rtl/axicb_mst_switch.sv
+read -sv2012 ../../rtl/axicb_pipeline.sv
+read -sv2012 ../../rtl/axicb_round_robin.sv
+read -sv2012 ../../rtl/axicb_round_robin_core.sv
+read -sv2012 ../../rtl/axicb_scfifo.sv
+read -sv2012 ../../rtl/axicb_scfifo_ram.sv
+read -sv2012 ../../rtl/axicb_slv_if.sv
+read -sv2012 ../../rtl/axicb_slv_switch.sv
+read -sv2012 ../../rtl/axicb_switch_top.sv
+
+# synthesize the core
+synth -top axicb_crossbar_top
+
+# convert design to (logical) gate-level netlists
+# +/adff2dff.v convert async reset to sync reset, used to mapp FFD correctly
+techmap +/adff2dff.v; opt
+# dffunmap
+
+# map internal register types to the ones from the cell library
+dfflibmap -liberty cmos.lib
+
+# use ABC to map remaining logic to cells from the cell library
+abc -liberty cmos.lib
+
+# cleanup
+clean
+
+# write synthesized design
+write_verilog axicb_crossbar_top.v

@@ -37,11 +37,6 @@ module axicb_crossbar_lite_top
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
 
-        // STRB support:
-        //   - 0: contiguous wstrb (store only 1st/last dataphase)
-        //   - 1: full wstrb transport
-        parameter STRB_MODE = 1,
-
         // USER fields transport enabling (0 deactivate, 1 activate)
         parameter USER_SUPPORT = 0,
         // USER fields width in bits
@@ -505,7 +500,6 @@ module axicb_crossbar_lite_top
     .SLV_NB              (SLV_NB),
     .MST_PIPELINE        (MST_PIPELINE),
     .SLV_PIPELINE        (SLV_PIPELINE),
-    .STRB_MODE           (STRB_MODE),
     .AXI_SIGNALING       (0),
     .USER_SUPPORT        (USER_SUPPORT),
     .AXI_AUSER_W         (AXI_AUSER_W),

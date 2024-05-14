@@ -49,20 +49,29 @@ completions. Slave monitor also uses LFSR to handshake with the core.
 
 The drivers can detect the following errors:
 
-- Write outstanding request timeout
-- Read outstanding request timeout
 - AW request timeout
 - W request timeout
 - AR request timeout
+- R completion error
 - BRESP response error
+- BUSER error
+- BID error
 - RRESP response error
+- RUSER error
+- RDATA error
+- RID error
+- RLEN error
 
 The monitors can detect the following errors:
 
-- B response timeout
-- R response timeout
+- B handshake timeout
+- R handshake timeout
 - WDATA error
-- ALEN issue (packet too short or too long)
+- WLEN error
+- ALEN issue
+- AWUSER error
+- ARUSER error
+
 
 ## Execution
 
@@ -76,11 +85,19 @@ To get help and understand all options:
 
 ```bash
 ./run.sh --help
+
+usage: bash ./run.sh ...
+     --tc                (optional)            Path to a testbench setup (located in tb_config)
+-m | --max-traffic       (optional)            Maximun number of requests injected by the drivers
+-t | --timeout           (optional)            Timeout in number of cycles (10000 by default)
+     --no-vcd            (optional)            Don't dump VCD file
+-h | --help                                    Brings up this menu
+
 ```
 To run the complete testsuite:
 
 ```bash
-./run.sh --no-vcd
+./run.sh
 ```
 
 The above command disables VCD dump to avoid dropping an insane number of big
@@ -98,4 +115,4 @@ A subset of the testbench configuration can also be ran:
 ./run.sh --tc tb_config/axi4lite_'*'
 ```
 
-Notice the wildcard if used needs to be quotted.
+(Notice the wildcard if used needs to be quoted)

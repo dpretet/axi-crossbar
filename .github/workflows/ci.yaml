@@ -1,13 +1,14 @@
 name: AXI-CROSSBAR
 on: [push]
 jobs:
-  lint-code:
+  Lint:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - run: brew install verilator
+      - run: git submodule update --init --recursive
       - run: ./flow.sh lint
-  sim-tests:
+  Simulation:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,3 +18,10 @@ jobs:
       - run: verilator -V
       - run: git submodule update --init --recursive
       - run: ./flow.sh sim
+  Synthesis:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: brew install yosys
+      - run: git submodule update --init --recursive
+      - run: ./flow.sh syn

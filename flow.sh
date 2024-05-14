@@ -127,9 +127,15 @@ main() {
 
     if [[ $1 == "syn" ]]; then
         printinfo "Start synthesis flow"
-        cd "$CURDIR/syn"
-        # ./run.sh
-        exit $?
+        cd "$CURDIR/syn/yosys"
+        # AXI4 synthesis
+        ./syn_asic.sh axicb_axi4.ys | tee axi4.log
+        ret=$?
+        # AXI4-lite synthesis
+        ./syn_asic.sh axicb_axi4lite.ys | tee axi4lite.log
+        ret=$((ret+$?))
+        echo "Execution status: $ret"
+        exit $ret
     fi
 }
 
