@@ -82,15 +82,12 @@ the phase regarding the other clocks. The core proposes a CDC stage for each
 interface to convert the clock to the interconnect clock domain. The CDC stage
 is implemented with a [DC-FIFO](https://github.com/dpretet/async_fifo).
 
-The user can also use the same clock for all the interfaces. In this
-configuration, all the agents connected to the core have to use the same clock
-than the interconnect switching logic.
 
 ### Reset
 
 The core fully supports both asynchronous and synchronous reset. The choice
 between these two options depends to the technology targeted. Most of the time,
-asynchronous reset schema is the prefered option. It is STRONGLY ADVICED TO
+asynchronous reset policy is the prefered option. It is STRONGLY ADVICED TO
 NOT MIX THESE TWO RESET TYPES, and choose for instance asynchronous reset only
 for the core and ALL the interfaces. The available resets, named uniformly
 across the interfaces, are:
@@ -112,6 +109,7 @@ Further details can be found in this
 [excellent document](http://www.sunburst-design.com/papers/CummingsSNUG2003Boston_Resets.pdf)
 from the excellent Clifford Cummings.
 
+
 ### Clock Domain Crossing
 
 The core provides a CDC stage for each master or slave interface if needed. The stage is 
@@ -120,6 +118,19 @@ clock (`aclk`) to route the requests and the completions from/to the agents. The
 and slave interfaces must activate a CDC stage if they don't use the same clock than 
 the fabric (same frequency & phase). If an agent uses the same clock than the fabric, the 
 agent must also use the same reset to ensure a clean reset sequence.
+
+
+### Boot time
+
+In order to boot properly the interconnect infrastructure, the user must follow the following
+sequence:
+1. Drive low all the reset inputs
+2. Source all the clocks of the active interface
+3. Wait for several clock cycles, for each clock domain, to be sure the whole logic has been reset
+4. Before releasing the resets, be sure all the domains has been completly reset (point 3). Some 
+   clock can be very slower than another domain, be sure to take it in account.
+5. Release the resets
+6. Start to issue request in the core
 
 
 ## AXI4 / AXI4-lite support
@@ -151,9 +162,15 @@ BUSER and RUSER). These bus fields of the AMBA channels can be activated
 individually, e.g. for address channel only and configured to any width. This
 applies for both AXI4 and AXI4-lite configuration.
 
+The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a 
+top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up 
+to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
+to 0 the input signals of an interface, and leave unconnected the outputs.
+
+
 ### Ordering rules
 
-The core supports outstanding requests, and so manages traffic queues.
+The core supports outstanding requests, and so manages traffic queues for each master.
 
 The core doesn't support ID reodering to enhance quality-of-service and so the user
 can be sure the read or write requests will be issued to the master interface(s)
@@ -194,10 +211,6 @@ AXI4-lite supports WSTRB and the core too. It doesn't manipulate this field and
 the user is responsible to drive correctly this field according the
 specification.
 
-AXI4-lite doesn't support `xLAST` signals. The core handles them internally for
-its own purpose and the user doesn't need to take care of them. The user can
-tied them to `0` or `1` or leave them unconnected.
-
 All other fields specified by AXI4 but not in AXI4-lite and not mentioned in
 this section are not supported by the core when AXI4-lite mode is selected.
 They are not used neither carried across the infrastructure and the user can
@@ -213,7 +226,9 @@ interfaces with two parameters:
 - `MSTx_OSTDREQ_NUM` or `SLVx_OSTDREQ_NUM`: the maximum number of oustanding
   requests the core is capable to store
 - `MSTx_OSTDREQ_SIZE` or `SLVx_OSTDREQ_SIZE`: the number of datpahases of an
-  outstanding requets
+  outstanding requets. Can be useful to save area if a system doesn't need to 
+  use biggest AXI4 payload possible, i.e. if a processor only use [1,2,4,8,16] 
+  dataphases maximum. Default should be `256` beats.
 
 When an inteface enables the CDC support to cross its clock domain, the internal
 buffering is managed with the [DC-FIFO](https://github.com/dpretet/async_fifo)
@@ -281,7 +296,7 @@ help timing closure.
 The figure below illustrates the switching logic dedicated to a slave interface.
 Each slave interface is connected to such switch which sends requests to master
 interface by decoding the address. Completion are routed back from the slave with
-a round robin arbitrer to ensure a fair traffic share. This architecture
+a fair-share round robin arbiter to ensure a fair traffic share. This architecture
 doesn't ensure any ordering rule and the master is responsible to reorder its
 completion if needed by its internal core.
 
@@ -309,7 +324,7 @@ completion if needed by its internal core.
 ### Switching Logic to Master Interfaces
 
 The figure below illustrates the switching logic dedicated to a master interface.
-A round robin arbitration ensures a fair traffic share from the master and the
+A fair-share round robin arbitration ensures a fair traffic share from the master and the
 completion are routed back to the requester by decoding the ID.
 
 ```

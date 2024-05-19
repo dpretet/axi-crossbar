@@ -99,11 +99,8 @@ To run the complete testsuite:
 ```bash
 ./run.sh
 ```
-
-The above command disables VCD dump to avoid dropping an insane number of big
-VCD files. Default run always drops them. During the execution, 1000
-AXI4(-lite) requests are injected into each of the 9 scenarios available. A
-default timeout is setup to ensure the whole requests can be completed.
+During the execution, 1000 AXI4(-lite) requests are injected into each of the 9 scenarios available.
+A default timeout is setup to ensure the whole requests can be completed.
 
 The number of requests can be setup to any value, the user just needs to take
 care of the timeout value. The testbench stops after a certain time, even if

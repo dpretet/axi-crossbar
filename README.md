@@ -49,9 +49,10 @@ Features
     - Seamless support of AXI4 vs AXI4-lite
 - CDC support in master & slave interface, to convert an agent clock domain
   from/to the fabric clock domain
-- Round-robin fair-share arbitration
-    - Non-blocking arbitration between requesters
-    - Priority configurable per master interface
+- Round-robin arbitration
+    - Non-blocking arbitration between requesters, with fait-share granting
+    - Priority configurable per master interface, up to 4 different levels,
+      for request and completion stages
 - AXI or AXI4-Lite mode:
     - LITE mode: route all signals described in AXI4-lite specification
     - FULL mode: route all signals described by AXI4 specification
@@ -71,7 +72,7 @@ Features
     - Data width configurable, any width
     - ID width configurable, any width
 - Advanced clock/reset network
-    - Support both asynchronous and synchronous reset schemes
+    - Support both asynchronous and synchronous reset policies
     - Can handle clock domain crossing if needed, the core being fueled by its
       own clock domain
 - Route read/write requests by address decoding. All slave agents are mapped
@@ -80,7 +81,7 @@ Features
   mask used to identified the route to drive back a completion
 - Configurable routing across the infrastructure
     - A master can be restricted to a memory map subset
-    - An acccess to a forbidden area is completed by a DECERR
+    - An access to a forbidden area is completed by a `DECERR`
 - Switching logic IO interfaces can be pipelined to achieve timing closure easier
 - Don't garantee completion ordering when a master targets multiple slaves with the
   same AXI ID (!). A master should use different IDs and reorder the completion by itself
@@ -110,6 +111,9 @@ Core features:
 - Address translation service to connect multiple systems together
 - Timeout support in switching logic
 - Debug interface to steam out events like 4KB crossing or timeout
+- New Checkers:
+    - Check address overlap (start+end vs next slave start address)
+    - ID overlap: mask ID + OR number supported up to next slave ID
 
 Wizard:
 - Number of master and slave agents configurable
@@ -127,9 +131,6 @@ Simulation:
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
   master granting, ...
-- New Checkers:
-    - Check address overlap (start+end vs next slave start address)
-    - ID overlap: mask ID + OR number supported up to next slave ID
 
 ## License
 
