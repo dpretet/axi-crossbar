@@ -96,7 +96,7 @@ main() {
 
         printinfo "Start Verilator lint"
         verilator --lint-only +1800-2017ext+sv \
-            -Wall -Wpedantic -cdc \
+            -Wall -Wpedantic \
             -Wno-VARHIDDEN \
             -Wno-PINCONNECTEMPTY \
             -Wno-TIMESCALEMOD \
@@ -104,8 +104,12 @@ main() {
             ./rtl/axicb_mst_if.sv\
             ./rtl/axicb_slv_if.sv\
             ./rtl/axicb_slv_switch.sv\
+            ./rtl/axicb_slv_switch_rd.sv\
+            ./rtl/axicb_slv_switch_wr.sv\
             ./rtl/axicb_pipeline.sv\
             ./rtl/axicb_mst_switch.sv\
+            ./rtl/axicb_mst_switch_rd.sv\
+            ./rtl/axicb_mst_switch_wr.sv\
             ./rtl/axicb_switch_top.sv\
             ./rtl/axicb_round_robin.sv\
             ./rtl/axicb_round_robin_core.sv\

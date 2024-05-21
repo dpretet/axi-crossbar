@@ -2,12 +2,16 @@
 ../../rtl/axicb_crossbar_top.sv
 ../../rtl/axicb_mst_if.sv
 ../../rtl/axicb_mst_switch.sv
+../../rtl/axicb_mst_switch_wr.sv
+../../rtl/axicb_mst_switch_rd.sv
 ../../rtl/axicb_round_robin.sv
 ../../rtl/axicb_round_robin_core.sv
 ../../rtl/axicb_scfifo.sv
 ../../rtl/axicb_scfifo_ram.sv
 ../../rtl/axicb_slv_if.sv
 ../../rtl/axicb_slv_switch.sv
+../../rtl/axicb_slv_switch_wr.sv
+../../rtl/axicb_slv_switch_rd.sv
 ../../rtl/axicb_switch_top.sv
 ../../rtl/axicb_pipeline.sv
 ./src/mst_driver.sv
