@@ -257,18 +257,18 @@ module axicb_slv_switch_rd
     assign rch_req = o_rvalid;
 
     assign i_rvalid = (!rch_mr_empty && !rch_running) ? 1'b1 :
-                      (rch_grant[0]) ? o_rvalid[0] :
-                      (rch_grant[1]) ? o_rvalid[1] :
-                      (rch_grant[2]) ? o_rvalid[2] :
-                      (rch_grant[3]) ? o_rvalid[3] :
-                                       1'b0;
+                      (rch_grant[0])                  ? o_rvalid[0] :
+                      (rch_grant[1])                  ? o_rvalid[1] :
+                      (rch_grant[2])                  ? o_rvalid[2] :
+                      (rch_grant[3])                  ? o_rvalid[3] :
+                                                        1'b0;
 
     assign i_rlast = (!rch_mr_empty && !rch_running) ? (rlen==rch_mr_len) & i_rvalid & i_rready :
-                     (rch_grant[0]) ? o_rlast[0] :
-                     (rch_grant[1]) ? o_rlast[1] :
-                     (rch_grant[2]) ? o_rlast[2] :
-                     (rch_grant[3]) ? o_rlast[3] :
-                                      1'b0;
+                     (rch_grant[0])                  ? o_rlast[0] :
+                     (rch_grant[1])                  ? o_rlast[1] :
+                     (rch_grant[2])                  ? o_rlast[2] :
+                     (rch_grant[3])                  ? o_rlast[3] :
+                                                       1'b0;
 
     assign o_rready[0] = rch_grant[0] & i_rready & (rch_mr_empty | rch_running);
     assign o_rready[1] = rch_grant[1] & i_rready & (rch_mr_empty | rch_running);
@@ -276,11 +276,11 @@ module axicb_slv_switch_rd
     assign o_rready[3] = rch_grant[3] & i_rready & (rch_mr_empty | rch_running);
 
     assign i_rch = (!rch_mr_empty && !rch_running) ? {{RCH_W-AXI_ID_W-2{1'b0}}, 2'h3, rch_mr_id} :
-                   (rch_grant[0]) ? o_rch[0*RCH_W+:RCH_W] :
-                   (rch_grant[1]) ? o_rch[1*RCH_W+:RCH_W] :
-                   (rch_grant[2]) ? o_rch[2*RCH_W+:RCH_W] :
-                   (rch_grant[3]) ? o_rch[3*RCH_W+:RCH_W] :
-                                    {RCH_W{1'b0}};
+                   (rch_grant[0])                  ? o_rch[0*RCH_W+:RCH_W] :
+                   (rch_grant[1])                  ? o_rch[1*RCH_W+:RCH_W] :
+                   (rch_grant[2])                  ? o_rch[2*RCH_W+:RCH_W] :
+                   (rch_grant[3])                  ? o_rch[3*RCH_W+:RCH_W] :
+                                                     {RCH_W{1'b0}};
 
 endmodule
 

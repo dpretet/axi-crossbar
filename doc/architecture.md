@@ -112,11 +112,11 @@ from the excellent Clifford Cummings.
 
 ### Clock Domain Crossing
 
-The core provides a CDC stage for each master or slave interface if needed. The stage is 
+The core provides a CDC stage for each master or slave interface if needed. The stage is
 activated with `MSTx_CDC` or `SLVx_CDC`. Internally, the switching fabric uses a specific
 clock (`aclk`) to route the requests and the completions from/to the agents. The master
-and slave interfaces must activate a CDC stage if they don't use the same clock than 
-the fabric (same frequency & phase). If an agent uses the same clock than the fabric, the 
+and slave interfaces must activate a CDC stage if they don't use the same clock than
+the fabric (same frequency & phase). If an agent uses the same clock than the fabric, the
 agent must also use the same reset to ensure a clean reset sequence.
 
 
@@ -127,7 +127,7 @@ sequence:
 1. Drive low all the reset inputs
 2. Source all the clocks of the active interface
 3. Wait for several clock cycles, for each clock domain, to be sure the whole logic has been reset
-4. Before releasing the resets, be sure all the domains has been completly reset (point 3). Some 
+4. Before releasing the resets, be sure all the domains has been completly reset (point 3). Some
    clock can be very slower than another domain, be sure to take it in account.
 5. Release the resets
 6. Start to issue request in the core
@@ -162,8 +162,8 @@ BUSER and RUSER). These bus fields of the AMBA channels can be activated
 individually, e.g. for address channel only and configured to any width. This
 applies for both AXI4 and AXI4-lite configuration.
 
-The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a 
-top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up 
+The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a
+top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up
 to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
 to 0 the input signals of an interface, and leave unconnected the outputs.
 
@@ -226,8 +226,8 @@ interfaces with two parameters:
 - `MSTx_OSTDREQ_NUM` or `SLVx_OSTDREQ_NUM`: the maximum number of oustanding
   requests the core is capable to store
 - `MSTx_OSTDREQ_SIZE` or `SLVx_OSTDREQ_SIZE`: the number of datpahases of an
-  outstanding requets. Can be useful to save area if a system doesn't need to 
-  use biggest AXI4 payload possible, i.e. if a processor only use [1,2,4,8,16] 
+  outstanding requets. Can be useful to save area if a system doesn't need to
+  use biggest AXI4 payload possible, i.e. if a processor only use [1,2,4,8,16]
   dataphases maximum. Default should be `256` beats.
 
 When an inteface enables the CDC support to cross its clock domain, the internal
@@ -270,21 +270,27 @@ All slave switches can target any master switch to drive read/write requests,
 while any master switch can drive back completions to any slave switch.
 
 ```
-         │                           │
-         │                           │
-         ▼                           ▼
-┌─────────────────────────────────────────────┐
-│ ┌──────────────┐           ┌──────────────┐ │
-│ │ slv0 switch  │           │ slv1 switch  │ │
-│ └──────────────┘           └──────────────┘ │
-│                                             │
-│ ┌──────────────┐           ┌──────────────┐ │
-│ │ mst0 switch  │           │ mst1 switch  │ │
-│ └──────────────┘           └──────────────┘ │
-└─────────────────────────────────────────────┘
-         │                           │
-         │                           │
-         ▼                           ▼
+
+             │                           │
+             │                           │
+             ▼                           ▼
+    ┌─────────────────────────────────────────────┐
+    │ ┌──────────────┐           ┌──────────────┐ │
+    │ │slv0 pipeline │   .....   │slvX pipeline │ │
+    │ └──────────────┘           └──────────────┘ │
+    │ ┌──────────────┐           ┌──────────────┐ │
+    │ │ slv0 switch  │   .....   │ slvX switch  │ │
+    │ └──────────────┘           └──────────────┘ │
+    │ ┌──────────────┐           ┌──────────────┐ │
+    │ │ mst0 switch  │   .....   │ mstX switch  │ │
+    │ └──────────────┘           └──────────────┘ │
+    │ ┌──────────────┐           ┌──────────────┐ │
+    │ │mst0 pipeline │   .....   │mstX pipeline │ │
+    │ └──────────────┘           └──────────────┘ │
+    └─────────────────────────────────────────────┘
+             │                           │
+             │                           │
+             ▼                           ▼
 ```
 
 A pipeline stage can be activated for input and output of the switch layer to
@@ -302,23 +308,23 @@ completion if needed by its internal core.
 
 ```
 
-                                     From slave interface
+                                         From slave interface
 
 
-   AW Channel                 W Channel         B channel         AR Channel        R Channel
+       AW Channel                 W Channel         B channel         AR Channel        R Channel
 
-        │                         │                 ▲                  │                ▲
-        │                         │                 │                  │                │
-        ▼                         ▼                 │                  ▼                │
-┌──────────────┐   ┌────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│decoder+router│──▶│FIFO│──│decoder+router│  │arbiter+switch│  │decoder+router│  │arbiter+switch│
-└──────────────┘   └────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-   │        │                 │        │        ▲        ▲        │        │        ▲        ▲
-   │        │                 │        │        │        │        │        │        │        │
-   ▼        ▼                 ▼        ▼        │        │        ▼        ▼        │        │
+            │                         │                 ▲                  │                ▲
+            │                         │                 │                  │                │
+            ▼                         ▼                 │                  ▼                │
+    ┌──────────────┐   ┌────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │decoder+router│──▶│FIFO│──│decoder+router│  │arbiter+switch│  │decoder+router│  │arbiter+switch│
+    └──────────────┘   └────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+       │        │                 │        │        ▲        ▲        │        │        ▲        ▲
+       │        │                 │        │        │        │        │        │        │        │
+       ▼        ▼                 ▼        ▼        │        │        ▼        ▼        │        │
 
 
-                                    To master switches
+                                        To master switches
 ```
 
 ### Switching Logic to Master Interfaces
@@ -328,23 +334,23 @@ A fair-share round robin arbitration ensures a fair traffic share from the maste
 completion are routed back to the requester by decoding the ID.
 
 ```
-                                    From slave switches
+                                        From slave switches
 
 
-   AW Channels       W Channels        B channels        AR Channels        R Channels
+       AW Channels       W Channels        B channels        AR Channels        R Channels
 
-   │        │        │        │        ▲        ▲        │        │        ▲        ▲
-   │        │        │        │        │        │        │        │        │        │
-   ▼        ▼        ▼        ▼        │        │        ▼        ▼        │        │
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│arbiter+switch│  │arbiter+switch│  │arbiter+switch│  │decoder+router│  │decoder+router│
-└──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-        │                 │                 ▲                │                 ▲
-        │                 │                 │                │                 │
-        ▼                 ▼                 │                ▼                 │
+       │        │        │        │        ▲        ▲        │        │        ▲        ▲
+       │        │        │        │        │        │        │        │        │        │
+       ▼        ▼        ▼        ▼        │        │        ▼        ▼        │        │
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │arbiter+switch│  │arbiter+switch│  │arbiter+switch│  │decoder+router│  │decoder+router│
+    └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+            │                 │                 ▲                │                 ▲
+            │                 │                 │                │                 │
+            ▼                 ▼                 │                ▼                 │
 
 
-                                    To master interface
+                                        To master interface
 
 ```
 
