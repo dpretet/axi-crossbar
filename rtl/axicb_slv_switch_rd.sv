@@ -173,7 +173,7 @@ module axicb_slv_switch_rd
     ///////////////////////////////////////////////////////////////////////////
 
     generate
-    // Gather ARID and ARLEN to pass them to the completion circuit returning
+    // Gather ARLEN and ARID to pass them to the completion circuit returning
     // the DECERR completion in case of misrouting
     if (AXI_SIGNALING>0)
     begin: AXI_SUPPORT
@@ -207,6 +207,9 @@ module axicb_slv_switch_rd
     );
 
 
+    // rch_running prevents mis-routed completion to be routed-back
+    // the corresponding master.
+    // rlen is the length of the mis-routed packet
     always @ (posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
             rlen <= 8'h0;
@@ -252,7 +255,7 @@ module axicb_slv_switch_rd
         .grant   (rch_grant)
     );
 
-    assign rch_en = i_rvalid & i_rready & rch_running;
+    assign rch_en = i_rvalid & i_rready & i_rlast & rch_running;
 
     assign rch_req = o_rvalid;
 
