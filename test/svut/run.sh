@@ -18,7 +18,7 @@ DEFINES=""
 MAX_TRAFFIC=1000
 TIMEOUT=500000
 TC="./tb_config/*.cfg"
-NOVCD=0
+NOWAVE=0
 NODEBUG=0
 
 test_ret=0
@@ -36,11 +36,11 @@ main() {
     PID=$$
     echo "PID: $PID"
 
-    rm -f simulation.log
-    rm -fr vcd
-    rm -fr *.vcd
-    rm -f *.txt
-    mkdir vcd
+    rm -fr simulation.log
+    rm -fr wave
+    rm -fr ./*.fst
+    rm -fr ./*.txt
+    mkdir wave
 
     # Get configuration from command line
     get_args "$@"
@@ -51,7 +51,6 @@ main() {
 
     # Check if errors occured and exit
     check_status
-
 }
 
 main "$@"

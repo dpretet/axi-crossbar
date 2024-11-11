@@ -1,4 +1,4 @@
-#!usr/bin/env bash
+#!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
 # Helper
@@ -10,7 +10,7 @@ usage: bash ./run.sh ...
      --tc                (optional)            Path to a testbench setup (located in tb_config)
 -m | --max-traffic       (optional)            Maximun number of requests injected by the drivers
 -t | --timeout           (optional)            Timeout in number of cycles (10000 by default)
-     --no-vcd            (optional)            Don't dump VCD file
+     --no-wave           (optional)            Don't dump waveform
 -h | --help                                    Brings up this menu
 EOF
 }
@@ -34,7 +34,7 @@ check_status() {
         echo "test_ret: $test_ret"
         echo -e "${RED}ERROR: Testsuite failed!${NC}"
         grep -i "Failling" simulation.log
-        echo $fails
+        echo "$fails"
         exit 1
     fi
 
@@ -61,8 +61,8 @@ get_args() {
                 shift
                 TIMEOUT=$1
             ;;
-            --no-vcd )
-                NOVCD=1
+            --no-wave )
+                NOWAVE=1
             ;;
             --no-debug-log )
                 NODEBUG=1
@@ -89,7 +89,7 @@ read_config() {
 
     while IFS=, read -r name value; do
         DEFINES="${DEFINES}${name}=${value};"
-    done < $1
+    done < "$1"
 
     echo "$DEFINES"
 }
@@ -100,24 +100,27 @@ read_config() {
 runner() {
 
     # Grab config name to setup testsuite name
-    config_file=$(basename $1)
+    config_file=$(basename "$1")
     config_name=${config_file%%.*}
 
     # Read testbench configuration and add config from command line
-    DEFINES=$(read_config $1)
+    DEFINES=$(read_config "$1")
     DEFINES="$DEFINES;TIMEOUT=$TIMEOUT;MAX_TRAFFIC=$MAX_TRAFFIC;TSNAME=$config_name"
 
-    if [ $NOVCD != 0 ]; then
-        DEFINES="$DEFINES;NOVCD=1"
+    if [ "$NOWAVE" != 0 ]; then
+        DEFINES="$DEFINES;NOWAVE=1"
     fi
 
     # Don't dump log, useful for Github actions which may use icarus 10 not supporting SVLogger
-    if [ $NODEBUG != 0 ]; then
+    if [ "$NODEBUG" != 0 ]; then
         DEFINES="$DEFINES;NODEBUG=1"
     fi
 
     # Run the simulation
-    svutRun -t ./src/axicb_crossbar_top_testbench.sv -define $DEFINES | tee simulation.log
+    svutRun -t ./src/axicb_crossbar_top_testbench.sv \
+            -define "$DEFINES" \
+            -fst \
+            | tee simulation.log
     ret=$?
     if [[ $ret != 0 ]]; then
         fails="$fails $config_name"
@@ -126,8 +129,8 @@ runner() {
     # Gathers the return code to check later a bunch of simulation status
     test_ret=$((test_ret+$ret))
 
-    # Backup VCD file of current test
-    if [ $NOVCD == 0 ]; then
-        mv axicb_*.vcd vcd/${config_name}.vcd
+    # Backup FST file of current test
+    if [ "$NOWAVE" == 0 ]; then
+        cp axicb_*.fst "wave/${config_name}.fst"
     fi
 }

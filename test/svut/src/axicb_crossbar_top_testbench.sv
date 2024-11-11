@@ -1556,10 +1556,10 @@ module axicb_crossbar_top_testbench();
     always #`SLV2_CLK slv2_aclk = !slv2_aclk;
     always #`SLV3_CLK slv3_aclk = !slv3_aclk;
 
-    `ifndef NOVCD
+    `ifndef NOWAVE
     // To dump data for visualization:
     initial begin
-         $dumpfile("axicb_crossbar_top_testbench.vcd");
+         $dumpfile("axicb_crossbar_top_testbench.fst");
          $dumpvars(0, axicb_crossbar_top_testbench);
      end
     `endif

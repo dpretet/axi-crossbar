@@ -93,7 +93,7 @@ module axicb_pipeline_testbench();
 
     // dump data for visualization:
     initial begin
-        $dumpfile("axicb_pipeline_testbench.vcd");
+        $dumpfile("axicb_pipeline_testbench.fst");
         $dumpvars(0, axicb_pipeline_testbench);
     end
 

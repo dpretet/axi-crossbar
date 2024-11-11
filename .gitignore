@@ -2,5 +2,6 @@ obj_dir
 *.log
 *.out
 *.vcd
+*.fst
 tags
 .DS_Store
