@@ -71,6 +71,8 @@ module axicb_mst_switch_wr
     ///////////////////////////////////////////////////////////////////////////
 
     logic                  awch_en;
+    logic                  awch_en_c;
+    logic                  awch_en_r;
     logic [MST_NB    -1:0] awch_req;
     logic [MST_NB    -1:0] awch_grant;
 
@@ -117,7 +119,20 @@ module axicb_mst_switch_wr
 
     assign i_awready = awch_grant & {MST_NB{o_awready & !wch_full}};
 
-    assign awch_en = o_awvalid & o_awready;
+    assign awch_en_c = |i_awvalid & o_awready;
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            awch_en_r <= '0;
+        end else if (srst) begin
+            awch_en_r <= '0;
+        end else begin
+            if (awch_grant=='0) awch_en_r <= 1'b1;
+            else                awch_en_r <= 1'b0;
+        end
+    end
+
+    assign awch_en = awch_en_c | awch_en_r;
 
     assign o_awch = (awch_grant[0]) ? i_awch[0*AWCH_W+:AWCH_W] :
                     (awch_grant[1]) ? i_awch[1*AWCH_W+:AWCH_W] :

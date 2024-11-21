@@ -74,6 +74,8 @@ module axicb_slv_switch_rd
     logic [SLV_NB    -1:0] slv_ar_targeted;
 
     logic                  rch_en;
+    logic                  rch_en_c;
+    logic                  rch_en_r;
     logic [SLV_NB    -1:0] rch_req;
     logic [SLV_NB    -1:0] rch_grant;
 
@@ -255,7 +257,20 @@ module axicb_slv_switch_rd
         .grant   (rch_grant)
     );
 
-    assign rch_en = i_rvalid & i_rready & i_rlast & rch_running;
+    assign rch_en_c = |o_rvalid & i_rready & |o_rlast & rch_running;
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            rch_en_r <= '0;
+        end else if (srst) begin
+            rch_en_r <= '0;
+        end else begin
+            if (rch_grant=='0) rch_en_r <= 1'b1;
+            else               rch_en_r <= 1'b0;
+        end
+    end
+
+    assign rch_en = rch_en_c | rch_en_r;
 
     assign rch_req = o_rvalid;
 

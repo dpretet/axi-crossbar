@@ -1,27 +1,34 @@
 [*]
 [*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
-[*] Mon Nov 11 20:06:39 2024
+[*] Tue Nov 19 19:32:08 2024
 [*]
 [dumpfile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.fst"
-[dumpfile_mtime] "Mon Nov 11 19:58:40 2024"
-[dumpfile_size] 6956586
+[dumpfile_mtime] "Tue Nov 19 18:40:31 2024"
+[dumpfile_size] 182679
 [savefile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.gtkw"
-[timestart] 319652800
+[timestart] 0
 [size] 1440 900
-[pos] -1 -26
-*-17.001486 320166000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-22.155149 9082000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] axicb_crossbar_top_testbench.
 [treeopen] axicb_crossbar_top_testbench.dut.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.P0_ON.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.P0_ON.
-[sst_width] 253
+[sst_width] 396
 [signals_width] 184
 [sst_expanded] 1
 [sst_vpaned_height] 262
+@200
+-
+@29
+axicb_crossbar_top_testbench.dut.aclk
+@200
+-
 @28
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_en
 @200
@@ -48,7 +55,6 @@ axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switc
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.P0_ON.rr_p0.mask[3:0]
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.P0_ON.rr_p0.masked[3:0]
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.P0_ON.rr_p0.req[3:0]
-@23
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_round_robin.P0_ON.rr_p0.grant[3:0]
 @200
 -
@@ -65,5 +71,25 @@ axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switc
 (3)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rvalid[3:0]
 (3)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rready[3:0]
 (3)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rlast[3:0]
+@200
+-
+-
+-
+@28
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_en
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_en_c
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_en_r
+@22
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_grant[3:0]
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_req[3:0]
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.i_awready[3:0]
+@200
+-
+@28
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.en
+@22
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.P0_ON.rr_p0.grant_c[3:0]
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.P0_ON.rr_p0.grant_r[3:0]
+axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.mst_switch_wr.awch_round_robin.grant[3:0]
 [pattern_trace] 1
 [pattern_trace] 0

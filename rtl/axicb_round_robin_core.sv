@@ -77,6 +77,8 @@ module axicb_round_robin_core
 
     logic [REQ_NB    -1:0] mask;
     logic [REQ_NB    -1:0] masked;
+    logic [REQ_NB    -1:0] grant_r;
+    logic [REQ_NB    -1:0] grant_c;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -95,19 +97,19 @@ module axicb_round_robin_core
 
         // 2.1 handles first the reqs which fall into the mask
         if (|masked) begin
-            if      (masked[0]) grant = 4'b0001;
-            else if (masked[1]) grant = 4'b0010;
-            else if (masked[2]) grant = 4'b0100;
-            else if (masked[3]) grant = 4'b1000;
-            else                grant = 4'b0000;
+            if      (masked[0]) grant_c = 4'b0001;
+            else if (masked[1]) grant_c = 4'b0010;
+            else if (masked[2]) grant_c = 4'b0100;
+            else if (masked[3]) grant_c = 4'b1000;
+            else                grant_c = 4'b0000;
 
         // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
         end else begin
-            if      (req[0]) grant = 4'b0001;
-            else if (req[1]) grant = 4'b0010;
-            else if (req[2]) grant = 4'b0100;
-            else if (req[3]) grant = 4'b1000;
-            else             grant = 4'b0000;
+            if      (req[0]) grant_c = 4'b0001;
+            else if (req[1]) grant_c = 4'b0010;
+            else if (req[2]) grant_c = 4'b0100;
+            else if (req[3]) grant_c = 4'b1000;
+            else             grant_c = 4'b0000;
         end
     end
 
@@ -122,33 +124,53 @@ module axicb_round_robin_core
 
         // 2.1 handles first the reqs which fall into the mask
         if (|masked) begin
-            if      (masked[0]) grant = 8'b00000001;
-            else if (masked[1]) grant = 8'b00000010;
-            else if (masked[2]) grant = 8'b00000100;
-            else if (masked[3]) grant = 8'b00001000;
-            else if (masked[4]) grant = 8'b00010000;
-            else if (masked[5]) grant = 8'b00100000;
-            else if (masked[6]) grant = 8'b01000000;
-            else if (masked[7]) grant = 8'b10000000;
-            else                grant = 8'b00000000;
+            if      (masked[0]) grant_c = 8'b00000001;
+            else if (masked[1]) grant_c = 8'b00000010;
+            else if (masked[2]) grant_c = 8'b00000100;
+            else if (masked[3]) grant_c = 8'b00001000;
+            else if (masked[4]) grant_c = 8'b00010000;
+            else if (masked[5]) grant_c = 8'b00100000;
+            else if (masked[6]) grant_c = 8'b01000000;
+            else if (masked[7]) grant_c = 8'b10000000;
+            else                grant_c = 8'b00000000;
 
         // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
         end else begin
-            if      (req[0]) grant = 8'b00000001;
-            else if (req[1]) grant = 8'b00000010;
-            else if (req[2]) grant = 8'b00000100;
-            else if (req[3]) grant = 8'b00001000;
-            else if (req[4]) grant = 8'b00010000;
-            else if (req[5]) grant = 8'b00100000;
-            else if (req[6]) grant = 8'b01000000;
-            else if (req[7]) grant = 8'b10000000;
-            else             grant = 8'b00000000;
+            if      (req[0]) grant_c = 8'b00000001;
+            else if (req[1]) grant_c = 8'b00000010;
+            else if (req[2]) grant_c = 8'b00000100;
+            else if (req[3]) grant_c = 8'b00001000;
+            else if (req[4]) grant_c = 8'b00010000;
+            else if (req[5]) grant_c = 8'b00100000;
+            else if (req[6]) grant_c = 8'b01000000;
+            else if (req[7]) grant_c = 8'b10000000;
+            else             grant_c = 8'b00000000;
         end
     end
 
     end
 
     endgenerate
+
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            grant_r <= '1;
+        end else if (srst) begin
+            grant_r <= '1;
+        end else begin
+            if (en) begin
+                grant_r <= grant_c;
+            end
+        end
+    end
+
+    always @ (*) begin
+        if (en)
+            grant = grant_c;
+        else
+            grant = grant_r;
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Generate the next mask

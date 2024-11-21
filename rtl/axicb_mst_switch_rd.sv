@@ -65,6 +65,8 @@ module axicb_mst_switch_rd
     ///////////////////////////////////////////////////////////////////////////
 
     logic                  arch_en;
+    logic                  arch_en_c;
+    logic                  arch_en_r;
     logic [MST_NB    -1:0] arch_req;
     logic [MST_NB    -1:0] arch_grant;
 
@@ -106,7 +108,20 @@ module axicb_mst_switch_rd
 
     assign i_arready = arch_grant & {MST_NB{o_arready}};
 
-    assign arch_en = o_arvalid & o_arready;
+    assign arch_en_c = |i_arvalid & o_arready;
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            arch_en_r <= '0;
+        end else if (srst) begin
+            arch_en_r <= '0;
+        end else begin
+            if (arch_grant=='0) arch_en_r <= 1'b1;
+            else                arch_en_r <= 1'b0;
+        end
+    end
+
+    assign arch_en = arch_en_c | arch_en_r;
 
     assign o_arch = (arch_grant[0]) ? i_arch[0*ARCH_W+:ARCH_W] :
                     (arch_grant[1]) ? i_arch[1*ARCH_W+:ARCH_W] :

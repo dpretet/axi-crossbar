@@ -83,6 +83,8 @@ module axicb_slv_switch_wr
     logic [SLV_NB    -1:0] slv_w_targeted;
 
     logic                  bch_en;
+    logic                  bch_en_c;
+    logic                  bch_en_r;
     logic [SLV_NB    -1:0] bch_req;
     logic [SLV_NB    -1:0] bch_grant;
 
@@ -263,7 +265,20 @@ module axicb_slv_switch_wr
         .grant   (bch_grant)
     );
 
-    assign bch_en = i_bvalid & i_bready & bch_mr_empty;
+    assign bch_en_c = |o_bvalid & i_bready & bch_mr_empty;
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            bch_en_r <= '0;
+        end else if (srst) begin
+            bch_en_r <= '0;
+        end else begin
+            if (bch_grant=='0) bch_en_r <= 1'b1;
+            else               bch_en_r <= 1'b0;
+        end
+    end
+
+    assign bch_en = bch_en_c | bch_en_r;
 
     assign bch_req = o_bvalid;
 
