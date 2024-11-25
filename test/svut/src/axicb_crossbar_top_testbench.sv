@@ -1,7 +1,7 @@
 // distributed under the mit license
 // https://opensource.org/licenses/mit-license.php
 
-/// Mandatory file to be able to launch SVUT flow
+// Mandatory file to be able to launch SVUT flow
 `include "svut_h.sv"
 
 `timescale 1 ns / 1 ps

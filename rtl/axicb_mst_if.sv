@@ -127,8 +127,13 @@ module axicb_mst_if
     logic [ARCH_W        -1:0] arch;
     logic [RCH_W         -1:0] rch;
     logic                      rlast;
+    logic                      rlast_r;
     logic [AXI_ADDR_W    -1:0] awaddr;
     logic [AXI_ADDR_W    -1:0] araddr;
+    logic                      wlast_r;
+
+    logic [BCH_W         -1:0] bch_f;
+    logic [RCH_W         -1:0] rch_f;
 
     generate
 
@@ -232,7 +237,7 @@ module axicb_mst_if
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (w_rinc),
-    .rdata   ({o_wlast, wch}),
+    .rdata   ({wlast_r, wch}),
     .rempty  (w_empty),
     .arempty ()
     );
@@ -241,6 +246,7 @@ module axicb_mst_if
     assign w_winc = i_wvalid & ~w_full;
 
     assign o_wvalid = ~w_empty;
+    assign o_wlast = (w_empty) ? 1'b0 : wlast_r;
     assign w_rinc = ~w_empty & o_wready;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -264,7 +270,7 @@ module axicb_mst_if
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (b_rinc),
-    .rdata   (i_bch),
+    .rdata   (bch_f),
     .rempty  (b_empty),
     .arempty ()
     );
@@ -273,6 +279,7 @@ module axicb_mst_if
     assign b_winc = o_bvalid & ~b_full;
 
     assign i_bvalid = ~b_empty;
+    assign i_bch = (b_empty) ? '0 : bch_f;
     assign b_rinc = ~b_empty & i_bready;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -328,7 +335,7 @@ module axicb_mst_if
     .rclk    (i_aclk),
     .rrst_n  (i_aresetn),
     .rinc    (r_rinc),
-    .rdata   ({i_rlast, i_rch}),
+    .rdata   ({rlast_r, rch_f}),
     .rempty  (r_empty),
     .arempty ()
     );
@@ -338,6 +345,20 @@ module axicb_mst_if
 
     assign i_rvalid = ~r_empty;
     assign r_rinc = ~r_empty & i_rready;
+    assign i_rlast = (r_empty) ? 1'b0 : rlast_r;
+
+    always @ (*) begin
+
+        // +2 = RESP width
+        i_rch[AXI_ID_W+2 +: (RCH_W-AXI_ID_W-2)] = rch_f[AXI_ID_W+2 +: (RCH_W-AXI_ID_W-2)];
+
+        // Tied off ID and RESP to ensure correct values
+        if (r_empty) begin
+            i_rch[0 +: (AXI_ID_W+2)] = '0;
+        end else begin
+            i_rch[0 +: (AXI_ID_W+2)] = rch_f[0 +: (AXI_ID_W+2)];
+        end
+    end
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -409,12 +430,13 @@ module axicb_mst_if
     .data_in  ({i_wlast, i_wch}),
     .push     (i_wvalid),
     .full     (w_full),
-    .data_out ({o_wlast, wch}),
+    .data_out ({wlast_r, wch}),
     .pull     (o_wready),
     .empty    (w_empty)
     );
     assign i_wready = ~w_full;
     assign o_wvalid = ~w_empty;
+    assign o_wlast = (w_empty) ? 1'b0 : wlast_r;
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response Channel
@@ -435,12 +457,13 @@ module axicb_mst_if
     .data_in  (bch),
     .push     (o_bvalid),
     .full     (b_full),
-    .data_out (i_bch),
+    .data_out (bch_f),
     .pull     (i_bready),
     .empty    (b_empty)
     );
 
     assign i_bvalid = ~b_empty;
+    assign i_bch = (b_empty) ? '0 : bch_f;
     assign o_bready = ~b_full;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -489,14 +512,27 @@ module axicb_mst_if
     .data_in  ({rlast, rch}),
     .push     (o_rvalid),
     .full     (r_full),
-    .data_out ({i_rlast,i_rch}),
+    .data_out ({rlast_r,rch_f}),
     .pull     (i_rready),
     .empty    (r_empty)
     );
 
     assign i_rvalid = ~r_empty;
+    assign i_rlast = (r_empty) ? 1'b0 : rlast_r;
     assign o_rready = ~r_full;
 
+    always @ (*) begin
+
+        // +2 = RESP width
+        i_rch[AXI_ID_W+2 +: (RCH_W-AXI_ID_W-2)] = rch_f[AXI_ID_W+2 +: (RCH_W-AXI_ID_W-2)];
+
+        // Tied off ID and RESP to ensure correct values
+        if (r_empty) begin
+            i_rch[0 +: (AXI_ID_W+2)] = '0;
+        end else begin
+            i_rch[0 +: (AXI_ID_W+2)] = rch_f[0 +: (AXI_ID_W+2)];
+        end
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////

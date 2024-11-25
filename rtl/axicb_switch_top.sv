@@ -61,7 +61,7 @@ module axicb_switch_top
         parameter BCH_W = 8,
         parameter ARCH_W = 8,
         parameter RCH_W = 8
-    )(
+    ) (
         // Global interface
         input  wire                           aclk,
         input  wire                           aresetn,
@@ -323,10 +323,10 @@ module axicb_switch_top
     ///////////////////////////////////////////////////////////////////////////
     // Reorder the valid/ready handshakes:
     //
-    // slave interface uses awvalid[0,1,2,3,...] to target master interface 0,
+    // Slave interfaces use awvalid[0,1,2,3,...] to target master interface 0,
     // master interface 1, master interface 2, master interface 3 ...
     //
-    // master interfaces must receive awvalid[0] of slv_if0 + awvalid[0] of
+    // Master interfaces must receive awvalid[0] of slv_if0 + awvalid[0] of
     // slv_if1 ...
     //
     // The same principle is applied for all channels targeted from slave
@@ -490,7 +490,6 @@ module axicb_switch_top
             .o_ready (o_wready[i]),
             .o_data  ({o_wlast[i], o_wch[i*WCH_W+:WCH_W]})
         );
-
 
         axicb_pipeline
         #(

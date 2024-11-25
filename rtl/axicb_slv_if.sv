@@ -121,11 +121,14 @@ module axicb_slv_if
     ///////////////////////////////////////////////////////////////////////////////
 
     logic [AWCH_W        -1:0] awch;
+    logic [AWCH_W        -1:0] awch_f;
     logic [WCH_W         -1:0] wch;
     logic [BCH_W         -1:0] bch;
     logic [ARCH_W        -1:0] arch;
+    logic [AWCH_W        -1:0] arch_f;
     logic [RCH_W         -1:0] rch;
     logic                      wlast;
+    logic                      wlast_r;
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -334,7 +337,7 @@ module axicb_slv_if
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (aw_rinc),
-    .rdata   (o_awch),
+    .rdata   (awch_f),
     .rempty  (aw_empty),
     .arempty ()
     );
@@ -343,6 +346,13 @@ module axicb_slv_if
     assign aw_winc = i_awvalid & ~aw_full;
 
     assign o_awvalid = ~aw_empty;
+
+    always @ (*) begin
+        o_awch[AXI_ADDR_W +: (AWCH_W-AXI_ADDR_W)] = awch_f[AXI_ADDR_W +: (AWCH_W-AXI_ADDR_W)];
+        // tied off AWADDR to avoid x in switches
+        o_awch[0 +: AXI_ADDR_W] = (aw_empty) ? '0 : awch_f[0 +: AXI_ADDR_W];;
+    end
+
     assign aw_rinc = ~aw_empty & o_awready;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -366,7 +376,7 @@ module axicb_slv_if
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (w_rinc),
-    .rdata   ({o_wlast, o_wch}),
+    .rdata   ({wlast_r, o_wch}),
     .rempty  (w_empty),
     .arempty ()
     );
@@ -375,6 +385,7 @@ module axicb_slv_if
     assign w_winc = i_wvalid & ~w_full;
 
     assign o_wvalid = ~w_empty;
+    assign o_wlast = (w_empty) ? 1'b0 : wlast_r;
     assign w_rinc = ~w_empty & o_wready;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -430,7 +441,7 @@ module axicb_slv_if
     .rclk    (o_aclk),
     .rrst_n  (o_aresetn),
     .rinc    (ar_rinc),
-    .rdata   (o_arch),
+    .rdata   (arch_f),
     .rempty  (ar_empty),
     .arempty ()
     );
@@ -440,6 +451,12 @@ module axicb_slv_if
 
     assign o_arvalid = ~ar_empty;
     assign ar_rinc = ~ar_empty & o_arready;
+
+    always @ (*) begin
+        o_arch[AXI_ADDR_W +: (ARCH_W-AXI_ADDR_W)] = arch_f[AXI_ADDR_W +: (ARCH_W-AXI_ADDR_W)];
+        // tied off ARADDR to avoid x in switches
+        o_arch[0 +: AXI_ADDR_W] = (ar_empty) ? '0 : arch_f[0 +: AXI_ADDR_W];;
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Data Channel
@@ -517,10 +534,17 @@ module axicb_slv_if
     .data_in  (awch),
     .push     (i_awvalid),
     .full     (aw_full),
-    .data_out (o_awch),
+    .data_out (awch_f),
     .pull     (o_awready),
     .empty    (aw_empty)
     );
+
+    always @ (*) begin
+        o_awch[AXI_ADDR_W +: (AWCH_W-AXI_ADDR_W)] = awch_f[AXI_ADDR_W +: (AWCH_W-AXI_ADDR_W)];
+        // tied off AWADDR to avoid x in switches
+        o_awch[0 +: AXI_ADDR_W] = (aw_empty) ? '0 : awch_f[0 +: AXI_ADDR_W];;
+    end
+
     assign i_awready = ~aw_full;
     assign o_awvalid = ~aw_empty;
 
@@ -544,12 +568,13 @@ module axicb_slv_if
     .data_in  ({wlast, wch}),
     .push     (i_wvalid),
     .full     (w_full),
-    .data_out ({o_wlast, o_wch}),
+    .data_out ({wlast_r, o_wch}),
     .pull     (o_wready),
     .empty    (w_empty)
     );
     assign i_wready = ~w_full;
     assign o_wvalid = ~w_empty;
+    assign o_wlast = (w_empty) ? 1'b0 : wlast_r;
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Response Channel
@@ -597,13 +622,19 @@ module axicb_slv_if
     .data_in  (arch),
     .push     (i_arvalid),
     .full     (ar_full),
-    .data_out (o_arch),
+    .data_out (arch_f),
     .pull     (o_arready),
     .empty    (ar_empty)
     );
 
     assign i_arready = ~ar_full;
     assign o_arvalid = ~ar_empty;
+
+    always @ (*) begin
+        o_arch[AXI_ADDR_W +: (ARCH_W-AXI_ADDR_W)] = arch_f[AXI_ADDR_W +: (ARCH_W-AXI_ADDR_W)];
+        // tied off ARADDR to avoid x in switches
+        o_arch[0 +: AXI_ADDR_W] = (ar_empty) ? '0 : arch_f[0 +: AXI_ADDR_W];;
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Data Channel

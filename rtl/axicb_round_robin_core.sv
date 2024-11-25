@@ -154,10 +154,10 @@ module axicb_round_robin_core
 
 
     always @ (posedge aclk or negedge aresetn) begin
-        if (~aresetn) begin
-            grant_r <= '1;
+        if (!aresetn) begin
+            grant_r <= '0;
         end else if (srst) begin
-            grant_r <= '1;
+            grant_r <= '0;
         end else begin
             if (en) begin
                 grant_r <= grant_c;
@@ -181,10 +181,10 @@ module axicb_round_robin_core
 
     always @ (posedge aclk or negedge aresetn) begin
 
-        if (~aresetn) begin
-            mask <= {REQ_NB{1'b1}};
+        if (!aresetn) begin
+            mask <= '0;
         end else if (srst) begin
-            mask <= {REQ_NB{1'b1}};
+            mask <= '0;
         end else begin
             if (en && |grant) begin
                 if      (grant[0]) mask <= 4'b1110;
@@ -199,10 +199,10 @@ module axicb_round_robin_core
 
     always @ (posedge aclk or negedge aresetn) begin
 
-        if (~aresetn) begin
-            mask <= {REQ_NB{1'b1}};
+        if (!aresetn) begin
+            mask <= '0;
         end else if (srst) begin
-            mask <= {REQ_NB{1'b1}};
+            mask <= '0;
         end else begin
             if (en && |grant) begin
                 if      (grant[0]) mask <= 8'b11111110;
