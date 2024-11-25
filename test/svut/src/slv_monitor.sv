@@ -510,12 +510,13 @@ module slv_monitor
         .lfsr    (b_lfsr)
     );
 
-    assign bvalid = ~b_empty & bvalid_lfsr[0];
-    assign bresp_exp = gen_resp(awaddr_b/*+SLV_ADDR*/);
-    assign buser_exp = gen_buser(awaddr_b/*+SLV_ADDR*/);
-    assign bresp = bresp_exp[1:0];
-    assign bid = (bvalid) ?  awid_b : {AXI_ID_W{1'b0}};
-    assign buser = buser_exp[0+:AXI_BUSER_W];
+    assign bresp_exp = gen_resp(awaddr_b);
+    assign buser_exp = gen_buser(awaddr_b);
+
+    assign bvalid = !b_empty & bvalid_lfsr[0];
+    assign bid =    (bvalid) ? awid_b : '0;
+    assign bresp =  (bvalid) ? bresp_exp[1:0] : '0;
+    assign buser =  (bvalid) ? buser_exp[0+:AXI_BUSER_W] : '0;
 
     // Monitor BRESP channel to detect timeout
     always @ (posedge aclk or negedge aresetn) begin
@@ -674,18 +675,19 @@ module slv_monitor
         .empty    (r_empty)
     );
 
-    assign rid = arid_r;
-    assign rresp_exp = gen_resp(araddr_r/*+SLV_ADDR*/);
-    assign rresp = rresp_exp[0+:2];
-    assign ruser_exp = gen_ruser(araddr_r/*+SLV_ADDR*/);
-    assign ruser = ruser_exp[0+:AXI_RUSER_W];
+    assign rid = (r_empty) ? '0 : arid_r;
+    assign rresp_exp = gen_resp(araddr_r);
+    assign ruser_exp = gen_ruser(araddr_r);
+
+    assign rresp = (r_empty) ? '0 : rresp_exp[0+:2];
+    assign ruser = (r_empty) ? '0 : ruser_exp[0+:AXI_RUSER_W];
 
     generate
     if (AXI_SIGNALING > 0) begin
 
         assign rvalid = rvalid_lfsr[0] & (~r_empty_r & ~r_empty);
-        assign rdata = (rlen==8'h0) ? rdata_r : next_rdata;
-        assign rlast = (rlen==arlen_r) ? 1'b1 : 1'b0;
+        assign rdata = (rvalid) ? (rlen==8'h0) ? rdata_r : next_rdata : '0;
+        assign rlast = (arlen_r === 'x) ? 1'b0: (rlen==arlen_r) ? 1'b1 : 1'b0;
 
         always @ (posedge aclk or negedge aresetn) begin
             if (~aresetn) begin
