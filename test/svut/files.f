@@ -10,6 +10,7 @@
 ../../rtl/axicb_scfifo_ram.sv
 ../../rtl/axicb_slv_if.sv
 ../../rtl/axicb_slv_switch.sv
+../../rtl/axicb_slv_ooo.sv
 ../../rtl/axicb_slv_switch_wr.sv
 ../../rtl/axicb_slv_switch_rd.sv
 ../../rtl/axicb_switch_top.sv

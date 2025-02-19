@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-# get current script path (applicable even if is a symlink)
+#-------------------------------------------------------------
+# Install SVUT from https://github.com/dpretet/svut if missing
+#-------------------------------------------------------------
+
+# Get current script path (applicable even if is a symlink)
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
   DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
@@ -9,6 +13,7 @@ while [ -h "$SOURCE" ]; do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
+# Clone SVUT and setup $PATH
 if [[ ! $(type svutRun) ]];
 then
     svut_dir="$DIR/.svut"

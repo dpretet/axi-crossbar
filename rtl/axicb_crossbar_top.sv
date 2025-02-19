@@ -77,7 +77,7 @@ module axicb_crossbar_top
         //                    determine which master to route back the
         //                    BRESP/RRESP completions.
         //
-        //   - MSTx_RW: Slect if the interface is
+        //   - MSTx_RW: Select if the interface is
         //         - Read/Write (=0)
         //         - Read-only (=1)
         //         - Write-only (=2)
@@ -708,6 +708,11 @@ module axicb_crossbar_top
                              MST1_ROUTES,
                              MST0_ROUTES};
 
+    localparam MST_OSTDREQ_NUM = {MST3_OSTDREQ_NUM[7:0], 
+                                  MST2_OSTDREQ_NUM[7:0], 
+                                  MST1_OSTDREQ_NUM[7:0], 
+                                  MST0_OSTDREQ_NUM[7:0]};
+
     logic [MST_NB            -1:0] i_awvalid;
     logic [MST_NB            -1:0] i_awready;
     logic [MST_NB*AWCH_W     -1:0] i_awch;
@@ -1147,6 +1152,7 @@ module axicb_crossbar_top
     .MST1_ID_MASK       (MST1_ID_MASK),
     .MST2_ID_MASK       (MST2_ID_MASK),
     .MST3_ID_MASK       (MST3_ID_MASK),
+    .MST_OSTDREQ_NUM    (MST_OSTDREQ_NUM),
     .MST_ROUTES         (MST_ROUTES),
     .MST0_PRIORITY      (MST0_PRIORITY),
     .MST1_PRIORITY      (MST1_PRIORITY),

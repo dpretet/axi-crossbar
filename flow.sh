@@ -54,7 +54,7 @@ help() {
     echo ""
     echo "DESCRIPTION"
     echo ""
-    echo "      This flow handles the different operations available"
+    echo "      This flow handles the different operations available:"
     echo ""
     echo "      ./flow.sh help|-h"
     echo ""
@@ -68,6 +68,10 @@ help() {
     echo ""
     echo "      Launch all available testsuites"
     echo ""
+    echo "      ./flow.sh lint"
+    echo ""
+    echo "      Launch lint analysis with Verilator"
+    echo ""
     echo -e "${NC}"
 }
 
@@ -76,7 +80,7 @@ main() {
     echo ""
     printinfo "Start AXI4-Crossbar Flow"
 
-    # If no argument provided, preint help and exit
+    # If no argument provided, print help and exit
     if [[ $# -eq 0 ]]; then
         help
         exit 1
@@ -103,6 +107,7 @@ main() {
             -I./rtl\
             ./rtl/axicb_mst_if.sv\
             ./rtl/axicb_slv_if.sv\
+            ./rtl/axicb_slv_ooo.sv\
             ./rtl/axicb_slv_switch.sv\
             ./rtl/axicb_slv_switch_rd.sv\
             ./rtl/axicb_slv_switch_wr.sv\
@@ -121,7 +126,9 @@ main() {
     fi
 
     if [[ $1 == "sim" ]]; then
+        # Install SVUT if missing in $PATH
         source script/setup.sh
+        # Run all testsuites against all configurations
         cd "$CURDIR/test/svut"
         ./run.sh --no-debug-log --no-wave
         ret=$?

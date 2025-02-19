@@ -26,6 +26,9 @@ module axicb_slv_switch_wr
         // Routes allowed to use by this master
         parameter MST_ROUTES = 4'b1_1_1_1,
 
+        // Max Outstanding Request
+        parameter MST_OSTDREQ_NUM = 4,
+
         // Slaves memory mapping
         parameter SLV0_START_ADDR = 0,
         parameter SLV0_END_ADDR = 4095,
@@ -47,7 +50,7 @@ module axicb_slv_switch_wr
         input  wire                           aclk,
         input  wire                           aresetn,
         input  wire                           srst,
-        // Input interfaces from masters
+        // Input interface from master
         input  wire                           i_awvalid,
         output logic                          i_awready,
         input  wire  [AWCH_W            -1:0] i_awch,

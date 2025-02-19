@@ -15,13 +15,25 @@
         active_scope: Some((
             strs: [
                 "axicb_crossbar_top_testbench",
-                "slv_monitor1",
             ],
         )),
         displayed_items_order: [
             (36),
             (165),
+            (310),
             (198),
+            (294),
+            (306),
+            (307),
+            (308),
+            (309),
+            (305),
+            (298),
+            (299),
+            (302),
+            (300),
+            (301),
+            (296),
             (271),
             (226),
             (229),
@@ -39,14 +51,17 @@
             (273),
             (274),
             (286),
+            (285),
             (282),
             (283),
             (284),
-            (285),
-            (212),
             (280),
             (259),
             (281),
+            (288),
+            (289),
+            (290),
+            (287),
             (260),
             (261),
             (262),
@@ -56,6 +71,8 @@
             (267),
             (268),
             (269),
+            (293),
+            (292),
             (270),
             (265),
             (256),
@@ -64,14 +81,13 @@
             (264),
             (213),
             (214),
+            (320),
+            (321),
+            (322),
+            (317),
+            (318),
+            (319),
             (215),
-            (216),
-            (217),
-            (218),
-            (219),
-            (220),
-            (221),
-            (222),
             (201),
             (204),
             (207),
@@ -116,53 +132,25 @@
             (170),
         ],
         displayed_items: {
-            (202): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (67): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (65): Variable((
+            (275): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
-                            "dut",
+                            "slv_monitor1",
                         ],
                     ),
-                    name: "i_rready",
+                    name: "araddr",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "…dut.i_rready [3:0]",
+                display_name: "…slv_monitor1.araddr [15:0]",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
                 field_formats: [],
             )),
-            (227): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
-                        ],
-                    ),
-                    name: "arvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor0.arvalid",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (264): Variable((
+            (293): Variable((
                 variable_ref: (
                     path: (
                         strs: [
@@ -172,72 +160,35 @@
                             "SLV_SWITCHS_GEN[0]",
                             "slv_switch",
                             "slv_switch_rd",
+                            "rch_round_robin",
+                            "P0_ON",
+                            "rr_p0",
                         ],
                     ),
-                    name: "o_rch",
+                    name: "masked",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "…slv_switch_rd.o_rch [183:0]",
+                display_name: "masked [3:0]",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
                 field_formats: [],
             )),
-            (274): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
-                        ],
-                    ),
-                    name: "arready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor1.arready",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (228): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
-                        ],
-                    ),
-                    name: "arready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor0.arready",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (280): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (63): Variable((
+            (322): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
                             "dut",
+                            "slv0_if",
                         ],
                     ),
-                    name: "i_bready",
+                    name: "i_rlast",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "i_bready [3:0]",
+                display_name: "…slv0_if.i_rlast",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -261,156 +212,6 @@
                 format: None,
                 field_formats: [],
             )),
-            (259): Divider((
-                color: None,
-                background_color: Some("blue"),
-                name: Some("SlvSwitch0"),
-            )),
-            (74): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_bvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_bvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (58): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_awready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_awready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (283): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
-                        ],
-                    ),
-                    name: "rready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor1.rready",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (213): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (271): Divider((
-                color: None,
-                background_color: Some("pink"),
-                name: Some("slv0"),
-            )),
-            (207): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "AXI_ADDR_W",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "AXI_ADDR_W",
-                display_name_type: Unique,
-                manual_name: None,
-                format: Some("Unsigned"),
-                field_formats: [],
-            )),
-            (206): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_arch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_arch [227:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (72): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_wready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_wready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (265): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (270): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "rch_grant",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "rch_grant [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
             (169): Variable((
                 variable_ref: (
                     path: (
@@ -429,91 +230,15 @@
                 format: None,
                 field_formats: [],
             )),
-            (167): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_bch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_bch [55:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (260): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "i_rvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.i_rvalid",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (275): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
-                        ],
-                    ),
-                    name: "araddr",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor1.araddr [15:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (219): Divider((
+            (265): Divider((
                 color: None,
                 background_color: None,
                 name: None,
             )),
-            (286): Divider((
+            (213): Divider((
                 color: None,
                 background_color: None,
                 name: None,
-            )),
-            (76): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_arvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_arvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
             )),
             (62): Variable((
                 variable_ref: (
@@ -533,631 +258,19 @@
                 format: None,
                 field_formats: [],
             )),
-            (68): Variable((
+            (301): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_awvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_awvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (198): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (267): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "rch_en_c",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "rch_en_c",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (77): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_arready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_arready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (209): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (59): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_wvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_wvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (222): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (278): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (203): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                        ],
-                    ),
-                    name: "aclk",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "aclk",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (232): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
-                        ],
-                    ),
-                    name: "rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor0.rlast",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (36): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (215): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (55): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_arvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_arvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (61): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_wlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_wlast [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (56): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_arready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_arready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (212): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (284): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
-                        ],
-                    ),
-                    name: "rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor1.rlast",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (78): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_rvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.o_rvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (262): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "i_rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.i_rlast",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (66): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.i_rlast [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (73): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_wlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_wlast [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (201): Divider((
-                color: None,
-                background_color: None,
-                name: Some("Top Level Signals"),
-            )),
-            (75): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_bready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_bready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (60): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_wready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_wready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (57): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_awvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_awvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (214): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (216): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (220): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (208): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "AXI_ID_W",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "AXI_ID_W",
-                display_name_type: Unique,
-                manual_name: None,
-                format: Some("Unsigned"),
-                field_formats: [],
-            )),
-            (233): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
+                            "mst_driver0",
                         ],
                     ),
                     name: "rid",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "…slv_monitor0.rid [7:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (281): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (244): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (257): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "o_rready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.o_rready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (70): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (261): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "i_rready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.i_rready",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (218): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (69): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_awready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_awready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (204): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (168): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_rch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.i_rch [183:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (221): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (170): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_rch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.o_rch [183:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (71): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_wvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "o_wvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (80): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.o_rlast [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (81): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (196): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "slv0_if",
-                        ],
-                    ),
-                    name: "i_araddr",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_araddr [15:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (210): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_awch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_awch [227:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (285): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
-                        ],
-                    ),
-                    name: "rid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor1.rid [7:0]",
+                display_name: "…mst_driver0.rid [7:0]",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -1181,153 +294,6 @@
                 format: None,
                 field_formats: [],
             )),
-            (268): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "rch_en_r",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "rch_en_r",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (263): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "i_rch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.i_rch [45:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (79): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "o_rready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.o_rready [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (258): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "o_rlast",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_switch_rd.o_rlast [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (231): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
-                        ],
-                    ),
-                    name: "rready",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…slv_monitor0.rready",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (205): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_arch",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "i_arch [227:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (269): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                            "switchs",
-                            "SLV_SWITCHS_GEN[0]",
-                            "slv_switch",
-                            "slv_switch_rd",
-                        ],
-                    ),
-                    name: "rch_req",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "rch_req [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (217): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
             (266): Variable((
                 variable_ref: (
                     path: (
@@ -1350,38 +316,121 @@
                 format: None,
                 field_formats: [],
             )),
-            (64): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axicb_crossbar_top_testbench",
-                            "dut",
-                        ],
-                    ),
-                    name: "i_rvalid",
-                ),
-                color: None,
-                background_color: None,
-                display_name: "…dut.i_rvalid [3:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-            )),
-            (165): Variable((
+            (292): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
                             "dut",
                             "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                            "rch_round_robin",
+                            "P0_ON",
+                            "rr_p0",
                         ],
                     ),
-                    name: "aclk",
+                    name: "mask",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "aclk",
+                display_name: "mask [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (306): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "arvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.arvalid",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (284): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor1",
+                        ],
+                    ),
+                    name: "rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor1.rlast",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (201): Divider((
+                color: None,
+                background_color: Some("blue"),
+                name: Some("Top Level Signals"),
+            )),
+            (71): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_wvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_wvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (69): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_awready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_awready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (227): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "arvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.arvalid",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -1409,42 +458,140 @@
                 format: None,
                 field_formats: [],
             )),
-            (272): Divider((
-                color: None,
-                background_color: Some("pink"),
-                name: Some("slv1"),
-            )),
-            (276): Variable((
+            (167): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
-                            "slv_monitor1",
+                            "dut",
                         ],
                     ),
-                    name: "arid",
+                    name: "i_bch",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "…slv_monitor1.arid [7:0]",
+                display_name: "i_bch [55:0]",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
                 field_formats: [],
             )),
-            (226): Variable((
+            (168): Variable((
                 variable_ref: (
                     path: (
                         strs: [
                             "axicb_crossbar_top_testbench",
-                            "slv_monitor0",
+                            "dut",
                         ],
                     ),
-                    name: "araddr",
+                    name: "i_rch",
                 ),
                 color: None,
                 background_color: None,
-                display_name: "…slv_monitor0.araddr [15:0]",
+                display_name: "…dut.i_rch [183:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (259): Divider((
+                color: None,
+                background_color: Some("blue"),
+                name: Some("SlvSwitch0"),
+            )),
+            (58): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_awready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_awready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (270): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_grant",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_grant [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (170): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_rch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.o_rch [183:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (76): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_arvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_arvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (260): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "i_rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.i_rvalid",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -1468,10 +615,189 @@
                 format: None,
                 field_formats: [],
             )),
-            (211): Divider((
+            (268): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_en_r",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_en_r",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (261): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "i_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.i_rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (63): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_bready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_bready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (300): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "rresp",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rresp [1:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (214): Divider((
                 color: None,
                 background_color: None,
                 name: None,
+            )),
+            (226): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "araddr",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.araddr [15:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (296): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (307): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "arready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.arready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (228): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "arready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.arready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (80): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.o_rlast [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (257): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "o_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.o_rready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
             )),
             (273): Variable((
                 variable_ref: (
@@ -1491,22 +817,1102 @@
                 format: None,
                 field_formats: [],
             )),
+            (196): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "i_araddr",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_araddr [15:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (289): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rlen",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rlen [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (205): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_arch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_arch [227:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (57): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_awvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_awvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (299): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (262): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "i_rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.i_rlast",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (59): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_wvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_wvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (283): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor1",
+                        ],
+                    ),
+                    name: "rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor1.rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (267): Placeholder((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_en_c",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_en_c",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (207): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "AXI_ADDR_W",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "AXI_ADDR_W",
+                display_name_type: Unique,
+                manual_name: None,
+                format: Some("Unsigned"),
+                field_formats: [],
+            )),
+            (72): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_wready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_wready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (310): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "aresetn",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "aresetn",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (67): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (233): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "rid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.rid [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (288): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_running",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_running",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (269): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_req",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_req [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (263): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "i_rch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.i_rch [45:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (231): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (319): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "o_rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv0_if.o_rlast",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (36): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (271): Divider((
+                color: None,
+                background_color: Some("pink"),
+                name: Some("slv0"),
+            )),
+            (65): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.i_rready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (287): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (298): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.rvalid",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (68): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_awvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_awvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (211): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (203): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                        ],
+                    ),
+                    name: "aclk",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "aclk",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (285): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor1",
+                        ],
+                    ),
+                    name: "rid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor1.rid [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (286): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (264): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "o_rch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.o_rch [183:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (294): Divider((
+                color: None,
+                background_color: Some("violet"),
+                name: Some("mst0"),
+            )),
+            (60): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_wready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_wready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (78): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.o_rvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (309): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "arlen",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "arlen [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (64): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.i_rvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (318): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "o_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv0_if.o_rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (79): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.o_rready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (280): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (210): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_awch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_awch [227:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (258): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "o_rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_switch_rd.o_rlast [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (61): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_wlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_wlast [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (302): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.rlast",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (274): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor1",
+                        ],
+                    ),
+                    name: "arready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor1.arready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (204): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (74): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_bvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_bvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (55): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_arvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_arvalid [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (66): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…dut.i_rlast [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (276): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor1",
+                        ],
+                    ),
+                    name: "arid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor1.arid [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (202): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (272): Divider((
+                color: None,
+                background_color: Some("pink"),
+                name: Some("slv1"),
+            )),
+            (56): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "i_arready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "i_arready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (165): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                        ],
+                    ),
+                    name: "aclk",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "aclk",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (77): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_arready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_arready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (208): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "AXI_ID_W",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "AXI_ID_W",
+                display_name_type: Unique,
+                manual_name: None,
+                format: Some("Unsigned"),
+                field_formats: [],
+            )),
+            (209): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (244): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (278): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (215): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (281): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (320): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "i_rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv0_if.i_rvalid",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (198): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (317): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "o_rvalid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv0_if.o_rvalid",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (70): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (305): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (73): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_wlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_wlast [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (75): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_bready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_bready [3:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (232): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "slv_monitor0",
+                        ],
+                    ),
+                    name: "rlast",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv_monitor0.rlast",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (308): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "mst_driver0",
+                        ],
+                    ),
+                    name: "arid",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…mst_driver0.arid [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (290): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "switchs",
+                            "SLV_SWITCHS_GEN[0]",
+                            "slv_switch",
+                            "slv_switch_rd",
+                        ],
+                    ),
+                    name: "rch_mr_empty",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rch_mr_empty",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (81): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (206): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                        ],
+                    ),
+                    name: "o_arch",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "o_arch [227:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
+            (321): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axicb_crossbar_top_testbench",
+                            "dut",
+                            "slv0_if",
+                        ],
+                    ),
+                    name: "i_rready",
+                ),
+                color: None,
+                background_color: None,
+                display_name: "…slv0_if.i_rready",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+            )),
         },
-        display_item_ref_counter: 286,
+        display_item_ref_counter: 322,
         viewports: [
             (
-                curr_left: (0.1529179687499914),
-                curr_right: (0.1607304687499914),
+                curr_left: (0.04799378367680571),
+                curr_right: (0.04805481883305571),
             ),
         ],
         cursor: Some((1, [
-            3583173,
+            159730520,
         ])),
         right_cursor: None,
         markers: {},
-        focused_item: Some((26)),
+        focused_item: Some((12)),
         default_variable_name_type: Unique,
-        scroll_offset: 320.0,
+        scroll_offset: 216.0,
         display_variable_indices: true,
     )),
     drag_started: false,
