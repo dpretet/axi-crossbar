@@ -1002,7 +1002,7 @@ module axicb_crossbar_top
     .i_arqos      (slv2_arqos),
     .i_arregion   (slv2_arregion),
     .i_arid       (slv2_arid),
-    .i_aruser     (slv3_aruser),
+    .i_aruser     (slv2_aruser),
     .i_rvalid     (slv2_rvalid),
     .i_rready     (slv2_rready),
     .i_rid        (slv2_rid),
