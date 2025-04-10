@@ -29,6 +29,9 @@ module axicb_slv_switch_rd
         // Max Outstanding Request
         parameter MST_OSTDREQ_NUM = 4,
 
+        // Master ID mask
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+
         // Slaves memory mapping
         parameter SLV0_START_ADDR = 0,
         parameter SLV0_END_ADDR = 4095,

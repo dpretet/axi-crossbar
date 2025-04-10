@@ -108,6 +108,8 @@ module axicb_switch_top
     );
 
     genvar i, j;
+        
+    parameter [4*AXI_ID_W-1:0] MST_ID_MASK = {MST3_ID_MASK,MST2_ID_MASK,MST1_ID_MASK,MST0_ID_MASK};
 
     // master <> slave logic routing
     logic [MST_NB*SLV_NB            -1:0] slv_awvalid;
@@ -265,6 +267,7 @@ module axicb_switch_top
             .SLV_NB          (SLV_NB),
             .MST_ROUTES      (MST_ROUTES[i*SLV_NB+:SLV_NB]),
             .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM[i*8+:8]),
+            .MST_ID_MASK     (MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W]),
             .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
             .SLV0_START_ADDR (SLV0_START_ADDR),
             .SLV0_END_ADDR   (SLV0_END_ADDR),

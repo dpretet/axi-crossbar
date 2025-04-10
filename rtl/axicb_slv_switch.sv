@@ -29,6 +29,9 @@ module axicb_slv_switch
         // Max Outstanding Request
         parameter MST_OSTDREQ_NUM = 4,
 
+        // Master ID mask
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+
         // Slaves memory mapping
         parameter SLV0_START_ADDR = 0,
         parameter SLV0_END_ADDR = 4095,
@@ -95,6 +98,8 @@ module axicb_slv_switch
         .AXI_SIGNALING   (AXI_SIGNALING),
         .SLV_NB          (SLV_NB),
         .MST_ROUTES      (MST_ROUTES),
+        .MST_ID_MASK     (MST_ID_MASK),
+        .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM),
         .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
         .SLV0_START_ADDR (SLV0_START_ADDR),
         .SLV0_END_ADDR   (SLV0_END_ADDR),
@@ -144,6 +149,8 @@ module axicb_slv_switch
         .AXI_SIGNALING   (AXI_SIGNALING),
         .SLV_NB          (SLV_NB),
         .MST_ROUTES      (MST_ROUTES),
+        .MST_ID_MASK     (MST_ID_MASK),
+        .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM),
         .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
         .SLV0_START_ADDR (SLV0_START_ADDR),
         .SLV0_END_ADDR   (SLV0_END_ADDR),

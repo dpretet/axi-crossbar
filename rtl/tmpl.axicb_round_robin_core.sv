@@ -85,8 +85,8 @@ module axicb_round_robin_core
 
 
     generate
-    
-    if (REQ_NB==2) begin : GRANT_2
+    {% for ix in range(2, num+1) %}
+    if (REQ_NB=={{ix}}) begin : GRANT_{{ix}}
 
     // Compute the requester granted based on mask state
     always @ (*) begin
@@ -99,19 +99,23 @@ module axicb_round_robin_core
         // 2.1 handles first the reqs which fall into the mask
         if (|masked) begin
             if      (masked[0]) grant_c = $bits(grant_c)'(1);
-            else if (masked[1]) grant_c = $bits(grant_c)'(2);
+            {%- for gix in range(1, ix) %}
+            else if (masked[{{gix}}]) grant_c = $bits(grant_c)'({{2**gix}});
+            {%- endfor %}
             else                grant_c = '0;
 
         // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
         end else begin
             if      (req[0]) grant_c = $bits(grant_c)'(1);
-            else if (req[1]) grant_c = $bits(grant_c)'(2);
+            {%- for gix in range(1, ix) %}
+            else if (req[{{gix}}]) grant_c = $bits(grant_c)'({{2**gix}});
+            {%- endfor %}
             else             grant_c = '0;
         end
     end
 
     // Generate the next mask
-    always @ (posedge aclk or negedge aresetn) begin : MASK_2
+    always @ (posedge aclk or negedge aresetn) begin : MASK_{{ix}}
 
         if (!aresetn) begin
             mask <= '0;
@@ -119,105 +123,17 @@ module axicb_round_robin_core
             mask <= '0;
         end else begin
             if (en && |grant) begin
-                if      (grant[0]) mask <= $bits(mask)'(2);
-                else if (grant[1]) mask <= '1;
+                if      (grant[0]) mask <= $bits(mask)'({{(2**ix-1)-1}});
+                {%- for mix in range(1, ix-1) %}
+                else if (grant[{{mix}}]) mask <= $bits(mask)'({{((2**ix-1-1)*2*mix)%(2**ix)}});
+                {%- endfor %}
+                else if (grant[{{ix-1}}]) mask <= '1;
             end
         end
     end
 
     end
-    
-    if (REQ_NB==3) begin : GRANT_3
-
-    // Compute the requester granted based on mask state
-    always @ (*) begin
-
-        // 1. Applies the mask and init the granted output
-        masked = mask & req;
-
-        // 2. Zeroes the grants once found a first activated one
-
-        // 2.1 handles first the reqs which fall into the mask
-        if (|masked) begin
-            if      (masked[0]) grant_c = $bits(grant_c)'(1);
-            else if (masked[1]) grant_c = $bits(grant_c)'(2);
-            else if (masked[2]) grant_c = $bits(grant_c)'(4);
-            else                grant_c = '0;
-
-        // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
-        end else begin
-            if      (req[0]) grant_c = $bits(grant_c)'(1);
-            else if (req[1]) grant_c = $bits(grant_c)'(2);
-            else if (req[2]) grant_c = $bits(grant_c)'(4);
-            else             grant_c = '0;
-        end
-    end
-
-    // Generate the next mask
-    always @ (posedge aclk or negedge aresetn) begin : MASK_3
-
-        if (!aresetn) begin
-            mask <= '0;
-        end else if (srst) begin
-            mask <= '0;
-        end else begin
-            if (en && |grant) begin
-                if      (grant[0]) mask <= $bits(mask)'(6);
-                else if (grant[1]) mask <= $bits(mask)'(4);
-                else if (grant[2]) mask <= '1;
-            end
-        end
-    end
-
-    end
-    
-    if (REQ_NB==4) begin : GRANT_4
-
-    // Compute the requester granted based on mask state
-    always @ (*) begin
-
-        // 1. Applies the mask and init the granted output
-        masked = mask & req;
-
-        // 2. Zeroes the grants once found a first activated one
-
-        // 2.1 handles first the reqs which fall into the mask
-        if (|masked) begin
-            if      (masked[0]) grant_c = $bits(grant_c)'(1);
-            else if (masked[1]) grant_c = $bits(grant_c)'(2);
-            else if (masked[2]) grant_c = $bits(grant_c)'(4);
-            else if (masked[3]) grant_c = $bits(grant_c)'(8);
-            else                grant_c = '0;
-
-        // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
-        end else begin
-            if      (req[0]) grant_c = $bits(grant_c)'(1);
-            else if (req[1]) grant_c = $bits(grant_c)'(2);
-            else if (req[2]) grant_c = $bits(grant_c)'(4);
-            else if (req[3]) grant_c = $bits(grant_c)'(8);
-            else             grant_c = '0;
-        end
-    end
-
-    // Generate the next mask
-    always @ (posedge aclk or negedge aresetn) begin : MASK_4
-
-        if (!aresetn) begin
-            mask <= '0;
-        end else if (srst) begin
-            mask <= '0;
-        end else begin
-            if (en && |grant) begin
-                if      (grant[0]) mask <= $bits(mask)'(14);
-                else if (grant[1]) mask <= $bits(mask)'(12);
-                else if (grant[2]) mask <= $bits(mask)'(8);
-                else if (grant[3]) mask <= '1;
-            end
-        end
-    end
-
-    end
-    
+    {% endfor %}
     endgenerate
 
     always @ (posedge aclk or negedge aresetn) begin

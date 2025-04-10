@@ -81,16 +81,16 @@ module axicb_round_robin
 
     axicb_round_robin_core
     #(
-    .REQ_NB (REQ_NB)
+        .REQ_NB (REQ_NB)
     )
     rr_p0
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (en & p0_active),
-    .req     (req_p0),
-    .grant   (grant_p0)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (en & p0_active),
+        .req     (req_p0),
+        .grant   (grant_p0)
     );
 
     end else begin : P0_OFF
@@ -103,16 +103,16 @@ module axicb_round_robin
 
     axicb_round_robin_core
     #(
-    .REQ_NB (REQ_NB)
+        .REQ_NB (REQ_NB)
     )
     rr_p1
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (en & p1_active),
-    .req     (req_p1),
-    .grant   (grant_p1)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (en & p1_active),
+        .req     (req_p1),
+        .grant   (grant_p1)
     );
 
     end else begin : P1_OFF
@@ -125,16 +125,16 @@ module axicb_round_robin
 
     axicb_round_robin_core
     #(
-    .REQ_NB (REQ_NB)
+        .REQ_NB (REQ_NB)
     )
     rr_p2
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (en & p2_active),
-    .req     (req_p2),
-    .grant   (grant_p2)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (en & p2_active),
+        .req     (req_p2),
+        .grant   (grant_p2)
     );
 
     end else begin : P2_OFF
@@ -147,16 +147,16 @@ module axicb_round_robin
 
     axicb_round_robin_core
     #(
-    .REQ_NB (REQ_NB)
+        .REQ_NB (REQ_NB)
     )
     rr_p3
     (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (en & p3_active),
-    .req     (req_p3),
-    .grant   (grant_p3)
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (en & p3_active),
+        .req     (req_p3),
+        .grant   (grant_p3)
     );
 
     end else begin : P3_OFF

@@ -120,7 +120,7 @@ main() {
             ./rtl/axicb_round_robin_core.sv\
             ./rtl/axicb_crossbar_top.sv\
             ./rtl/axicb_crossbar_lite_top.sv\
-            --top-module axicb_crossbar_lite_top
+            --top-module axicb_crossbar_lite_top &> lint.log
 
         set -e
     fi
