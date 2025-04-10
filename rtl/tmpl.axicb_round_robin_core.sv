@@ -98,17 +98,17 @@ module axicb_round_robin_core
 
         // 2.1 handles first the reqs which fall into the mask
         if (|masked) begin
-            if      (masked[0]) grant_c = $bits(grant_c)'(1);
+            if      (masked[0]) grant_c = {{ix}}'d1;
             {%- for gix in range(1, ix) %}
-            else if (masked[{{gix}}]) grant_c = $bits(grant_c)'({{2**gix}});
+            else if (masked[{{gix}}]) grant_c = {{ix}}'d{{2**gix}};
             {%- endfor %}
             else                grant_c = '0;
 
         // 2.2 if the mask doesn't match the reqs, uses the unmasked ones
         end else begin
-            if      (req[0]) grant_c = $bits(grant_c)'(1);
+            if      (req[0]) grant_c = {{ix}}'d1;
             {%- for gix in range(1, ix) %}
-            else if (req[{{gix}}]) grant_c = $bits(grant_c)'({{2**gix}});
+            else if (req[{{gix}}]) grant_c = {{ix}}'d{{2**gix}};
             {%- endfor %}
             else             grant_c = '0;
         end
@@ -123,9 +123,9 @@ module axicb_round_robin_core
             mask <= '0;
         end else begin
             if (en && |grant) begin
-                if      (grant[0]) mask <= $bits(mask)'({{(2**ix-1)-1}});
+                if      (grant[0]) mask <= {{ix}}'b{{ '{:b}'.format( ((2**ix-1) * (2*(0+1))) %(2**ix) ) }};
                 {%- for mix in range(1, ix-1) %}
-                else if (grant[{{mix}}]) mask <= $bits(mask)'({{((2**ix-1-1)*2*mix)%(2**ix)}});
+                else if (grant[{{mix}}]) mask <= {{ix}}'b{{ '{:b}'.format( ((2**ix-1) * (2**(mix+1)))%(2**ix)  ) }};
                 {%- endfor %}
                 else if (grant[{{ix-1}}]) mask <= '1;
             end
