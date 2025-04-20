@@ -162,6 +162,7 @@ module mst_driver
     logic                                    w_empty;
     logic                                    w_empty_r;
     logic                                    wlast_r;
+    logic                                    wvalid_r;
 
     `ifndef NODEBUG
     // Logger setup
@@ -329,7 +330,8 @@ module mst_driver
     generate
     if (AXI_SIGNALING > 0) begin
 
-        assign wvalid = wvalid_lfsr[0] & en & ~w_empty_r;
+        // assign wvalid = wvalid_lfsr[0] & en & (!w_empty_r | !(w_empty & wlast_r));
+        assign wvalid = wvalid_lfsr[0] & en & wvalid_r;
         assign wdata = (wlen==8'h0) ? wdata_w : next_wdata;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = (w_empty) ? 1'b0 : (wlen==awlen_w) ? 1'b1 : 1'b0;
@@ -341,11 +343,13 @@ module mst_driver
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
+                wvalid_r <= '0;
             end else if (srst) begin
                 wlen <= 8'h0;
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
+                wvalid_r <= '0;
             end else if (en) begin
 
                 w_empty_r <= w_empty;
@@ -354,12 +358,17 @@ module mst_driver
                 // Was empty, but now it's filled with new request
                 if (!w_empty && w_empty_r) begin
                     next_wdata <= wdata_w;
+                    wvalid_r <= '1;
                 // FIFO is filled and last request has been fully transmitted
                 end else if (!w_empty && wlen==8'h0 && wlast_r==1'b1) begin
                     next_wdata <= next_data(wdata_w);
+                    wvalid_r <= '1;
                 // Under a request processing
                 end else if (wvalid && wready) begin
                     next_wdata <= next_data(wdata);
+                    wvalid_r <= '1;
+                end else if (wvalid & wready & wlast) begin
+                    wvalid_r <= '0;
                 end
 
                 if (!w_empty) begin

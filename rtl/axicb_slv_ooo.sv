@@ -4,6 +4,12 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Manage read or write response channel ordering
+//
+//////////////////////////////////////////////////////////////////////////////
+
 module axicb_slv_ooo
 
     #(
@@ -25,16 +31,16 @@ module axicb_slv_ooo
         input  wire                           aresetn,
         input  wire                           srst,
         // Input interface from master:
-        // - address channel handshake (valid/ready)
-        // - full flag (one ID FIFOs is full)
+        // - address channel valid
+        // - ID FIFOs full flag (=1 if any FIFO is full)
         // - address channel burst length and ID
         // - slave index targeted (one-hot encoded)
         // - misrouted flag
         input  wire                           a_valid,
-        output logic                          a_ready,
+        input  wire                           a_ready,
         output logic                          a_full,
-        input  wire  [AXI_ID_W          -1:0] a_id,
         input  wire  [8                 -1:0] a_len,
+        input  wire  [AXI_ID_W          -1:0] a_id,
         input  wire  [SLV_NB            -1:0] a_ix,
         input  wire                           a_mr,
         // Grant interface:
@@ -52,6 +58,7 @@ module axicb_slv_ooo
         // Completion channel from slaves (either read or write)
         input  wire  [SLV_NB            -1:0] c_valid,
         input  wire                           c_ready,
+        input  wire  [SLV_NB            -1:0] c_last,
         input  wire  [CCH_W*SLV_NB      -1:0] c_ch
     );
 
@@ -59,8 +66,9 @@ module axicb_slv_ooo
     // Localparam & signals
     ////////////////////////////////////////////////////////////////
 
-    localparam NB_ID      = MST_OSTDREQ_NUM;
-    localparam FIFO_DEPTH = (MST_OSTDREQ_NUM < 2) ? 1 : $clog2(MST_OSTDREQ_NUM);
+    localparam OSTDREQ_NUM = (MST_OSTDREQ_NUM < 2) ? 1 : MST_OSTDREQ_NUM;
+    localparam NB_ID      = OSTDREQ_NUM;
+    localparam FIFO_DEPTH = $clog2(OSTDREQ_NUM);
     localparam FIFO_WIDTH = (RD_PATH) ? 8 + SLV_NB + 1 + AXI_ID_W : SLV_NB + 1 + AXI_ID_W;
 
     logic [           NB_ID-1:0] push;
@@ -72,9 +80,9 @@ module axicb_slv_ooo
     logic [      FIFO_WIDTH-1:0] c_select;
     logic [           NB_ID-1:0] c_reqs;
     logic [           NB_ID-1:0] id_grant;
-
-    logic [AXI_ID_W        -1:0] a_id_m;
-    logic [AXI_ID_W        -1:0] c_id_m;
+    logic [        AXI_ID_W-1:0] a_id_m;
+    logic [        AXI_ID_W-1:0] c_id_m;
+    logic                        c_empty;
 
     ////////////////////////////////////////////////////////////////
 
@@ -88,93 +96,146 @@ module axicb_slv_ooo
     end
     endgenerate
 
-    // Unmasked Address Channel ID
-    always_comb a_id_m = a_id ^ MST_ID_MASK;
-
     generate
 
-    // FIFO storing per ID the transaction attributes
-    for (genvar i=0; i<NB_ID; i++) begin: FIFOS_GEN
+    if (OSTDREQ_NUM==1) begin : NO_ID_FIFO
 
-        assign push[i] = (a_id_m == i[0+:AXI_ID_W]) ? a_valid : 1'b0;
+        assign fifo_out = '0;
+        assign id_full = '0;
+        assign id_empty = '0;
+        assign a_id_m = '0;
 
-        axicb_scfifo
-        #(
-            .ADDR_WIDTH (FIFO_DEPTH),
-            .DATA_WIDTH (FIFO_WIDTH)
-        )
-        id_fifo
-        (
-            .aclk     (aclk),
-            .aresetn  (aresetn),
-            .srst     (srst),
-            .flush    (1'b0),
-            .data_in  (fifo_in),
-            .push     (push[i]),
-            .full     (id_full[i]),
-            .data_out (fifo_out[i*FIFO_WIDTH+:FIFO_WIDTH]),
-            .pull     (pull[i]),
-            .empty    (id_empty[i])
-        );
+    end else begin : W_ID_FIFO
 
+        // Unmasked Address Channel ID
+        always_comb a_id_m = a_id ^ MST_ID_MASK;
+
+        // FIFO storing per ID the transaction attributes
+        for (genvar i=0; i<NB_ID; i++) begin: FIFOS_GEN
+
+            assign push[i] = (a_id_m == i[0+:AXI_ID_W]) ? a_valid&a_ready : 1'b0;
+
+            axicb_scfifo
+            #(
+                .BLOCK      ("REGFILE"),
+                .ADDR_WIDTH (FIFO_DEPTH),
+                .DATA_WIDTH (FIFO_WIDTH)
+            )
+            id_fifo
+            (
+                .aclk     (aclk),
+                .aresetn  (aresetn),
+                .srst     (srst),
+                .flush    (1'b0),
+                .data_in  (fifo_in),
+                .push     (push[i]),
+                .full     (id_full[i]),
+                .data_out (fifo_out[i*FIFO_WIDTH+:FIFO_WIDTH]),
+                .pull     (pull[i]),
+                .empty    (id_empty[i])
+            );
+
+        end
     end
-
     endgenerate
 
-    // Drive aready by selecting the ID FIFO full
-    // Could be replaced by ORing full vector if AID
-    // doesn't come from a FFD
-    always @ (*) begin
-        a_ready = 1'b0;
-        for (int i=0; i<NB_ID; i++)
-            if (a_id_m == i[AXI_ID_W-1:0])
-                a_ready = !id_full[i];
-    end
+    generate
+    if (OSTDREQ_NUM==1) begin : NO_CPL_PATH
 
-    always_comb a_full = |id_full;
+        assign a_full = '0;
+        assign c_reqs = '0;
+        assign c_id_m = '0;
+        assign pull = '0;
+        assign id_grant = '0;
+        assign c_select = '0;
+        assign c_empty = '0;
 
+    end else begin : CPL_PATH
 
-    // Round robin grants fairly the IDs, not the slaves, so we marry per-ID
-    // the ID FIFOs status with the slave carrying an ID-matching completion
-    always @ (*) begin
-        for (int i=0; i<NB_ID; i++) begin
-            c_reqs[i] = '0;
-            for (int j=0; j<SLV_NB; j++) begin
-                // Unmasked Address Channel ID
-                c_id_m = c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK;
-                if (c_id_m == i[0+:AXI_ID_W])
-                    c_reqs[i] = c_valid[j] & !id_empty[i];
+        always_comb a_full = |id_full;
+
+        // Round robin grants fairly the IDs, not the slaves, so we marry per-ID
+        // the ID FIFOs status with the slave carrying an ID-matching completion
+        always @ (*) begin
+
+            for (int i=0; i<NB_ID; i++) begin : CREQS
+                c_reqs[i] = '0;
+                pull[i] = '0;
+                for (int j=0; j<SLV_NB; j++) begin
+                    // Unmasked Address Channel ID
+                    c_id_m = c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK;
+                    // Select the slave if its ID is matching the FIFO index
+                    if (c_id_m == i[0+:AXI_ID_W]) begin
+                        c_reqs[i] = c_valid[j] & !id_empty[i];
+                        pull[i] = c_valid[j] & c_ready & c_last[j];
+                    end
+                end
             end
         end
+
+        axicb_round_robin_core
+        #(
+            .REQ_NB  (NB_ID)
+        )
+        cch_round_robin
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .en      (c_en),
+            .req     (c_reqs),
+            .grant   (id_grant)
+        );
+
+        // Convert one-hot encoding to decimal and extract the right 
+        // FIFO and its corresponding empty flag
+        always_comb begin
+            c_select = '0;
+            c_empty = '0;
+            for (int i=0; i<NB_ID; i++) begin
+                if (id_grant[i]) begin
+                    c_select = fifo_out[i*FIFO_WIDTH +: FIFO_WIDTH];
+                    c_empty = id_empty[i];
+                end
+            end
+        end
+
     end
-
-    axicb_round_robin_core
-    #(
-        .REQ_NB  (NB_ID)
-    )
-    cch_round_robin
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      ('1),
-        .req     (push),
-        .grant   (id_grant)
-    );
-
-    always_comb c_select = fifo_out[id_grant*FIFO_WIDTH +: FIFO_WIDTH];
+    endgenerate
 
     generate
-    if (RD_PATH) begin: OUT_RD_PATH_CPL
+
+    if (OSTDREQ_NUM==1) begin : NO_PATH_CPL
+
+        assign {c_len,c_ix,c_mr,c_id} = '0;
+        assign c_grant = c_valid;
+
+    end else if (RD_PATH) begin: RD_PATH_CPL
+
         always @ (*) begin
-            {c_len,c_ix,c_mr,c_id} = c_select;
+            if (c_empty)
+                {c_len,c_ix,c_mr,c_id} = '0;
+            else
+                {c_len,c_ix,c_mr,c_id} = c_select;
         end
-    end else begin: OUT_WR_PATH_CPL
+
+        always_comb c_grant = c_ix;
+
+    end else begin: WR_PATH_CPL
+
         always @ (*) begin
-            {c_ix,c_mr,c_id} = c_select;
+            if (c_empty)
+                {c_ix,c_mr,c_id} = '0;
+            else
+                {c_ix,c_mr,c_id} = c_select;
             c_len = '0;
         end
+
+        always_comb c_grant = c_ix;
+
     end
+
+
     endgenerate
 
 endmodule

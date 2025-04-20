@@ -25,6 +25,8 @@
 module axicb_scfifo
 
     #(
+        // Select if the FIFO is using a RAM or a register file
+        parameter BLOCK = "RAM",
         // When pull & empty, move data directly to the output
         parameter PASS_THRU = 0,
         // Address bus width, depth=2**ADDR_WIDTH
@@ -109,6 +111,10 @@ module axicb_scfifo
 
     assign wr_en = push & ~full & ~pass_thru;
 
+    generate
+
+    if (BLOCK == "RAM") begin : RAM_BLOCK
+
     axicb_scfifo_ram
     #(
         .ADDR_WIDTH (ADDR_WIDTH),
@@ -117,13 +123,36 @@ module axicb_scfifo
     )
         fifo_ram
     (
-        .aclk     (aclk                 ),
-        .wr_en    (wr_en                ),
+        .aclk     (aclk),
+        .wr_en    (wr_en),
         .addr_in  (wrptr[ADDR_WIDTH-1:0]),
-        .data_in  (data_in              ),
+        .data_in  (data_in),
         .addr_out (rdptr[ADDR_WIDTH-1:0]),
-        .data_out (data_fifo            )
+        .data_out (data_fifo)
     );
+
+    end else begin : REGFILE_BLOCK
+    
+    axicb_scfifo_regfile
+    #(
+        .ADDR_WIDTH (ADDR_WIDTH),
+        .DATA_WIDTH (DATA_WIDTH),
+        .FFD_EN     (0)
+    )
+        fifo_regfile
+    (
+        .aclk     (aclk),
+        .aresetn  (aresetn),
+        .srst     (srst),
+        .wr_en    (wr_en),
+        .addr_in  (wrptr[ADDR_WIDTH-1:0]),
+        .data_in  (data_in),
+        .addr_out (rdptr[ADDR_WIDTH-1:0]),
+        .data_out (data_fifo)
+    );
+
+    end
+    endgenerate
 
     ///////////////////////////////////////////////////////////////////////////
     // Pass-thru mode management

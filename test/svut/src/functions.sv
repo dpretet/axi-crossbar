@@ -81,21 +81,17 @@ endfunction
 function automatic integer gen_resp_for_slave(
     input integer value
 );
-
     gen_resp_for_slave[31] = value[31];
     for (int i=31; i>0; i=i-1) begin
         gen_resp_for_slave[i-1] = value[i] ^ value[i-1];
     end
-
 endfunction
 
 
 function automatic integer gen_data(
     input integer value
 );
-
     gen_data = {value[7:0],value[7:0],value[7:0],value[7:0]};
-
 endfunction
 
 
@@ -103,9 +99,7 @@ endfunction
 function automatic integer next_data(
     input integer value
 );
-
     next_data = value + {8'h1, 8'h1, 8'h1, 8'h1};
-
 endfunction
 
 

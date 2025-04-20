@@ -45,6 +45,7 @@ main() {
     # Get configuration from command line
     get_args "$@"
 
+    # Run all configurations one by one
     for config in $TC; do
         runner $config
     done

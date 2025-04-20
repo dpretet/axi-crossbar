@@ -1635,12 +1635,10 @@ module axicb_crossbar_top_testbench();
             `INFO("Full traffic has been injected by the drivers");
         end
         begin
-
             while (error===8'b0) begin
                 @(posedge aclk);
             end
-            `ASSERT((error===8'b0), "Error detected during execution");
-            $display("Errors: %x", error);
+            `ASSERT((error===8'b0), "Error(s) detected during execution");
         end
         join_any
 

@@ -84,7 +84,6 @@ module axicb_slv_switch_wr
 
     logic [SLV_NB    -1:0] slv_aw_targeted;
     logic [SLV_NB    -1:0] slv_w_targeted;
-    logic                  awready_ooo;
     logic                  aw_misrouting;
     logic                  aw_misrouting_c;
 
@@ -249,7 +248,7 @@ module axicb_slv_switch_wr
         .aresetn (aresetn),
         .srst    (srst),
         .a_valid (i_awvalid),
-        .a_ready (awready_ooo),
+        .a_ready (i_awready),
         .a_full  (bch_full),
         .a_id    (i_awch[AXI_ADDR_W+:AXI_ID_W]),
         .a_len   ('0),
@@ -259,9 +258,11 @@ module axicb_slv_switch_wr
         .c_grant (bch_grant),
         .c_mr    (bch_mr),
         .c_id    (bch_id),
+        .c_ix    (),
         .c_len   (/*unused*/),
         .c_valid (o_bvalid),
         .c_ready (i_bready),
+        .c_last  ('1),
         .c_ch    (o_bch)
     );
 

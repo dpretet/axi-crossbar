@@ -122,6 +122,28 @@ main() {
             ./rtl/axicb_crossbar_lite_top.sv\
             --top-module axicb_crossbar_lite_top &> lint.log
 
+        verilator --lint-only +1800-2017ext+sv \
+            -Wall -Wpedantic \
+            -Wno-VARHIDDEN \
+            -Wno-PINCONNECTEMPTY \
+            -Wno-TIMESCALEMOD \
+            -I./rtl\
+            ./rtl/axicb_mst_if.sv\
+            ./rtl/axicb_slv_if.sv\
+            ./rtl/axicb_slv_ooo.sv\
+            ./rtl/axicb_slv_switch.sv\
+            ./rtl/axicb_slv_switch_rd.sv\
+            ./rtl/axicb_slv_switch_wr.sv\
+            ./rtl/axicb_pipeline.sv\
+            ./rtl/axicb_mst_switch.sv\
+            ./rtl/axicb_mst_switch_rd.sv\
+            ./rtl/axicb_mst_switch_wr.sv\
+            ./rtl/axicb_switch_top.sv\
+            ./rtl/axicb_round_robin.sv\
+            ./rtl/axicb_round_robin_core.sv\
+            ./rtl/axicb_crossbar_top.sv\
+            ./rtl/axicb_crossbar_lite_top.sv\
+            --top-module axicb_crossbar_top &>> lint.log
         set -e
     fi
 

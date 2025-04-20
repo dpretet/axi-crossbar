@@ -17,7 +17,6 @@ EOF
 #------------------------------------------------------------------------------
 
 
-
 #------------------------------------------------------------------------------
 # Check the execution ran well
 #------------------------------------------------------------------------------
@@ -25,7 +24,6 @@ check_status() {
 
     echo "INFO: Check testsuite status"
 
-    # Exit if execution failed.
     # Double check the execution status by parsing the log
     ec=$(grep -c "ERROR:" simulation.log)
 
@@ -80,6 +78,7 @@ get_args() {
     done
 }
 
+
 #------------------------------------------------------------------------------
 # Read a configuration file listing parameters and values, comma separated
 #------------------------------------------------------------------------------
@@ -93,6 +92,7 @@ read_config() {
 
     echo "$DEFINES"
 }
+
 
 #------------------------------------------------------------------------------
 # Run function targeting a specific configuration
@@ -120,7 +120,7 @@ runner() {
     svutRun -t ./src/axicb_crossbar_top_testbench.sv \
             -define "$DEFINES" \
             -fst \
-            | tee simulation.log
+            | tee -a simulation.log
     ret=$?
     if [[ $ret != 0 ]]; then
         fails="$fails $config_name"

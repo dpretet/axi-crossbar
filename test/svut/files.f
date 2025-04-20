@@ -8,6 +8,7 @@
 ../../rtl/axicb_round_robin_core.sv
 ../../rtl/axicb_scfifo.sv
 ../../rtl/axicb_scfifo_ram.sv
+../../rtl/axicb_scfifo_regfile.sv
 ../../rtl/axicb_slv_if.sv
 ../../rtl/axicb_slv_switch.sv
 ../../rtl/axicb_slv_ooo.sv
