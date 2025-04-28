@@ -162,6 +162,7 @@ module mst_driver
     logic                                    w_empty;
     logic                                    w_empty_r;
     logic                                    wlast_r;
+    logic                                    wvalid_r;
 
     `ifndef NODEBUG
     // Logger setup
@@ -329,7 +330,8 @@ module mst_driver
     generate
     if (AXI_SIGNALING > 0) begin
 
-        assign wvalid = wvalid_lfsr[0] & en & ~w_empty_r;
+        // assign wvalid = wvalid_lfsr[0] & en & (!w_empty_r | !(w_empty & wlast_r));
+        assign wvalid = wvalid_lfsr[0] & en & wvalid_r & !w_empty;
         assign wdata = (wlen==8'h0) ? wdata_w : next_wdata;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = (w_empty) ? 1'b0 : (wlen==awlen_w) ? 1'b1 : 1'b0;
@@ -341,15 +343,23 @@ module mst_driver
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
+                wvalid_r <= '0;
             end else if (srst) begin
                 wlen <= 8'h0;
                 next_wdata <= {AXI_DATA_W{1'b0}};
                 w_empty_r <= 1'b0;
                 wlast_r <= 1'b0;
+                wvalid_r <= '0;
             end else if (en) begin
 
                 w_empty_r <= w_empty;
                 wlast_r <= wlast;
+
+                if (!w_empty) begin
+                    wvalid_r <= '1;
+                end else begin
+                    wvalid_r <= '0;
+                end
 
                 // Was empty, but now it's filled with new request
                 if (!w_empty && w_empty_r) begin
@@ -435,15 +445,15 @@ module mst_driver
 
         if (~aresetn) begin
 
-            wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
-            wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            wr_orreq_bresp <= {MST_OSTDREQ_NUM*2{1'b0}};
-            wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
-            wr_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
-            bresp_error <= {MST_OSTDREQ_NUM{1'b0}};
-            buser_error <= {MST_OSTDREQ_NUM{1'b0}};
-            bid_error <= {MST_OSTDREQ_NUM{1'b0}};
-            wor_error <= {MST_OSTDREQ_NUM{1'b0}};
+            wr_orreq <= '0;
+            wr_orreq_id <= '0;
+            wr_orreq_bresp <= '0;
+            wr_orreq_buser <= '0;
+            wr_orreq_mr <= '0;
+            bresp_error <= '0;
+            buser_error <= '0;
+            bid_error <= '0;
+            wor_error <= '0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
@@ -451,14 +461,15 @@ module mst_driver
 
         end else if (srst) begin
 
-            wr_orreq <= {MST_OSTDREQ_NUM{1'b0}};
-            wr_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            wr_orreq_bresp <= {MST_OSTDREQ_NUM*2{1'b0}};
-            wr_orreq_buser <= {MST_OSTDREQ_NUM*AXI_BUSER_W{1'b0}};
-            wr_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
-            bresp_error <= {MST_OSTDREQ_NUM{1'b0}};
-            buser_error <= {MST_OSTDREQ_NUM{1'b0}};
-            wor_error <= {MST_OSTDREQ_NUM{1'b0}};
+            wr_orreq <= '0;
+            wr_orreq_id <= '0;
+            wr_orreq_bresp <= '0;
+            wr_orreq_buser <= '0;
+            wr_orreq_mr <= '0;
+            bresp_error <= '0;
+            buser_error <= '0;
+            bid_error <= '0;
+            wor_error <= '0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
@@ -751,19 +762,19 @@ module mst_driver
 
         if (~aresetn) begin
 
-            rd_orreq <= {MST_OSTDREQ_NUM{1'b0}};
-            rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
-            rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
-            rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
-            rd_orreq_rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
-            rresp_error <= {MST_OSTDREQ_NUM{1'b0}};
-            ruser_error <= {MST_OSTDREQ_NUM{1'b0}};
-            ror_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rlen_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rid_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rd_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
-            rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+            rd_orreq <= '0;
+            rd_orreq_id <= '0;
+            rd_orreq_rdata <= '0;
+            rd_orreq_rresp <= '0;
+            rd_orreq_ruser <= '0;
+            rd_orreq_rlen <= '0;
+            rresp_error <= '0;
+            ruser_error <= '0;
+            ror_error <= '0;
+            rlen_error <= '0;
+            rid_error <= '0;
+            rd_orreq_mr <= '0;
+            rlen <= '0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
@@ -771,19 +782,19 @@ module mst_driver
 
         end else if (srst) begin
 
-            rd_orreq <= {MST_OSTDREQ_NUM{1'b0}};
-            rd_orreq_id <= {MST_OSTDREQ_NUM*AXI_ID_W{1'b0}};
-            rd_orreq_rdata <= {MST_OSTDREQ_NUM*AXI_DATA_W{1'b0}};
-            rd_orreq_rresp <= {MST_OSTDREQ_NUM*2{1'b0}};
-            rd_orreq_ruser <= {MST_OSTDREQ_NUM*AXI_RUSER_W{1'b0}};
-            rd_orreq_rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
-            rresp_error <= {MST_OSTDREQ_NUM{1'b0}};
-            ruser_error <= {MST_OSTDREQ_NUM{1'b0}};
-            ror_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rlen_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rid_error <= {MST_OSTDREQ_NUM{1'b0}};
-            rd_orreq_mr <= {MST_OSTDREQ_NUM{1'b0}};
-            rlen <= {MST_OSTDREQ_NUM*8{1'b0}};
+            rd_orreq <= '0;
+            rd_orreq_id <= '0;
+            rd_orreq_rdata <= '0;
+            rd_orreq_rresp <= '0;
+            rd_orreq_ruser <= '0;
+            rd_orreq_rlen <= '0;
+            rresp_error <= '0;
+            ruser_error <= '0;
+            ror_error <= '0;
+            rlen_error <= '0;
+            rid_error <= '0;
+            rd_orreq_mr <= '0;
+            rlen <= '0;
 
             for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
