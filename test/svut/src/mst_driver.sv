@@ -330,8 +330,7 @@ module mst_driver
     generate
     if (AXI_SIGNALING > 0) begin
 
-        // assign wvalid = wvalid_lfsr[0] & en & (!w_empty_r | !(w_empty & wlast_r));
-        assign wvalid = wvalid_lfsr[0] & en & wvalid_r & !w_empty;
+        assign wvalid = wvalid_lfsr[0] & en & !w_empty_r;
         assign wdata = (wlen==8'h0) ? wdata_w : next_wdata;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = (w_empty) ? 1'b0 : (wlen==awlen_w) ? 1'b1 : 1'b0;
