@@ -13,10 +13,12 @@ read -sv2012 ../../rtl/axicb_round_robin.sv
 read -sv2012 ../../rtl/axicb_round_robin_core.sv
 read -sv2012 ../../rtl/axicb_scfifo.sv
 read -sv2012 ../../rtl/axicb_scfifo_ram.sv
+read -sv2012 ../../rtl/axicb_scfifo_regfile.sv
 read -sv2012 ../../rtl/axicb_slv_if.sv
 read -sv2012 ../../rtl/axicb_slv_switch.sv
 read -sv2012 ../../rtl/axicb_slv_switch_wr.sv
 read -sv2012 ../../rtl/axicb_slv_switch_rd.sv
+read -sv2012 ../../rtl/axicb_slv_ooo.sv
 read -sv2012 ../../rtl/axicb_switch_top.sv
 
 # synthesize the core
