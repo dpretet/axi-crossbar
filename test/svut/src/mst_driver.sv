@@ -111,6 +111,8 @@ module mst_driver
         input  logic [AXI_RUSER_W   -1:0] ruser
     );
 
+    localparam OSTDREQ_NUM = (MST_OSTDREQ_NUM == 0) ? 1 : MST_OSTDREQ_NUM;
+
     logic [32                          -1:0] awaddr_ramp;
     logic [32                          -1:0] araddr_ramp;
     logic [AXI_ID_W                    -1:0] awid_cnt;
@@ -128,30 +130,30 @@ module mst_driver
     logic [32                          -1:0] arvalid_lfsr;
     logic [32                          -1:0] bready_lfsr;
     logic [32                          -1:0] rready_lfsr;
-    logic [MST_OSTDREQ_NUM             -1:0] wr_orreq;
-    logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] wr_orreq_id;
-    logic [MST_OSTDREQ_NUM*2           -1:0] wr_orreq_bresp;
-    logic [MST_OSTDREQ_NUM*AXI_BUSER_W -1:0] wr_orreq_buser;
-    logic [MST_OSTDREQ_NUM             -1:0] rd_orreq;
-    logic [MST_OSTDREQ_NUM*AXI_ID_W    -1:0] rd_orreq_id;
-    logic [MST_OSTDREQ_NUM*AXI_DATA_W  -1:0] rd_orreq_rdata;
-    logic [MST_OSTDREQ_NUM*2           -1:0] rd_orreq_rresp;
-    logic [MST_OSTDREQ_NUM*AXI_RUSER_W -1:0] rd_orreq_ruser;
-    logic [MST_OSTDREQ_NUM*8           -1:0] rd_orreq_rlen;
-    logic [MST_OSTDREQ_NUM*8           -1:0] rlen;
-    logic [MST_OSTDREQ_NUM             -1:0] bresp_error;
-    logic [MST_OSTDREQ_NUM             -1:0] buser_error;
-    logic [MST_OSTDREQ_NUM             -1:0] rresp_error;
-    logic [MST_OSTDREQ_NUM             -1:0] ruser_error;
-    logic [MST_OSTDREQ_NUM             -1:0] wor_error;
-    logic [MST_OSTDREQ_NUM             -1:0] ror_error;
-    logic [MST_OSTDREQ_NUM             -1:0] rlen_error;
-    logic [MST_OSTDREQ_NUM             -1:0] rid_error;
-    logic [MST_OSTDREQ_NUM             -1:0] bid_error;
-    logic [MST_OSTDREQ_NUM             -1:0] wr_orreq_mr;
-    logic [MST_OSTDREQ_NUM             -1:0] rd_orreq_mr;
-    integer                                  wr_orreq_timeout[MST_OSTDREQ_NUM-1:0];
-    integer                                  rd_orreq_timeout[MST_OSTDREQ_NUM-1:0];
+    logic [OSTDREQ_NUM                 -1:0] wr_orreq;
+    logic [OSTDREQ_NUM*AXI_ID_W        -1:0] wr_orreq_id;
+    logic [OSTDREQ_NUM*2               -1:0] wr_orreq_bresp;
+    logic [OSTDREQ_NUM*AXI_BUSER_W     -1:0] wr_orreq_buser;
+    logic [OSTDREQ_NUM                 -1:0] rd_orreq;
+    logic [OSTDREQ_NUM*AXI_ID_W        -1:0] rd_orreq_id;
+    logic [OSTDREQ_NUM*AXI_DATA_W      -1:0] rd_orreq_rdata;
+    logic [OSTDREQ_NUM*2               -1:0] rd_orreq_rresp;
+    logic [OSTDREQ_NUM*AXI_RUSER_W     -1:0] rd_orreq_ruser;
+    logic [OSTDREQ_NUM*8               -1:0] rd_orreq_rlen;
+    logic [OSTDREQ_NUM*8               -1:0] rlen;
+    logic [OSTDREQ_NUM                 -1:0] bresp_error;
+    logic [OSTDREQ_NUM                 -1:0] buser_error;
+    logic [OSTDREQ_NUM                 -1:0] rresp_error;
+    logic [OSTDREQ_NUM                 -1:0] ruser_error;
+    logic [OSTDREQ_NUM                 -1:0] wor_error;
+    logic [OSTDREQ_NUM                 -1:0] ror_error;
+    logic [OSTDREQ_NUM                 -1:0] rlen_error;
+    logic [OSTDREQ_NUM                 -1:0] rid_error;
+    logic [OSTDREQ_NUM                 -1:0] bid_error;
+    logic [OSTDREQ_NUM                 -1:0] wr_orreq_mr;
+    logic [OSTDREQ_NUM                 -1:0] rd_orreq_mr;
+    integer                                  wr_orreq_timeout[OSTDREQ_NUM-1:0];
+    integer                                  rd_orreq_timeout[OSTDREQ_NUM-1:0];
     integer                                  awtimer;
     integer                                  wtimer;
     integer                                  artimer;
@@ -258,7 +260,7 @@ module mst_driver
 
             // ID counter
             if (awvalid && awready) begin
-                if (awid_cnt==(MST_OSTDREQ_NUM-1)) awid_cnt <= 'h0;
+                if (awid_cnt==(OSTDREQ_NUM-1)) awid_cnt <= 'h0;
                 else awid_cnt <= awid_cnt + 1;
             end
         end
@@ -330,8 +332,7 @@ module mst_driver
     generate
     if (AXI_SIGNALING > 0) begin
 
-        // assign wvalid = wvalid_lfsr[0] & en & (!w_empty_r | !(w_empty & wlast_r));
-        assign wvalid = wvalid_lfsr[0] & en & wvalid_r;
+        assign wvalid = wvalid_lfsr[0] & en & wvalid_r & !w_empty;
         assign wdata = (wlen==8'h0) ? wdata_w : next_wdata;
         assign wstrb = {AXI_DATA_W/8{1'b1}};
         assign wlast = (w_empty) ? 1'b0 : (wlen==awlen_w) ? 1'b1 : 1'b0;
@@ -354,6 +355,12 @@ module mst_driver
 
                 w_empty_r <= w_empty;
                 wlast_r <= wlast;
+
+                if (!w_empty) begin
+                    wvalid_r <= '1;
+                end else begin
+                    wvalid_r <= '0;
+                end
 
                 // Was empty, but now it's filled with new request
                 if (!w_empty && w_empty_r) begin
@@ -454,7 +461,7 @@ module mst_driver
             bid_error <= '0;
             wor_error <= '0;
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
             end
 
@@ -470,13 +477,13 @@ module mst_driver
             bid_error <= '0;
             wor_error <= '0;
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
                 wr_orreq_timeout[i] <= 0;
             end
 
         end else if (en) begin
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
 
                 if (bvalid && bready) begin
                     if ((bid&MST_ID) != MST_ID) begin
@@ -635,7 +642,7 @@ module mst_driver
 
             // ID counter
             if (arvalid && arready) begin
-                if (arid_cnt==(MST_OSTDREQ_NUM-1)) arid_cnt <= 'h0;
+                if (arid_cnt==(OSTDREQ_NUM-1)) arid_cnt <= 'h0;
                 else arid_cnt <= arid_cnt + 1;
             end
         end
@@ -775,7 +782,7 @@ module mst_driver
             rd_orreq_mr <= '0;
             rlen <= '0;
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
 
@@ -795,13 +802,13 @@ module mst_driver
             rd_orreq_mr <= '0;
             rlen <= '0;
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
                 rd_orreq_timeout[i] <= 0;
             end
 
         end else if (en) begin
 
-            for (int i=0;i<MST_OSTDREQ_NUM;i++) begin
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
 
                 // Store the OR request on address channel handshake
                 if (arvalid && arready && i==arid_cnt) begin
