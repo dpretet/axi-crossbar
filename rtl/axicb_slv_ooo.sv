@@ -81,7 +81,6 @@ module axicb_slv_ooo
     logic [           NB_ID-1:0] c_reqs;
     logic [           NB_ID-1:0] id_grant;
     logic [        AXI_ID_W-1:0] a_id_m;
-    logic [        AXI_ID_W-1:0] c_id_m;
     logic                        c_empty;
 
     ////////////////////////////////////////////////////////////////
@@ -113,7 +112,7 @@ module axicb_slv_ooo
         // FIFO storing per ID the transaction attributes
         for (genvar i=0; i<NB_ID; i++) begin: FIFOS_GEN
 
-            assign push[i] = (a_id_m == i[0+:AXI_ID_W]) ? a_valid&a_ready : 1'b0;
+            assign push[i] = (a_id_m == i[0+:AXI_ID_W]) ? a_valid & a_ready : 1'b0;
 
             axicb_scfifo
             #(
@@ -144,7 +143,6 @@ module axicb_slv_ooo
 
         assign a_full = '0;
         assign c_reqs = '0;
-        assign c_id_m = '0;
         assign pull = '0;
         assign id_grant = '0;
         assign c_select = '0;
@@ -160,18 +158,18 @@ module axicb_slv_ooo
 
             for (int i=0; i<NB_ID; i++) begin : CREQS
                 c_reqs[i] = '0;
-                pull[i] = '0;
                 for (int j=0; j<SLV_NB; j++) begin
-                    // Unmasked Address Channel ID
-                    c_id_m = c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK;
-                    // Select the slave if its ID is matching the FIFO index
-                    if (c_id_m == i[0+:AXI_ID_W]) begin
+                    // Unmasked Address Channel ID and select the slave if its ID is 
+                    // matching the FIFO index
+                    if ((c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK) == i[0+:AXI_ID_W]) begin
                         c_reqs[i] = c_valid[j] & !id_empty[i];
-                        pull[i] = c_valid[j] & c_ready & c_last[j];
                     end
                 end
             end
         end
+
+        // Pull the corresponding ID FIFO
+        always_comb pull = (|(c_valid & c_last) & c_ready) ? id_grant : '0;
 
         axicb_round_robin_core
         #(
@@ -187,8 +185,7 @@ module axicb_slv_ooo
             .grant   (id_grant)
         );
 
-        // Convert one-hot encoding to decimal and extract the right 
-        // FIFO and its corresponding empty flag
+        // Multiplexer to extract the right // FIFO and its corresponding empty flag
         always_comb begin
             c_select = '0;
             c_empty = '0;

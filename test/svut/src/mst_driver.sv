@@ -152,8 +152,8 @@ module mst_driver
     logic [OSTDREQ_NUM                 -1:0] bid_error;
     logic [OSTDREQ_NUM                 -1:0] wr_orreq_mr;
     logic [OSTDREQ_NUM                 -1:0] rd_orreq_mr;
-    integer                                  wr_orreq_timeout[OSTDREQ_NUM-1:0];
-    integer                                  rd_orreq_timeout[OSTDREQ_NUM-1:0];
+    logic [OSTDREQ_NUM*32              -1:0] wr_orreq_timeout;
+    logic [OSTDREQ_NUM*32              -1:0] rd_orreq_timeout;
     integer                                  awtimer;
     integer                                  wtimer;
     integer                                  artimer;
@@ -305,7 +305,7 @@ module mst_driver
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     generate
-    if (AXI_SIGNALING>0) assign awlen = {3'h0, awaddr[4:0]};
+    if (AXI_SIGNALING>0) assign awlen = {5'h0, awaddr[2:0]};
     else assign awlen = 8'b0;
     endgenerate
 
@@ -460,10 +460,7 @@ module mst_driver
             buser_error <= '0;
             bid_error <= '0;
             wor_error <= '0;
-
-            for (int i=0;i<OSTDREQ_NUM;i++) begin
-                wr_orreq_timeout[i] <= 0;
-            end
+            wr_orreq_timeout <= '0;
 
         end else if (srst) begin
 
@@ -476,10 +473,7 @@ module mst_driver
             buser_error <= '0;
             bid_error <= '0;
             wor_error <= '0;
-
-            for (int i=0;i<OSTDREQ_NUM;i++) begin
-                wr_orreq_timeout[i] <= 0;
-            end
+            wr_orreq_timeout <= '0;
 
         end else if (en) begin
 
@@ -547,18 +541,18 @@ module mst_driver
 
                 // Manage OR timeout
                 if (wr_orreq[i]) begin
-                    if (wr_orreq_timeout[i]==TIMEOUT) begin
+                    if (wr_orreq_timeout[i*32+:32]==TIMEOUT) begin
                         `ifndef NODEBUG
                         $sformat(msg, "Write OR %0x reached timeout (MST_ID: %0x)", i, MST_ID);
                         log.error(msg);
                         `endif
                         wor_error[i] <= 1'b1;
                     end
-                    if (wr_orreq_timeout[i]<=TIMEOUT) begin
-                        wr_orreq_timeout[i] <= wr_orreq_timeout[i] + 1;
+                    if (wr_orreq_timeout[i*32+:32]<=TIMEOUT) begin
+                        wr_orreq_timeout[i*32+:32] <= wr_orreq_timeout[i*32+:32] + 1;
                     end
                 end else begin
-                    wr_orreq_timeout[i] <= 0;
+                    wr_orreq_timeout[i*32+:32] <= '0;
                     wor_error[i] <= 1'b0;
                 end
             end
@@ -688,7 +682,7 @@ module mst_driver
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
     generate
-    if (AXI_SIGNALING>0) assign arlen = {3'h0, araddr[4:0]};
+    if (AXI_SIGNALING>0) assign arlen = {5'h0, araddr[2:0]};
     else assign arlen = 8'b0;
     endgenerate
 
