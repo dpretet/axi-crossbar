@@ -54,7 +54,6 @@ module axicb_slv_ooo
         output logic                          c_mr,
         output logic [8                 -1:0] c_len,
         output logic [AXI_ID_W          -1:0] c_id,
-        output logic [SLV_NB            -1:0] c_ix,
         // Completion channel from slaves (either read or write)
         input  wire  [SLV_NB            -1:0] c_valid,
         input  wire                           c_ready,
@@ -141,7 +140,6 @@ module axicb_slv_ooo
     generate
     if (OSTDREQ_NUM==1) begin : NO_CPL_PATH
 
-        assign a_full = '0;
         assign c_reqs = '0;
         assign pull = '0;
         assign id_grant = '0;
@@ -204,31 +202,80 @@ module axicb_slv_ooo
 
     if (OSTDREQ_NUM==1) begin : NO_PATH_CPL
 
-        assign {c_len,c_ix,c_mr,c_id} = '0;
+        localparam PIPE_W = (RD_PATH) ? 1 + 8 + AXI_ID_W : 1+ AXI_ID_W;
+
+        logic [PIPE_W-1:0] pipe_in;
+        logic [PIPE_W-1:0] pipe_out;
+        logic pipe_aready;
+        logic pipe_cready;
+
+        assign pipe_in = (RD_PATH) ? {a_id, a_len, a_mr} : {a_id, a_mr};
+        assign a_full = !pipe_aready;
+
+        axicb_pipeline 
+        #(
+            .DATA_BUS_W  (PIPE_W),
+            .NB_PIPELINE (1)
+        )
+        rd_cpl_pipe_no_or 
+        (
+            .aclk    (aclk),
+            .aresetn (aresetn),
+            .srst    (srst),
+            .i_valid (a_valid),
+            .i_ready (pipe_aready),
+            .i_data  (pipe_in),
+            .o_valid (pipe_cready),
+            .o_ready (c_ready),
+            .o_data  (pipe_out)
+        );
+
         assign c_grant = c_valid;
+
+        always @ (*) begin
+
+            if (RD_PATH) begin
+                if (pipe_cready) begin
+                    c_id = pipe_out[9+:AXI_ID_W];
+                    c_len = pipe_out[1+:8];
+                    c_mr = pipe_out[0];
+                end else begin
+                    c_id = '0;
+                    c_len = '0;
+                    c_mr = '0;
+                end
+
+            end else begin
+                if (pipe_cready) begin
+                    c_id = pipe_out[1+:AXI_ID_W];
+                    c_mr = pipe_out[0];
+                end else begin
+                    c_id = '0;
+                    c_mr = '0;
+                end
+                c_len = '0;
+            end
+
+        end
 
     end else if (RD_PATH) begin: RD_PATH_CPL
 
         always @ (*) begin
             if (c_empty)
-                {c_len,c_ix,c_mr,c_id} = '0;
+                {c_len,c_grant,c_mr,c_id} = '0;
             else
-                {c_len,c_ix,c_mr,c_id} = c_select;
+                {c_len,c_grant,c_mr,c_id} = c_select;
         end
-
-        always_comb c_grant = c_ix;
 
     end else begin: WR_PATH_CPL
 
         always @ (*) begin
             if (c_empty)
-                {c_ix,c_mr,c_id} = '0;
+                {c_grant,c_mr,c_id} = '0;
             else
-                {c_ix,c_mr,c_id} = c_select;
+                {c_grant,c_mr,c_id} = c_select;
             c_len = '0;
         end
-
-        always_comb c_grant = c_ix;
 
     end
 

@@ -258,7 +258,6 @@ module axicb_slv_switch_wr
         .c_grant (bch_grant),
         .c_mr    (bch_mr),
         .c_id    (bch_id),
-        .c_ix    (/*unused*/),
         .c_len   (/*unused*/),
         .c_valid (o_bvalid),
         .c_ready (i_bready),
