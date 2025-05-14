@@ -81,6 +81,7 @@ module axicb_slv_ooo
     logic [           NB_ID-1:0] id_grant;
     logic [        AXI_ID_W-1:0] a_id_m;
     logic                        c_empty;
+    logic [           NB_ID-1:0] mr_reqs;
 
     ////////////////////////////////////////////////////////////////
 
@@ -133,6 +134,8 @@ module axicb_slv_ooo
                 .empty    (id_empty[i])
             );
 
+            assign mr_reqs[i] = (id_empty[i]) ? 1'b0 : fifo_out[i*FIFO_WIDTH+AXI_ID_W];
+
         end
     end
     endgenerate
@@ -154,20 +157,28 @@ module axicb_slv_ooo
         // the ID FIFOs status with the slave carrying an ID-matching completion
         always @ (*) begin
 
-            for (int i=0; i<NB_ID; i++) begin : CREQS
-                c_reqs[i] = '0;
-                for (int j=0; j<SLV_NB; j++) begin
-                    // Unmasked Address Channel ID and select the slave if its ID is 
-                    // matching the FIFO index
-                    if ((c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK) == i[0+:AXI_ID_W]) begin
-                        c_reqs[i] = c_valid[j] & !id_empty[i];
+            // Serves misrouted IDs first
+            if (|mr_reqs) begin
+                c_reqs = mr_reqs;
+
+            // Then serves completion channels
+            end else begin
+
+                for (int i=0; i<NB_ID; i++) begin : CREQS
+                    c_reqs[i] = '0;
+                    for (int j=0; j<SLV_NB; j++) begin
+                        // Unmasked Address Channel ID and select the slave if its ID is 
+                        // matching the FIFO index
+                        if ((c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK) == i[0+:AXI_ID_W]) begin
+                            c_reqs[i] = c_valid[j] & !id_empty[i];
+                        end
                     end
                 end
             end
         end
 
         // Pull the corresponding ID FIFO
-        always_comb pull = (|(c_valid & c_last) & c_ready) ? id_grant : '0;
+        always_comb pull = ( |( (c_valid|mr_reqs) & c_last) & c_ready) ? id_grant : '0;
 
         axicb_round_robin_core
         #(
@@ -202,14 +213,15 @@ module axicb_slv_ooo
 
     if (OSTDREQ_NUM==1) begin : NO_PATH_CPL
 
-        localparam PIPE_W = (RD_PATH) ? 1 + 8 + AXI_ID_W : 1+ AXI_ID_W;
+        localparam PIPE_W = (RD_PATH) ? 1 + AXI_ID_W + 8 : 
+                                        1 + AXI_ID_W;
 
         logic [PIPE_W-1:0] pipe_in;
         logic [PIPE_W-1:0] pipe_out;
-        logic pipe_aready;
-        logic pipe_cready;
+        logic              pipe_aready;
+        logic              pipe_valid;
 
-        assign pipe_in = (RD_PATH) ? {a_id, a_len, a_mr} : {a_id, a_mr};
+        assign pipe_in = (RD_PATH) ? {a_len, a_id, a_mr} : {a_id, a_mr};
         assign a_full = !pipe_aready;
 
         axicb_pipeline 
@@ -222,10 +234,10 @@ module axicb_slv_ooo
             .aclk    (aclk),
             .aresetn (aresetn),
             .srst    (srst),
-            .i_valid (a_valid),
+            .i_valid (a_valid & a_ready),
             .i_ready (pipe_aready),
             .i_data  (pipe_in),
-            .o_valid (pipe_cready),
+            .o_valid (pipe_valid),
             .o_ready (c_ready),
             .o_data  (pipe_out)
         );
@@ -235,25 +247,18 @@ module axicb_slv_ooo
         always @ (*) begin
 
             if (RD_PATH) begin
-                if (pipe_cready) begin
-                    c_id = pipe_out[9+:AXI_ID_W];
-                    c_len = pipe_out[1+:8];
-                    c_mr = pipe_out[0];
-                end else begin
-                    c_id = '0;
+                if (pipe_valid)
+                    c_len = pipe_out[(1+AXI_ID_W)+:8];
+                else
                     c_len = '0;
-                    c_mr = '0;
-                end
+            end
 
+            if (pipe_valid) begin
+                c_id = pipe_out[1+:AXI_ID_W];
+                c_mr = pipe_out[0];
             end else begin
-                if (pipe_cready) begin
-                    c_id = pipe_out[1+:AXI_ID_W];
-                    c_mr = pipe_out[0];
-                end else begin
-                    c_id = '0;
-                    c_mr = '0;
-                end
-                c_len = '0;
+                c_id = '0;
+                c_mr = '0;
             end
 
         end
