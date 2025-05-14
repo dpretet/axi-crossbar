@@ -1680,7 +1680,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Single Master Driver vs a Single Slave Monitor")
 
         addr_min = 0;
-        addr_max = 4095;
+        addr_max = SLV0_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h1;
@@ -1691,7 +1691,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Single Master Driver vs Two Slave Monitors")
 
         addr_min = 0;
-        addr_max = 8191;
+        addr_max = SLV1_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h1;
@@ -1702,7 +1702,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Two Master Drivers vs a Single Slave Monitor")
 
         addr_min = 0;
-        addr_max = 4095;
+        addr_max = SLV0_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h3;
@@ -1713,7 +1713,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Three Master Drivers vs a Single Slave Monitor")
 
         addr_min = 0;
-        addr_max = 4095;
+        addr_max = SLV0_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h7;
@@ -1724,7 +1724,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Four Master Drivers vs a Single Slave Monitor")
 
         addr_min = 0;
-        addr_max = 4095;
+        addr_max = SLV0_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'hF;
@@ -1735,7 +1735,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Two Master Drivers vs Two Slave Monitors")
 
         addr_min = 0;
-        addr_max = 8191;
+        addr_max = SLV1_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h3;
@@ -1746,7 +1746,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Three Master Drivers vs Two Slave Monitors")
 
         addr_min = 0;
-        addr_max = 8191;
+        addr_max = SLV1_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'h7;
@@ -1757,7 +1757,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Four Master Drivers vs Two Slave Monitors")
 
         addr_min = 0;
-        addr_max = 8191;
+        addr_max = SLV1_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'hF;
@@ -1768,7 +1768,7 @@ module axicb_crossbar_top_testbench();
     `UNIT_TEST("Four Master Drivers vs Four Slave Monitors")
 
         addr_min = 0;
-        addr_max = 16383;
+        addr_max = SLV3_END_ADDR;
 
         @(posedge aclk);
         mst_en = 4'hF;

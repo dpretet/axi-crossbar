@@ -1,22 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
-[*] Tue May 13 19:49:45 2025
+[*] Wed May 14 19:19:36 2025
 [*]
 [dumpfile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.fst"
-[dumpfile_mtime] "Tue May 13 19:38:58 2025"
-[dumpfile_size] 399629
+[dumpfile_mtime] "Wed May 14 18:39:23 2025"
+[dumpfile_size] 81203529
 [savefile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.gtkw"
-[timestart] 2703200
+[timestart] 0
 [size] 1440 900
 [pos] -1 -1
-*-15.546410 2802000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-28.181051 1300922000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] axicb_crossbar_top_testbench.
 [treeopen] axicb_crossbar_top_testbench.dut.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_wr.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_wr.bresp_ooo.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_wr.bresp_ooo.NO_PATH_CPL.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.
@@ -36,8 +33,9 @@ axicb_crossbar_top_testbench.aresetn
 @22
 axicb_crossbar_top_testbench.error[7:0]
 axicb_crossbar_top_testbench.mst_en[3:0]
-@420
+@421
 axicb_crossbar_top_testbench.nb_reqs
+@420
 axicb_crossbar_top_testbench.timeout
 @200
 -
@@ -482,7 +480,7 @@ axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switc
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.NB_ID
 @22
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.MST_ID_MASK
-@421
+@420
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.OSTDREQ_NUM
 @200
 -
@@ -527,14 +525,18 @@ axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switc
 -
 @22
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.mr_reqs[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_reqs[7:0]
 @200
 -
 @22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_ch[39:0]
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_valid[3:0]
 @28
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_ready
 @22
 axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_last[3:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.mr_last
 @200
 -
 @28
