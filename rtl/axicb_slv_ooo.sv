@@ -58,7 +58,10 @@ module axicb_slv_ooo
         input  wire  [SLV_NB            -1:0] c_valid,
         input  wire                           c_ready,
         input  wire  [SLV_NB            -1:0] c_last,
-        input  wire  [CCH_W*SLV_NB      -1:0] c_ch
+        input  wire  [CCH_W*SLV_NB      -1:0] c_ch,
+        // Last flag recreated when misrouted completion occurs
+        // Avoid combinatorial loop
+        input  wire                           mr_last
     );
 
     ////////////////////////////////////////////////////////////////
@@ -85,28 +88,36 @@ module axicb_slv_ooo
 
     ////////////////////////////////////////////////////////////////
 
-    // FIFO Input path: for read, we store along the slave index
-    // and misroute flag the ALEN, not necessary for write completion
-    generate
-    if (RD_PATH) begin : IN_RD_PATH_FIFO
-        always_comb fifo_in = {a_len,a_ix,a_mr,a_id};
-    end else begin: IN_WR_PATH_FIFO
-        always_comb fifo_in = {a_ix,a_mr,a_id};
-    end
-    endgenerate
+
+    //--------------------------------------------------------------- 
+    // First stage grabs the read or write address channel and stores
+    // the transaction attributes to a FIFO per ID target. When a 
+    // single OR is supported by a master, it's not necessary and so
+    // this stage is not existing
+    //--------------------------------------------------------------- 
 
     generate
 
     if (OSTDREQ_NUM==1) begin : NO_ID_FIFO
 
+        assign fifo_in = '0;
         assign fifo_out = '0;
         assign id_full = '0;
         assign id_empty = '0;
         assign a_id_m = '0;
+        assign mr_reqs = '0;
 
     end else begin : W_ID_FIFO
 
-        // Unmasked Address Channel ID
+        // FIFO Input path: for read, we store along the slave index
+        // and misroute flag the ALEN, not necessary for write completion
+        if (RD_PATH) begin : IN_RD_PATH_FIFO
+            always_comb fifo_in = {a_len,a_ix,a_mr,a_id};
+        end else begin: IN_WR_PATH_FIFO
+            always_comb fifo_in = {a_ix,a_mr,a_id};
+        end
+
+        // Unmasked Address Channel ID to target the right FIFO
         always_comb a_id_m = a_id ^ MST_ID_MASK;
 
         // FIFO storing per ID the transaction attributes
@@ -134,12 +145,28 @@ module axicb_slv_ooo
                 .empty    (id_empty[i])
             );
 
+            // Indicates when an ID FIFO is ready to pass a completion for
+            // a misrouted transaction. Used later on arbitration stage
             assign mr_reqs[i] = (id_empty[i]) ? 1'b0 : fifo_out[i*FIFO_WIDTH+AXI_ID_W];
 
         end
+
+        // Back pressure to address channel, block any further transaction
+        // as soon an ID FIFO is full.
+        // TODO: could be optimized but the loop back to the initiatior
+        //       from the FIFO could be unavoidable.
+        always_comb a_full = |id_full;
+
     end
     endgenerate
+    //-------------------------------------------------------------------------
 
+
+    //-------------------------------------------------------------------------
+    // Second stage, doing the arbitration between the completion channels from
+    // the slaves. We grant the completion channel when they match the index
+    // an ID FIFO indicates
+    //-------------------------------------------------------------------------
     generate
     if (OSTDREQ_NUM==1) begin : NO_CPL_PATH
 
@@ -150,8 +177,6 @@ module axicb_slv_ooo
         assign c_empty = '0;
 
     end else begin : CPL_PATH
-
-        always_comb a_full = |id_full;
 
         // Round robin grants fairly the IDs, not the slaves, so we marry per-ID
         // the ID FIFOs status with the slave carrying an ID-matching completion
@@ -178,7 +203,23 @@ module axicb_slv_ooo
         end
 
         // Pull the corresponding ID FIFO
-        always_comb pull = ( |( (c_valid|mr_reqs) & c_last) & c_ready) ? id_grant : '0;
+        always @ (*) begin
+            // If we are managing a misrouted completion
+            if (|mr_reqs) begin
+                if (|mr_reqs & c_ready & mr_last)
+                    pull = id_grant;
+                else 
+                    pull = '0;
+            // Else normal completion channel managed
+            end else begin
+                if (|(c_valid & c_last) & c_ready)
+                    pull = id_grant;
+                else 
+                    pull = '0;
+            end
+        end
+
+        // always_comb pull = ((|(c_valid & c_last) | |mr_reqs) & c_ready) ? id_grant : '0;
 
         axicb_round_robin_core
         #(
@@ -208,9 +249,18 @@ module axicb_slv_ooo
 
     end
     endgenerate
+    //--------------------------------------------------------------------------
 
+
+    //--------------------------------------------------------------------------
+    // Third stage, we drive the completion attribute back to the slave switch
+    // When only a single OR is supported, just put here a pipeline to store the
+    // transaction attribute and drive back to the switch once the initiator
+    // is ready to accept a completion
+    //--------------------------------------------------------------------------
     generate
 
+    // Single oustanding request management
     if (OSTDREQ_NUM==1) begin : NO_PATH_CPL
 
         localparam PIPE_W = (RD_PATH) ? 1 + AXI_ID_W + 8 : 
@@ -224,6 +274,7 @@ module axicb_slv_ooo
         assign pipe_in = (RD_PATH) ? {a_len, a_id, a_mr} : {a_id, a_mr};
         assign a_full = !pipe_aready;
 
+        // Pass the tansaction attributes to a pipeline to store them
         axicb_pipeline 
         #(
             .DATA_BUS_W  (PIPE_W),
@@ -242,17 +293,19 @@ module axicb_slv_ooo
             .o_data  (pipe_out)
         );
 
+        // Granted completion is just the one active
         assign c_grant = c_valid;
 
         always @ (*) begin
-
+            // Read completion path also comprise the ALEN
             if (RD_PATH) begin
                 if (pipe_valid)
                     c_len = pipe_out[(1+AXI_ID_W)+:8];
                 else
                     c_len = '0;
             end
-
+            // For read and write completion path
+            // pass back the ID and misrouteed flag
             if (pipe_valid) begin
                 c_id = pipe_out[1+:AXI_ID_W];
                 c_mr = pipe_out[0];
@@ -263,6 +316,7 @@ module axicb_slv_ooo
 
         end
 
+    // OR > 1, Read completion path 
     end else if (RD_PATH) begin: RD_PATH_CPL
 
         always @ (*) begin
@@ -272,6 +326,7 @@ module axicb_slv_ooo
                 {c_len,c_grant,c_mr,c_id} = c_select;
         end
 
+    // OR > 1, Write completion path (no ALEN)
     end else begin: WR_PATH_CPL
 
         always @ (*) begin

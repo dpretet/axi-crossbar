@@ -262,7 +262,8 @@ module axicb_slv_switch_wr
         .c_valid (o_bvalid),
         .c_ready (i_bready),
         .c_last  ('1),
-        .c_ch    (o_bch)
+        .c_ch    (o_bch),
+        .mr_last (1'b1)
     );
 
     // Control of the OoO ID management stage
