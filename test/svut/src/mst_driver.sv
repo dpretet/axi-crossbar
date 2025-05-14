@@ -55,6 +55,8 @@ module mst_driver
         parameter SLV3_START_ADDR = 0,
         parameter SLV3_END_ADDR = 4095,
 
+        // Maximum number of bits of ALEN to generate a value
+        parameter MAX_ALEN_BITS = 3,
         // LFSR key init
         parameter KEY = 'hFFFFFFFF
     )(
@@ -305,7 +307,7 @@ module mst_driver
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
     generate
-    if (AXI_SIGNALING>0) assign awlen = {5'h0, awaddr[2:0]};
+    if (AXI_SIGNALING>0) assign awlen = awaddr[MAX_ALEN_BITS-1:0];
     else assign awlen = 8'b0;
     endgenerate
 
@@ -682,7 +684,7 @@ module mst_driver
     assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
 
     generate
-    if (AXI_SIGNALING>0) assign arlen = {5'h0, araddr[2:0]};
+    if (AXI_SIGNALING>0) assign arlen = araddr[MAX_ALEN_BITS-1:0];
     else assign arlen = 8'b0;
     endgenerate
 

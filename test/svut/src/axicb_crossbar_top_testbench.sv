@@ -83,6 +83,7 @@ module axicb_crossbar_top_testbench();
     parameter SLV3_OSTDREQ_SIZE = `SLV3_OSTDREQ_SIZE;
 
     parameter CHECK_REPORT = 1;
+    parameter MAX_ALEN_BITS = 3;
 
     logic                      aclk;
     logic                      aresetn;
@@ -953,6 +954,7 @@ module axicb_crossbar_top_testbench();
     .SLV3_END_ADDR   (SLV3_END_ADDR),
     .CHECK_REPORT    (CHECK_REPORT),
     .TIMEOUT         (`OR_TIMEOUT),
+    .MAX_ALEN_BITS   (MAX_ALEN_BITS),
     .KEY             ('hCCCCCCCC)
     )
     mst_driver0
@@ -1034,6 +1036,7 @@ module axicb_crossbar_top_testbench();
     .SLV3_START_ADDR (SLV3_START_ADDR),
     .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
+    .MAX_ALEN_BITS   (MAX_ALEN_BITS),
     .KEY             ('hEEEEEEEE)
     )
     mst_driver1
@@ -1115,6 +1118,7 @@ module axicb_crossbar_top_testbench();
     .SLV3_START_ADDR (SLV3_START_ADDR),
     .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
+    .MAX_ALEN_BITS   (MAX_ALEN_BITS),
     .KEY             ('hAAAAAAAA)
     )
     mst_driver2
@@ -1196,6 +1200,7 @@ module axicb_crossbar_top_testbench();
     .SLV3_START_ADDR (SLV3_START_ADDR),
     .SLV3_END_ADDR   (SLV3_END_ADDR),
     .TIMEOUT         (`OR_TIMEOUT),
+    .MAX_ALEN_BITS   (MAX_ALEN_BITS),
     .KEY             ('h55555555)
     )
     mst_driver3

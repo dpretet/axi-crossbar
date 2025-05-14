@@ -148,15 +148,15 @@ module axicb_slv_switch_wr
 
     endgenerate
 
-    assign o_awvalid[0] = (slv_aw_targeted[0]) ? i_awvalid & !bch_full : 1'b0;
-    assign o_awvalid[1] = (slv_aw_targeted[1]) ? i_awvalid & !bch_full : 1'b0;
-    assign o_awvalid[2] = (slv_aw_targeted[2]) ? i_awvalid & !bch_full : 1'b0;
-    assign o_awvalid[3] = (slv_aw_targeted[3]) ? i_awvalid & !bch_full : 1'b0;
+    assign o_awvalid[0] = (slv_aw_targeted[0]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
+    assign o_awvalid[1] = (slv_aw_targeted[1]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
+    assign o_awvalid[2] = (slv_aw_targeted[2]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
+    assign o_awvalid[3] = (slv_aw_targeted[3]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
 
-    assign i_awready = (slv_aw_targeted[0]) ? o_awready[0] & !bch_full :
-                       (slv_aw_targeted[1]) ? o_awready[1] & !bch_full :
-                       (slv_aw_targeted[2]) ? o_awready[2] & !bch_full :
-                       (slv_aw_targeted[3]) ? o_awready[3] & !bch_full :
+    assign i_awready = (slv_aw_targeted[0]) ? o_awready[0] & !bch_full & !wch_full :
+                       (slv_aw_targeted[1]) ? o_awready[1] & !bch_full & !wch_full :
+                       (slv_aw_targeted[2]) ? o_awready[2] & !bch_full & !wch_full :
+                       (slv_aw_targeted[3]) ? o_awready[3] & !bch_full & !wch_full :
                                               aw_misrouting;
 
     assign o_awch = i_awch;
