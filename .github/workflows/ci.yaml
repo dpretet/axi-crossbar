@@ -5,23 +5,17 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install verilator
       - run: git submodule update --init --recursive
       - run: ./flow.sh lint
-  Simulation:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: brew install icarus-verilog
-      - run: brew install verilator
-      - run: iverilog -V
-      - run: verilator -V
-      - run: git submodule update --init --recursive
-      - run: ./flow.sh sim
   Synthesis:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install yosys
       - run: git submodule update --init --recursive
       - run: ./flow.sh syn
+  Simulation:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: git submodule update --init --recursive
+      - run: ./flow.sh sim

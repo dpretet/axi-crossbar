@@ -6,8 +6,20 @@
 # -o pipefail: causes a pipeline to fail if any command fails
 set -eu -o pipefail
 
-# Current script path; doesn't support symlink
-CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+#-------------------------------------------------------------
+# Get current script path (applicable even if is a symlink)
+#-------------------------------------------------------------
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
+# Functions to install the flow
+source script/setup.sh
 
 ret=0
 
@@ -88,7 +100,6 @@ main() {
 
     # Print help
     if [[ $1 == "-h" || $1 == "help" ]]; then
-
         help
         exit 0
     fi
@@ -96,6 +107,8 @@ main() {
 
     if [[ $1 == "lint" ]]; then
 
+        install_verilator
+        # Disable break on error bc Verilator exit with 1 with warnings
         set +e
 
         printinfo "Start Verilator lint"
@@ -148,10 +161,11 @@ main() {
     fi
 
     if [[ $1 == "sim" ]]; then
-        # Install SVUT if missing in $PATH
-        source script/setup.sh
+        # Install SVUT and Icarus Verilog if needed
+        install_svut
+        install_icarus
         # Run all testsuites against all configurations
-        cd "$CURDIR/test/svut"
+        cd "$DIR/test/svut"
         ./run.sh --no-debug-log --no-wave
         ret=$?
         echo "Execution status: $ret"
@@ -159,8 +173,9 @@ main() {
     fi
 
     if [[ $1 == "syn" ]]; then
+        install_yosys
         printinfo "Start synthesis flow"
-        cd "$CURDIR/syn/yosys"
+        cd "$DIR/syn/yosys"
         # AXI4 synthesis
         ./syn_asic.sh axicb_axi4.ys | tee axi4.log
         ret=$?

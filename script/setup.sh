@@ -3,24 +3,51 @@
 #-------------------------------------------------------------
 # Install SVUT from https://github.com/dpretet/svut if missing
 #-------------------------------------------------------------
-
-# Get current script path (applicable even if is a symlink)
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-
-# Clone SVUT and setup $PATH
-if [[ ! $(type svutRun) ]];
-then
-    svut_dir="$DIR/.svut"
-    if [[ ! -d $svut_dir ]]; then
-        echo "INFO: Install SVUT (https://github.com/dpretet/svut)"
-        git clone "https://github.com/dpretet/svut.git" "$svut_dir"
+install_svut() {
+    if [[ ! $(type svutRun) ]];
+    then
+        svut_dir="$DIR/.svut"
+        if [[ ! -d $svut_dir ]]; then
+            echo "INFO: Install SVUT (https://github.com/dpretet/svut)"
+            git clone "https://github.com/dpretet/svut.git" "$svut_dir"
+        fi
+        echo "INFO: Enable SVUT in PATH"
+        export PATH=$svut_dir/:$PATH
     fi
-    echo "INFO: Enable SVUT in PATH"
-    export PATH=$svut_dir/:$PATH
-fi
+}
+
+#-------------------------------------------------------------
+# Install Verilator with brew
+#-------------------------------------------------------------
+install_verilator() {
+    if [[ ! $(type verilator) ]];
+    then
+        echo "INFO: Enable Verilator"
+        brew install verilator
+        verilator -V
+    fi
+}
+
+#-------------------------------------------------------------
+# Install Icarus-verilog with brew
+#-------------------------------------------------------------
+install_icarus() {
+    if [[ ! $(type iverilog) ]];
+    then
+        echo "INFO: Enable Icarus-Verilog"
+        brew install icarus-verilog
+        iverilog -V
+    fi
+}
+
+#-------------------------------------------------------------
+# Install Icarus-verilog with brew
+#-------------------------------------------------------------
+install_yosys() {
+    if [[ ! $(type yosys) ]];
+    then
+        echo "INFO: Enable Yosys"
+        brew install yosys
+        yosys --version
+    fi
+}
