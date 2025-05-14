@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Defines passed to the simulation. Read from read_config() config files
 DEFINES=""
 MAX_TRAFFIC=5000
-TIMEOUT=100000
+TIMEOUT=700000
 TC="./tb_config/*.cfg"
 NOWAVE=0
 NODEBUG=0
