@@ -55,10 +55,15 @@ module axicb_slv_ooo
         output logic [8                 -1:0] c_len,
         output logic [AXI_ID_W          -1:0] c_id,
         // Completion channel from slaves (either read or write)
+        // - valid / ready / last from r/w completion
+        // - ch: the concatenated completion channel
+        // - end: combination of valid/ready/last from input
+        //        side to avoid comb loop
         input  wire  [SLV_NB            -1:0] c_valid,
         input  wire                           c_ready,
         input  wire  [SLV_NB            -1:0] c_last,
         input  wire  [CCH_W*SLV_NB      -1:0] c_ch,
+        input  wire                           c_end,
         // Last flag recreated when misrouted completion occurs
         // Avoid combinatorial loop
         input  wire                           mr_last
@@ -202,6 +207,11 @@ module axicb_slv_ooo
             end
         end
 
+        /*
+        // First attempt
+        // always_comb pull = ((|(c_valid & c_last) | |mr_reqs) & c_ready) ? id_grant : '0;
+        
+        // Second attempt
         // Pull the corresponding ID FIFO
         always @ (*) begin
             // If we are managing a misrouted completion
@@ -218,8 +228,9 @@ module axicb_slv_ooo
                     pull = '0;
             end
         end
+        */
 
-        // always_comb pull = ((|(c_valid & c_last) | |mr_reqs) & c_ready) ? id_grant : '0;
+        assign pull = (c_end) ? id_grant : '0;
 
         axicb_round_robin_core
         #(
@@ -235,7 +246,7 @@ module axicb_slv_ooo
             .grant   (id_grant)
         );
 
-        // Multiplexer to extract the right // FIFO and its corresponding empty flag
+        // Multiplexer to extract the right FIFO and its corresponding empty flag
         always_comb begin
             c_select = '0;
             c_empty = '0;

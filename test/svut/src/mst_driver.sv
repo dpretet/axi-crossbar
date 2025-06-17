@@ -113,15 +113,18 @@ module mst_driver
         input  logic [AXI_RUSER_W   -1:0] ruser
     );
 
+    ///////////////////////////////////////////
+    //
+    // Local declarations
+    //
+    ///////////////////////////////////////////
+
     localparam OSTDREQ_NUM = (MST_OSTDREQ_NUM == 0) ? 1 : MST_OSTDREQ_NUM;
+    localparam TMW = 16;
 
     logic [32                          -1:0] awaddr_ramp;
-    logic [32                          -1:0] araddr_ramp;
     logic [AXI_ID_W                    -1:0] awid_cnt;
-    logic [AXI_ID_W                    -1:0] arid_cnt;
     logic [32                          -1:0] aw_lfsr;
-    logic [32                          -1:0] ar_lfsr;
-    logic [32                          -1:0] r_lfsr;
     logic [32                          -1:0] b_lfsr;
     logic [32                          -1:0] awvalid_lfsr;
     logic [32                          -1:0] wvalid_lfsr;
@@ -129,20 +132,41 @@ module mst_driver
     logic [8                           -1:0] wlen;
     logic [AXI_DATA_W                  -1:0] wdata_w;
     logic [AXI_DATA_W                  -1:0] next_wdata;
+    logic                                    w_full;
+    logic                                    w_empty;
+    logic                                    w_empty_r;
+    logic                                    wlast_r;
+    logic                                    wvalid_r;
+
+    logic [32                          -1:0] araddr_ramp;
+    logic [AXI_ID_W                    -1:0] arid_cnt;
+    logic [32                          -1:0] ar_lfsr;
+    logic [32                          -1:0] r_lfsr;
     logic [32                          -1:0] arvalid_lfsr;
     logic [32                          -1:0] bready_lfsr;
     logic [32                          -1:0] rready_lfsr;
-    logic [OSTDREQ_NUM                 -1:0] wr_orreq;
-    logic [OSTDREQ_NUM*AXI_ID_W        -1:0] wr_orreq_id;
-    logic [OSTDREQ_NUM*2               -1:0] wr_orreq_bresp;
-    logic [OSTDREQ_NUM*AXI_BUSER_W     -1:0] wr_orreq_buser;
+
+    logic [OSTDREQ_NUM*OSTDREQ_NUM                 -1:0] wror;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*AXI_ID_W        -1:0] wror_id;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM                 -1:0] wror_mr;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*2               -1:0] wror_bresp;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*AXI_BUSER_W     -1:0] wror_buser;
+    integer                                              wror_wptr[0:OSTDREQ_NUM-1];
+    integer                                              wror_rptr[0:OSTDREQ_NUM-1];
+    logic [OSTDREQ_NUM*8                           -1:0] wror_wptr_unpacked;
+    logic [OSTDREQ_NUM*8                           -1:0] wror_rptr_unpacked;
+    logic [OSTDREQ_NUM*TMW*OSTDREQ_NUM             -1:0] wror_timer;
+
     logic [OSTDREQ_NUM                 -1:0] rd_orreq;
     logic [OSTDREQ_NUM*AXI_ID_W        -1:0] rd_orreq_id;
+    logic [OSTDREQ_NUM                 -1:0] rd_orreq_mr;
     logic [OSTDREQ_NUM*AXI_DATA_W      -1:0] rd_orreq_rdata;
     logic [OSTDREQ_NUM*2               -1:0] rd_orreq_rresp;
     logic [OSTDREQ_NUM*AXI_RUSER_W     -1:0] rd_orreq_ruser;
     logic [OSTDREQ_NUM*8               -1:0] rd_orreq_rlen;
     logic [OSTDREQ_NUM*8               -1:0] rlen;
+    logic [OSTDREQ_NUM*32              -1:0] rd_orreq_timeout;
+
     logic [OSTDREQ_NUM                 -1:0] bresp_error;
     logic [OSTDREQ_NUM                 -1:0] buser_error;
     logic [OSTDREQ_NUM                 -1:0] rresp_error;
@@ -152,24 +176,23 @@ module mst_driver
     logic [OSTDREQ_NUM                 -1:0] rlen_error;
     logic [OSTDREQ_NUM                 -1:0] rid_error;
     logic [OSTDREQ_NUM                 -1:0] bid_error;
-    logic [OSTDREQ_NUM                 -1:0] wr_orreq_mr;
-    logic [OSTDREQ_NUM                 -1:0] rd_orreq_mr;
-    logic [OSTDREQ_NUM*32              -1:0] wr_orreq_timeout;
-    logic [OSTDREQ_NUM*32              -1:0] rd_orreq_timeout;
+
     integer                                  awtimer;
     integer                                  wtimer;
     integer                                  artimer;
     logic                                    awtimeout;
     logic                                    wtimeout;
     logic                                    artimeout;
-    logic                                    w_full;
-    logic                                    w_empty;
-    logic                                    w_empty_r;
-    logic                                    wlast_r;
-    logic                                    wvalid_r;
+
+    integer wreq_cnt, rreq_cnt, bcpl_cnt, rcpl_cnt;
+
+    ///////////////////////////////////////////
+    //
+    // Logger setup
+    //
+    ///////////////////////////////////////////
 
     `ifndef NODEBUG
-    // Logger setup
 
     svlogger log;
     string svlogger_name;
@@ -183,6 +206,26 @@ module mst_driver
     end
     `endif
 
+    initial begin
+        if (TIMEOUT>16535) begin
+            $finish();
+            log.error("Timer counter are only 16b wide, TIMEOUT can't be greater than 16535");
+        end
+    end
+    //////////////////////////////////////////////////////////////////////////
+    //
+    // Two functions binding shared functions with monitor module, passing
+    // address to generate RESP and misroute flag
+    // These functions are used to pass the driver specific parameter and
+    // the function call smaller
+    //
+    //////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////
+    // Generates a RESP for read/write request
+    // @value: the address used to generate a RESP
+    // @returns a 2bit wide RESP (0x0, 0x1, 0x2)
+    ///////////////////////////////////////////////////////
     function automatic integer gen_resp(input integer value);
         gen_resp = gen_resp_for_master(
             MST_ROUTES,
@@ -198,6 +241,13 @@ module mst_driver
         );
     endfunction
 
+    ///////////////////////////////////////////////////////
+    // Generate a misroute flag based on address and slaves
+    // boundaries
+    // @value: the address to used
+    // @returns 1 if the address doesn't match any slave
+    // mapping, 0 otherwise
+    ///////////////////////////////////////////////////////
     function automatic integer req_is_misroute(input integer value);
         req_is_misroute = is_misroute(
             MST_ROUTES,
@@ -213,8 +263,50 @@ module mst_driver
         );
     endfunction
 
+    ///////////////////////////////////////////////////////////
+    // Indicates an ID can be used for a read or write
+    // request.
+    // @id: the AXI ID to check for future used
+    // @id_ptr: a pointer used to parse and select a free slot
+    // @id_status: the oustanding request status gathering
+    // all the IDs
+    // @returns 1 if the ID can be used, 0 otherwise
+    ///////////////////////////////////////////////////////////
+    function automatic logic or_id_avlb(
+        input logic [AXI_ID_W               -1:0] id,
+        input integer                             id_ptr,
+        input logic [OSTDREQ_NUM*OSTDREQ_NUM-1:0] id_status
+    );
+        or_id_avlb = (id_status[id*OSTDREQ_NUM+id_ptr] == 1'b0) ? 1'b1 : 1'b0;
+    endfunction
+
+    ///////////////////////////////////////////////////////////
+    // Indicates an read/write outstanding request can be
+    // issued, so we didn't reach the maximum issued
+    //
+    // @id_status: the oustanding request status gathering
+    // all the IDs
+    // @returns 1 if can issue another request, 0 otherwise
+    ///////////////////////////////////////////////////////////
+    function automatic logic not_max_or(
+        input logic [OSTDREQ_NUM*OSTDREQ_NUM-1:0] id_status
+    );
+        integer count;
+
+        count = 0;
+        not_max_or = '0;
+
+        for (int i=0; i<OSTDREQ_NUM*OSTDREQ_NUM; i++)
+            if (id_status[i])
+                count = count + 1;
+
+        not_max_or = (count < OSTDREQ_NUM) ? 1'b1 : 1'b0;
+
+    endfunction
+
+
     ///////////////////////////////////////////////////////////////////////////
-    // Write Address & Data Channels
+    // Write Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
     assign awsize = gen_size(awaddr);
@@ -228,16 +320,61 @@ module mst_driver
     assign awid = MST_ID + awid_cnt;
 
 
+    // LFSR to generate valid of AW / W channels
+
+    lfsr32
+    #(
+        .KEY (KEY)
+    )
+    awch_lfsr
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (awvalid & awready),
+        .lfsr    (aw_lfsr)
+    );
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            wreq_cnt <= 0;
+            rreq_cnt <= 0;
+            bcpl_cnt <= 0;
+            rcpl_cnt <= 0;
+        end else if (srst) begin
+            wreq_cnt <= 0;
+            rreq_cnt <= 0;
+            bcpl_cnt <= 0;
+            rcpl_cnt <= 0;
+        end else if (en) begin
+
+            if (awvalid & awready)
+                wreq_cnt <= wreq_cnt + 1;
+            if (arvalid & arready)
+                rreq_cnt <= rreq_cnt + 1;
+
+            if (bvalid & bready)
+                bcpl_cnt <= bcpl_cnt + 1;
+            if (rvalid & rready)
+                rcpl_cnt <= rcpl_cnt + 1;
+
+        end
+
+        if (wreq_cnt > (bcpl_cnt + OSTDREQ_NUM)) begin
+            $finish();
+        end
+
+    end
+
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
             awvalid_lfsr <= 32'b0;
             wvalid_lfsr <= 32'b0;
-            awid_cnt <= {AXI_ID_W{1'b0}};
         end else if (srst) begin
             awvalid_lfsr <= 32'b0;
             wvalid_lfsr <= 32'b0;
-            awid_cnt <= {AXI_ID_W{1'b0}};
         end else if (en) begin
 
             // At startup init with LFSR default value
@@ -259,28 +396,8 @@ module mst_driver
             end else if (wready) begin
                 wvalid_lfsr <= aw_lfsr;
             end
-
-            // ID counter
-            if (awvalid && awready) begin
-                if (awid_cnt==(OSTDREQ_NUM-1)) awid_cnt <= 'h0;
-                else awid_cnt <= awid_cnt + 1;
-            end
         end
     end
-
-    // LFSR to generate valid of AW / W channels
-    lfsr32
-    #(
-        .KEY (KEY)
-    )
-    awch_lfsr
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (awvalid & awready),
-        .lfsr    (aw_lfsr)
-    );
 
     // A ramp used in address field when the generated one is out of
     // min/max bound
@@ -299,17 +416,42 @@ module mst_driver
         end
     end
 
-    assign awvalid = awvalid_lfsr[0] & en & ~wr_orreq[awid_cnt] & ~w_full;
     // Limit the address range to target possibly a particular slave
     // Always use aligned address
     assign awaddr = (aw_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
                     (aw_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {awaddr_ramp[AXI_ADDR_W-1:2], 2'h0} :
                                                          {aw_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            awid_cnt <= {AXI_ID_W{1'b0}};
+        end else if (srst) begin
+            awid_cnt <= {AXI_ID_W{1'b0}};
+        end else if (en) begin
+            if (awvalid && awready) begin
+                if (awid_cnt==(OSTDREQ_NUM-1))
+                    awid_cnt <= 'h0;
+                else begin
+                    awid_cnt <= awid_cnt + 1;
+                end
+            end
+        end
+    end
+
     generate
     if (AXI_SIGNALING>0) assign awlen = awaddr[MAX_ALEN_BITS-1:0];
-    else assign awlen = 8'b0;
+    else                 assign awlen = 8'b0;
     endgenerate
+
+    assign awvalid = awvalid_lfsr[0] & en &
+                     or_id_avlb(awid_cnt, wror_wptr[awid_cnt], wror) &
+                     not_max_or(wror) &
+                     !w_full;
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Write Data Channel
+    ///////////////////////////////////////////////////////////////////////////////
 
     axicb_scfifo
     #(
@@ -400,6 +542,46 @@ module mst_driver
     end
     endgenerate
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Write Response channel
+    ///////////////////////////////////////////////////////////////////////////
+
+    // LFSR to generate valid of B channels
+    lfsr32
+    #(
+        .KEY (KEY)
+    )
+    bch_lfsr
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (bvalid & bready),
+        .lfsr    (b_lfsr)
+    );
+
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            bready_lfsr <= 32'b0;
+        end else if (srst) begin
+            bready_lfsr <= 32'b0;
+        end else begin
+            // At startup init with LFSR default value
+            if (bready_lfsr==32'b0) begin
+                bready_lfsr <= b_lfsr;
+            // Use to randomly assert arready
+            end else if (~bready) begin
+                bready_lfsr <= bready_lfsr >> 1;
+            end else if (bvalid) begin
+                bready_lfsr <= b_lfsr;
+            end
+        end
+    end
+
+    assign bready = bready_lfsr[0];
+
+
     ///////////////////////////////////////////////////////////////////////////////
     // Monitor AW/W channel to detect timeout
     ///////////////////////////////////////////////////////////////////////////////
@@ -449,87 +631,110 @@ module mst_driver
     // Write Oustanding Requests Management
     ///////////////////////////////////////////////////////////////////////////////
 
+    generate
+        for (genvar i=0; i<OSTDREQ_NUM; i++) begin
+            assign wror_wptr_unpacked[i*8+:8] = wror_wptr[i][7:0];
+            assign wror_rptr_unpacked[i*8+:8] = wror_rptr[i][7:0];
+        end
+    endgenerate
+
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
 
-            wr_orreq <= '0;
-            wr_orreq_id <= '0;
-            wr_orreq_bresp <= '0;
-            wr_orreq_buser <= '0;
-            wr_orreq_mr <= '0;
+            wror <= '0;
+            wror_id <= '0;
+            wror_bresp <= '0;
+            wror_buser <= '0;
+            wror_mr <= '0;
             bresp_error <= '0;
             buser_error <= '0;
             bid_error <= '0;
             wor_error <= '0;
-            wr_orreq_timeout <= '0;
+            wror_timer <= '0;
+
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+                wror_wptr[i] <= 0;
+                wror_rptr[i] <= 0;
+            end
 
         end else if (srst) begin
 
-            wr_orreq <= '0;
-            wr_orreq_id <= '0;
-            wr_orreq_bresp <= '0;
-            wr_orreq_buser <= '0;
-            wr_orreq_mr <= '0;
+            wror <= '0;
+            wror_id <= '0;
+            wror_bresp <= '0;
+            wror_buser <= '0;
+            wror_mr <= '0;
             bresp_error <= '0;
             buser_error <= '0;
             bid_error <= '0;
             wor_error <= '0;
-            wr_orreq_timeout <= '0;
+            wror_timer <= '0;
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+                wror_wptr[i] <= 0;
+                wror_rptr[i] <= 0;
+            end
 
         end else if (en) begin
 
             for (int i=0;i<OSTDREQ_NUM;i++) begin
 
-                if (bvalid && bready) begin
-                    if ((bid&MST_ID) != MST_ID) begin
-                        `ifndef NODEBUG
-                        $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid);
-                        log.error(msg);
-                        `endif
-                        bid_error[i] <= 1'b1;
-                    end else begin
-                        bid_error[i] <= 1'b0;
-                    end
-                end
-
-                // Store the OR request on address channel handshake
+                // Reserve the OR request on address channel handshake
                 if (awvalid && awready && i==awid_cnt) begin
-                    wr_orreq[i] <= 1'b1;
-                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= awid;
-                    wr_orreq_bresp[i*2+:2] <= gen_resp(awaddr);
-                    wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= gen_buser(awaddr);
-                    wr_orreq_mr[i] <= req_is_misroute(awaddr);
-                end
 
-                // Release the OR on response handshake
-                if (bvalid && bready && wr_orreq[i] &&
-                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W]==bid)
+                    // Increment write pointer on request
+                    if (wror_wptr[i]==(OSTDREQ_NUM-1)) wror_wptr[i] <= 0;
+                    else                               wror_wptr[i] <= wror_wptr[i] + 1;
+
+                    // Store request attributes
+                    wror[i*OSTDREQ_NUM+wror_wptr[i]] <= 1'b1;
+                    wror_mr[i*OSTDREQ_NUM+wror_wptr[i]] <= req_is_misroute(awaddr);
+                    wror_id[(i*AXI_ID_W*OSTDREQ_NUM+wror_wptr[i]*AXI_ID_W)+:AXI_ID_W] <= awid;
+                    wror_bresp[(i*2*OSTDREQ_NUM+wror_wptr[i]*2)+:2] <= gen_resp(awaddr);
+                    wror_buser[(i*AXI_BUSER_W*OSTDREQ_NUM+wror_wptr[i]*AXI_BUSER_W)+:AXI_BUSER_W] <= gen_buser(awaddr);
+
+                end
+            end
+
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+
+                // Release the OR on response handshake and check it
+                if (bvalid && bready &&
+                    ((bid ^ MST_ID) == i) &&
+                    wror[i*OSTDREQ_NUM+wror_rptr[i]] &&
+                    wror_id[(i*AXI_ID_W*OSTDREQ_NUM+wror_rptr[i]*AXI_ID_W)+:AXI_ID_W]===bid)
                 begin
 
-                    wr_orreq[i] <= 1'b0;
-                    wr_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= {AXI_ID_W{1'b0}};
-                    wr_orreq_bresp[i*2+:2] <= 2'b0;
-                    wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] <= {AXI_BUSER_W{1'b0}};
+                    // Increment read pointer on completion
+                    if (wror_rptr[i]==(OSTDREQ_NUM-1)) wror_rptr[i] <= 0;
+                    else                               wror_rptr[i] <= wror_rptr[i] + 1;
 
-                    if (wr_orreq_bresp[i*2+:2] !== bresp && CHECK_REPORT) begin
+                    // Reset the request attributes
+                    wror[i*OSTDREQ_NUM+wror_rptr[i]] <= 1'b0;
+                    wror_mr[i*OSTDREQ_NUM+wror_rptr[i]] <= '0;
+                    wror_id[(i*AXI_ID_W*OSTDREQ_NUM+wror_rptr[i]*AXI_ID_W)+:AXI_ID_W] <= '0;
+                    wror_bresp[(i*2*OSTDREQ_NUM+wror_rptr[i]*2)+:2] <= '0;
+                    wror_buser[(i*AXI_BUSER_W*OSTDREQ_NUM+wror_rptr[i]*AXI_BUSER_W)+:AXI_BUSER_W] <= '0;
+
+                    if (wror_bresp[(i*2*OSTDREQ_NUM+wror_rptr[i]*2)+:2] !== bresp && CHECK_REPORT) begin
                         `ifndef NODEBUG
                         log.error("BRESP doesn't match expected value");
                         $sformat(msg, "  - BID: %x", bid); log.error(msg);
                         $sformat(msg, "  - BRESP: %x", bresp); log.error(msg);
-                        $sformat(msg, "  - Expected BRESP: %x", wr_orreq_bresp[i*2+:2]); log.error(msg);
+                        $sformat(msg, "  - Expected BRESP: %x", wror_bresp[(i*2*OSTDREQ_NUM+wror_rptr[i]*2)+:2]);log.error(msg);
+                        $sformat(msg, "wr_rptr: %x", wror_rptr[i]); log.error(msg);
                         `endif
                         bresp_error[i] <= 1'b1;
                     end else begin
 
-                        if (wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W] !== buser &&
-                            !wr_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT
+                        if (wror_buser[(i*AXI_BUSER_W*OSTDREQ_NUM+wror_rptr[i]*AXI_BUSER_W)+:AXI_BUSER_W] !== buser &&
+                            !wror_mr[i*OSTDREQ_NUM+wror_rptr[i]] && USER_SUPPORT && CHECK_REPORT
                         ) begin
                             `ifndef NODEBUG
                             log.error("BUSER doesn't match expected value");
                             $sformat(msg, "  - BID: %x", bid); log.error(msg);
                             $sformat(msg, "  - BUSER: %x", buser); log.error(msg);
-                            $sformat(msg, "  - Expected BUSER: %x", wr_orreq_buser[i*AXI_BUSER_W+:AXI_BUSER_W]); log.error(msg);
+                            $sformat(msg, "  - Expected BUSER: %x", wror_buser[(i*AXI_BUSER_W*OSTDREQ_NUM+wror_rptr[i]*AXI_BUSER_W)+:AXI_BUSER_W]);log.error(msg);
                             `endif
                             buser_error[i] <= 1'b1;
                         end
@@ -542,64 +747,37 @@ module mst_driver
                 end
 
                 // Manage OR timeout
-                if (wr_orreq[i]) begin
-                    if (wr_orreq_timeout[i*32+:32]==TIMEOUT) begin
+                for (int j=0;j<OSTDREQ_NUM;j++) begin
+                    if (wror[i*OSTDREQ_NUM+j]) begin
+                        if (wror_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW]==TIMEOUT) begin
+                            `ifndef NODEBUG
+                            $sformat(msg, "Write OR %0x reached timeout (MST_ID: %0x)", i, MST_ID); log.error(msg);
+                            `endif
+                            wor_error[i] <= 1'b1;
+                        end
+                        if (wror_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW]<=TIMEOUT) begin
+                            wror_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] <= wror_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] + 1;
+                        end
+                    end else begin
+                        wror_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] <= '0;
+                        wor_error[i] <= 1'b0;
+                    end
+                end
+
+                // Manage unexpected completion
+                if (bvalid && bready) begin
+                    if ((bid & MST_ID) != MST_ID) begin
                         `ifndef NODEBUG
-                        $sformat(msg, "Write OR %0x reached timeout (MST_ID: %0x)", i, MST_ID);
-                        log.error(msg);
+                        $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid); log.error(msg);
                         `endif
-                        wor_error[i] <= 1'b1;
+                        bid_error[i] <= 1'b1;
+                    end else begin
+                        bid_error[i] <= 1'b0;
                     end
-                    if (wr_orreq_timeout[i*32+:32]<=TIMEOUT) begin
-                        wr_orreq_timeout[i*32+:32] <= wr_orreq_timeout[i*32+:32] + 1;
-                    end
-                end else begin
-                    wr_orreq_timeout[i*32+:32] <= '0;
-                    wor_error[i] <= 1'b0;
                 end
             end
         end
     end
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Write Response channel
-    ///////////////////////////////////////////////////////////////////////////
-
-    always @ (posedge aclk or negedge aresetn) begin
-
-        if (~aresetn) begin
-            bready_lfsr <= 32'b0;
-        end else if (srst) begin
-            bready_lfsr <= 32'b0;
-        end else begin
-            // At startup init with LFSR default value
-            if (bready_lfsr==32'b0) begin
-                bready_lfsr <= b_lfsr;
-            // Use to randomly assert arready
-            end else if (~bready) begin
-                bready_lfsr <= bready_lfsr >> 1;
-            end else if (bvalid) begin
-                bready_lfsr <= b_lfsr;
-            end
-        end
-    end
-
-    assign bready = bready_lfsr[0];
-
-    // LFSR to generate valid of B channels
-    lfsr32
-    #(
-    .KEY (KEY)
-    )
-    bch_lfsr
-    (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (bvalid & bready),
-    .lfsr    (b_lfsr)
-    );
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -615,6 +793,20 @@ module mst_driver
     assign arregion = gen_region(araddr);
     assign aruser = gen_auser(araddr);
     assign arid = MST_ID + arid_cnt;
+
+    // LFSR to generate valid of AR channel
+    lfsr32
+    #(
+        .KEY (KEY)
+    )
+    arch_lfsr
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (arvalid & arready),
+        .lfsr    (ar_lfsr)
+    );
 
     always @ (posedge aclk or negedge aresetn) begin
 
@@ -644,20 +836,6 @@ module mst_driver
         end
     end
 
-    // LFSR to generate valid of AR channel
-    lfsr32
-    #(
-        .KEY (KEY)
-    )
-    arch_lfsr
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (arvalid & arready),
-        .lfsr    (ar_lfsr)
-    );
-
     // A ramp used in address field when generated one is out of
     // min/max bound
     always @ (posedge aclk or negedge aresetn) begin
@@ -681,12 +859,13 @@ module mst_driver
                     (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {araddr_ramp} :
                                                          {ar_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
 
-    assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
-
     generate
     if (AXI_SIGNALING>0) assign arlen = araddr[MAX_ALEN_BITS-1:0];
     else assign arlen = 8'b0;
     endgenerate
+
+    assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Monitor AR channel to detect timeout
@@ -716,9 +895,24 @@ module mst_driver
         end
     end
 
+
     ///////////////////////////////////////////////////////////////////////////
     // Read Response channel
     ///////////////////////////////////////////////////////////////////////////
+
+    // LFSR to generate valid of R channel
+    lfsr32
+    #(
+        .KEY (KEY)
+    )
+    rch_lfsr
+    (
+        .aclk    (aclk),
+        .aresetn (aresetn),
+        .srst    (srst),
+        .en      (rvalid & rready),
+        .lfsr    (r_lfsr)
+    );
 
     always @ (posedge aclk or negedge aresetn) begin
 
@@ -741,23 +935,9 @@ module mst_driver
 
     assign rready = rready_lfsr[0];
 
-    // LFSR to generate valid of R channel
-    lfsr32
-    #(
-    .KEY (KEY)
-    )
-    rch_lfsr
-    (
-    .aclk    (aclk),
-    .aresetn (aresetn),
-    .srst    (srst),
-    .en      (rvalid & rready),
-    .lfsr    (r_lfsr)
-    );
-
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Read Oustanding Requests Management
+    // Read Oustanding Requests Management & Checking
     ///////////////////////////////////////////////////////////////////////////////
 
     always @ (posedge aclk or negedge aresetn) begin
@@ -864,7 +1044,8 @@ module mst_driver
                         log.error("RDATA doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
-                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]); log.error(msg);
+                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]);
+                        log.error(msg);
                         `endif
                         rresp_error[i] <= 1'b1;
                     end
@@ -876,7 +1057,8 @@ module mst_driver
                         log.error("RRESP doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RRESP: %x", rresp); log.error(msg);
-                        $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]); log.error(msg);
+                        $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
+                        log.error(msg);
                         `endif
                         rresp_error[i] <= 1'b1;
                     end
@@ -888,7 +1070,8 @@ module mst_driver
                         log.error("ARLEN doesn't match the expected beats:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - ARLEN: %x", rlen[i*8+:8]); log.error(msg);
-                        $sformat(msg, "  - Expected ARLEN: %x", rd_orreq_rlen[i*8+:8]); log.error(msg);
+                        $sformat(msg, "  - Expected ARLEN: %x", rd_orreq_rlen[i*8+:8]);
+                        log.error(msg);
                         `endif
                         rlen_error[i] <= 1'b1;
                     end
@@ -919,12 +1102,18 @@ module mst_driver
         end
     end
 
-    // Error report to the testbench
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Error reporting to the testbench
+    /////////////////////////////////////////////////////////////////////////////////////
     assign error = (en) ?
 
                     (|bresp_error | |buser_error | |rresp_error | |ruser_error |
                     |wor_error | |ror_error | |bid_error | |rid_error | |rlen_error |
-                    awtimeout | wtimeout | artimeout) : 1'b0;
+                    awtimeout | wtimeout | artimeout) :
+
+                    1'b0;
+    /////////////////////////////////////////////////////////////////////////////////////
 
 endmodule
 

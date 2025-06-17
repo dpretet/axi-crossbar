@@ -97,6 +97,7 @@ module axicb_slv_switch_wr
     logic [SLV_NB    -1:0] bch_grant;
     logic                  bch_mr;
     logic [AXI_ID_W  -1:0] bch_id;
+    logic                  c_end;
 
     logic [AXI_ADDR_W-1:0] slv0_start_addr = SLV0_START_ADDR[0+:AXI_ADDR_W];
     logic [AXI_ADDR_W-1:0] slv0_end_addr =   SLV0_END_ADDR[0+:AXI_ADDR_W];
@@ -263,8 +264,11 @@ module axicb_slv_switch_wr
         .c_ready (i_bready),
         .c_last  ('1),
         .c_ch    (o_bch),
+        .c_end   (c_end),
         .mr_last (1'b1)
     );
+
+    assign c_end = i_bvalid & i_bready;
 
     // Control of the OoO ID management stage
 

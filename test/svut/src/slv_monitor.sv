@@ -632,7 +632,7 @@ module slv_monitor
         end else begin
             // At startup init with LFSR default value
             if (rvalid_lfsr==32'b0) begin
-                rvalid_lfsr <= b_lfsr;
+                rvalid_lfsr <= r_lfsr;
             // Use to randomly assert bvalid/wready
             end else if (~rvalid) begin
                 rvalid_lfsr <= rvalid_lfsr >> 1;
