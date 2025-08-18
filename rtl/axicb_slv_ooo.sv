@@ -116,6 +116,7 @@ module axicb_slv_ooo
 
         // FIFO Input path: for read, we store along the slave index
         // and misroute flag the ALEN, not necessary for write completion
+        // a_id is stored for misrouted completion
         if (RD_PATH) begin : IN_RD_PATH_FIFO
             always_comb fifo_in = {a_len,a_ix,a_mr,a_id};
         end else begin: IN_WR_PATH_FIFO
@@ -195,40 +196,19 @@ module axicb_slv_ooo
             end else begin
 
                 for (int i=0; i<NB_ID; i++) begin : CREQS
+
                     c_reqs[i] = '0;
+
                     for (int j=0; j<SLV_NB; j++) begin
-                        // Unmasked Address Channel ID and select the slave if its ID is 
-                        // matching the FIFO index
-                        if ((c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK) == i[0+:AXI_ID_W]) begin
-                            c_reqs[i] = c_valid[j] & !id_empty[i];
-                        end
+                        if (fifo_out[i*FIFO_WIDTH+AXI_ID_W + 1 + j] && !id_empty[i] && c_valid[j])
+                            // Unmasked Address Channel ID
+                            if ((c_ch[j*CCH_W+:AXI_ID_W] ^ MST_ID_MASK) == i[0+:AXI_ID_W])
+                                c_reqs[i] = c_valid[j];
                     end
                 end
             end
         end
 
-        /*
-        // First attempt
-        // always_comb pull = ((|(c_valid & c_last) | |mr_reqs) & c_ready) ? id_grant : '0;
-        
-        // Second attempt
-        // Pull the corresponding ID FIFO
-        always @ (*) begin
-            // If we are managing a misrouted completion
-            if (|mr_reqs) begin
-                if (|mr_reqs & c_ready & mr_last)
-                    pull = id_grant;
-                else 
-                    pull = '0;
-            // Else normal completion channel managed
-            end else begin
-                if (|(c_valid & c_last) & c_ready)
-                    pull = id_grant;
-                else 
-                    pull = '0;
-            end
-        end
-        */
 
         assign pull = (c_end) ? id_grant : '0;
 

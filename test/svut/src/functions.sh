@@ -12,6 +12,9 @@ usage: bash ./run.sh ...
 -t | --timeout           (optional)            Timeout in number of cycles (10000 by default)
      --no-wave           (optional)            Don't dump waveform
 -h | --help                                    Brings up this menu
+
+If no config is passed, all files listed in ./tb_config will be executed
+
 EOF
 }
 #------------------------------------------------------------------------------
