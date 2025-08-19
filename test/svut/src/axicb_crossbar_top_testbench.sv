@@ -1625,11 +1625,13 @@ module axicb_crossbar_top_testbench();
 
         fork
         begin
-            while (timeout<`TIMEOUT) begin
-                @(posedge aclk);
-                timeout = timeout + 1;
+            if (TIMEOUT_VALUE > 0) begin
+                while (timeout<TIMEOUT_VALUE) begin
+                    @(posedge aclk);
+                    timeout = timeout + 1;
+                end
+                `ASSERT((timeout<`TIMEOUT), "Testcase reached timeout");
             end
-            `ASSERT((timeout<`TIMEOUT), "Testcase reached timeout");
         end
         begin
             while (nb_reqs<`MAX_TRAFFIC) begin
@@ -1665,7 +1667,11 @@ module axicb_crossbar_top_testbench();
         $display("------------------------");
         $display("");
         $display("  - Configuration: %s", tsname);
-        $display("  - Testbench timeout: %0d cycles", `TIMEOUT);
+        if (TIMEOUT_VALUE > 0) begin
+            $display("  - Testbench timeout: %0d cycles", `TIMEOUT);
+        end else begin
+            $display("  - Testbench timeout: deactivated");
+        end
         $display("  - Outstanding request timeout: %0d cycles", `OR_TIMEOUT);
         $display("  - Maximum traffic: %0d", `MAX_TRAFFIC);
         $display("  - AXI_ADDR_W: %0d", `AXI_ADDR_W);

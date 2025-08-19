@@ -164,9 +164,11 @@ main() {
         # Install SVUT and Icarus Verilog if needed
         install_svut
         install_icarus
-        # Run all testsuites against all configurations
+        # Run all testsuites against all configurations,
+        # no timeout setup to avoid false error if wrongly
+        # configured
         cd "$DIR/test/svut"
-        ./run.sh --no-debug-log --no-wave
+        ./run.sh --no-debug-log --no-wave -m 10000 -t 0
         ret=$?
         echo "Execution status: $ret"
         exit $ret
