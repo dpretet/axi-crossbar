@@ -164,11 +164,15 @@ main() {
         # Install SVUT and Icarus Verilog if needed
         install_svut
         install_icarus
-        # Run all testsuites against all configurations,
-        # no timeout setup to avoid false error if wrongly
-        # configured
+        # Run all testsuites
         cd "$DIR/test/svut"
-        ./run.sh --no-debug-log --no-wave -m 10000 -t 0
+        if [[ $2 == "axi4" ]]; then
+            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "tb_config/axi4_*.cfg"
+        elif  [[ $2 == "axi4lite" ]]; then
+            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "tb_config/axi4lite_*.cfg"
+        else
+            ./run.sh --no-debug-log --no-wave -m 10000 -t 0
+        fi
         ret=$?
         echo "Execution status: $ret"
         exit $ret
