@@ -266,10 +266,11 @@ module mst_driver
     ///////////////////////////////////////////////////////////
     // Indicates an ID can be used for a read or write
     // request.
-    // @id: the AXI ID to check for future used
+    // @id: the AXI ID to check for future use
     // @id_ptr: a pointer used to parse and select a free slot
+    //          within an ID batch
     // @id_status: the oustanding request status gathering
-    // all the IDs
+    // all the IDs and sub-OR per ID
     // @returns 1 if the ID can be used, 0 otherwise
     ///////////////////////////////////////////////////////////
     function automatic logic or_id_avlb(
@@ -433,7 +434,10 @@ module mst_driver
                 if (awid_cnt==(OSTDREQ_NUM-1))
                     awid_cnt <= 'h0;
                 else begin
-                    awid_cnt <= awid_cnt + 1;
+                    // Don't increment is this case (could be any condition)
+                    // to use a fixed ID
+                    if (awaddr[8])
+                        awid_cnt <= awid_cnt + 1;
                 end
             end
         end
@@ -571,7 +575,7 @@ module mst_driver
             if (bready_lfsr==32'b0) begin
                 bready_lfsr <= b_lfsr;
             // Use to randomly assert arready
-            end else if (~bready) begin
+            end else if (!bready) begin
                 bready_lfsr <= bready_lfsr >> 1;
             end else if (bvalid) begin
                 bready_lfsr <= b_lfsr;
