@@ -4,7 +4,7 @@
 # -u: treat unset variable as an error
 # -f: disable filename expansion upon seeing *, ?, ...
 # -o pipefail: causes a pipeline to fail if any command fails
-set -eu -o pipefail
+set -e -o pipefail
 
 #-------------------------------------------------------------
 # Get current script path (applicable even if is a symlink)
@@ -181,13 +181,20 @@ main() {
     if [[ $1 == "syn" ]]; then
         install_yosys
         printinfo "Start synthesis flow"
+        ret=0
         cd "$DIR/syn/yosys"
+
         # AXI4 synthesis
-        ./syn_asic.sh axicb_axi4.ys | tee axi4.log
-        ret=$?
+        if [[ $2 == "axi4" || -z $2 ]]; then
+            ./syn_asic.sh axicb_axi4.ys | tee axi4.log
+            ret=$?
+        fi
         # AXI4-lite synthesis
-        ./syn_asic.sh axicb_axi4lite.ys | tee axi4lite.log
-        ret=$((ret+$?))
+        if  [[ $2 == "axi4lite" || -z $2 ]]; then
+            ./syn_asic.sh axicb_axi4lite.ys | tee axi4lite.log
+            ret=$((ret+$?))
+        fi
+
         echo "Execution status: $ret"
         exit $ret
     fi
