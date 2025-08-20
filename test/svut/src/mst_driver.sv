@@ -871,7 +871,7 @@ module mst_driver
             if (arvalid && arready) begin
                 if (arid_cnt==(OSTDREQ_NUM-1)) arid_cnt <= 'h0;
                 else
-                    // if (araddr[8])
+                    if (araddr[8])
                         arid_cnt <= arid_cnt + 1;
             end
         end
