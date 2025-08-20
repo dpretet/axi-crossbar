@@ -49,7 +49,7 @@ a master agent is connected:
     - Any value from 1
 - MSTx_OSTDREQ_SIZE
     - Number of dataphase of an outstanding request for master x
-    - Any from value between 1 and 256
+    - Any power of 2 value between 1 and 256
 - MSTx_PRIORITY
     - Priority a master will be garanteed in a switching
     - Value between 0 (low priority) and 3 (high priority)
@@ -72,7 +72,7 @@ slave agent is connected:
     - Any value from 1
 - SLVx_OSTDREQ_SIZE
     - Number of dataphase of an outstanding request for slave x
-    - Any from value between 1 and 256
+    - Any power of 2 value between 1 and 256
 - SLVx_START_ADDR
     - Memory address from which a slave agent can be targeted
     - Any value from 0 up to 2^`AXI_ADDR_W`/8

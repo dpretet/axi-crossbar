@@ -168,7 +168,7 @@ to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
 to 0 the input signals of an interface, and leave unconnected the outputs.
 
 
-### Ordering rules
+### Ordering rules on Issuing
 
 The core supports outstanding requests, and so manages traffic queues for each master.
 
@@ -234,6 +234,7 @@ When an inteface enables the CDC support to cross its clock domain, the internal
 buffering is managed with the [DC-FIFO](https://github.com/dpretet/async_fifo)
 instanciated for CDC purpose. If no CDC is required, a simple synchronous FIFO
 is used to buffer the requests.
+
 
 ## Routing Accross The Switching Matrix
 

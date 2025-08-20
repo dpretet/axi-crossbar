@@ -83,8 +83,8 @@ Features
     - A master can be restricted to a memory map subset
     - An access to a forbidden area is completed by a `DECERR`
 - Switching logic IO interfaces can be pipelined to achieve timing closure easier
-- Don't garantee completion ordering when a master targets multiple slaves with the
-  same AXI ID (!). A master should use different IDs and reorder the completion by itself
+- Full AXI ordering support, in-order, out-of-order, among a master or multiple
+  masters
 
 Further details can be found in:
 - The architecture [chapter](doc/architecture.md)
@@ -104,9 +104,11 @@ to integrate the core in your own development. The flow relies on:
 
 ## Development plan
 
+Here is a brief summary on the next features to implement. Most of them are
+documented in issue section of this repository. If not feel free to open
+disucussion to plan their developments.
+
 Core features:
-- Full AXI ordering support: put in place multiple queues
-  per ID and manage reordering to master interfaces
 - Read-only or write-only master to save gate count
 - Address translation service to connect multiple systems together
 - Timeout support in switching logic
@@ -131,6 +133,24 @@ Simulation:
 - Error injection in the core and tesbench
 - Implement statistics in testbench to track misrouting, address distribution,
   master granting, ...
+
+
+## Help and Support
+
+Feel free to open an issue if you notice a bug or have a question, I'll be
+happy to help and merge your contribution. But please:
+- read the doc, it's not perfect but there is information. Ask more info or a rewrite,
+  I'll be eager to add more resources
+- explain your problem, bug, issue ... with phrases. No open question like "is a bug here?"
+- provide details about your flow if you don't use the one provided
+- share your parameters setup!
+- no screenshot of a waveform or code only. Paste the code in the issue tracker and
+  join a waveform.
+- no fix/update will be accepted if you don't fork, update and run the CI.
+
+Thanks to follow these simple rules. I do that development on my spare time and don't
+have many time to support people and add new feature. The core is pretty complex to
+debug and consider I don't read your mind :)
 
 ## License
 
