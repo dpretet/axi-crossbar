@@ -262,10 +262,8 @@ module axicb_slv_switch_wr
         .c_len   (/*unused*/),
         .c_valid (o_bvalid),
         .c_ready (i_bready),
-        .c_last  ('1),
         .c_ch    (o_bch),
-        .c_end   (c_end),
-        .mr_last (1'b1)
+        .c_end   (c_end)
     );
 
     assign c_end = i_bvalid & i_bready;

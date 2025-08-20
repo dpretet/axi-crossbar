@@ -61,12 +61,8 @@ module axicb_slv_ooo
         //        side to avoid comb loop
         input  wire  [SLV_NB            -1:0] c_valid,
         input  wire                           c_ready,
-        input  wire  [SLV_NB            -1:0] c_last,
         input  wire  [CCH_W*SLV_NB      -1:0] c_ch,
-        input  wire                           c_end,
-        // Last flag recreated when misrouted completion occurs
-        // Avoid combinatorial loop
-        input  wire                           mr_last
+        input  wire                           c_end
     );
 
     ////////////////////////////////////////////////////////////////

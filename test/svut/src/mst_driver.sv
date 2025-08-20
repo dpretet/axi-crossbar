@@ -157,15 +157,19 @@ module mst_driver
     logic [OSTDREQ_NUM*8                           -1:0] wror_rptr_unpacked;
     logic [OSTDREQ_NUM*TMW*OSTDREQ_NUM             -1:0] wror_timer;
 
-    logic [OSTDREQ_NUM                 -1:0] rd_orreq;
-    logic [OSTDREQ_NUM*AXI_ID_W        -1:0] rd_orreq_id;
-    logic [OSTDREQ_NUM                 -1:0] rd_orreq_mr;
-    logic [OSTDREQ_NUM*AXI_DATA_W      -1:0] rd_orreq_rdata;
-    logic [OSTDREQ_NUM*2               -1:0] rd_orreq_rresp;
-    logic [OSTDREQ_NUM*AXI_RUSER_W     -1:0] rd_orreq_ruser;
-    logic [OSTDREQ_NUM*8               -1:0] rd_orreq_rlen;
-    logic [OSTDREQ_NUM*8               -1:0] rlen;
-    logic [OSTDREQ_NUM*32              -1:0] rd_orreq_timeout;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM                 -1:0] rdor;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM                 -1:0] rdor_mr;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*AXI_ID_W        -1:0] rdor_id;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*AXI_DATA_W      -1:0] rdor_rdata;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*2               -1:0] rdor_rresp;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*AXI_RUSER_W     -1:0] rdor_ruser;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*8               -1:0] rdor_rlen;
+    logic [OSTDREQ_NUM*8                           -1:0] rlen;
+    integer                                              rdor_wptr[0:OSTDREQ_NUM-1];
+    integer                                              rdor_rptr[0:OSTDREQ_NUM-1];
+    logic [OSTDREQ_NUM*8                           -1:0] rdor_wptr_unpacked;
+    logic [OSTDREQ_NUM*8                           -1:0] rdor_rptr_unpacked;
+    logic [OSTDREQ_NUM*OSTDREQ_NUM*TMW             -1:0] rdor_timer;
 
     logic [OSTDREQ_NUM                 -1:0] bresp_error;
     logic [OSTDREQ_NUM                 -1:0] buser_error;
@@ -772,7 +776,7 @@ module mst_driver
                 if (bvalid && bready) begin
                     if ((bid & MST_ID) != MST_ID) begin
                         `ifndef NODEBUG
-                        $sformat(msg, "Received a completion not addressed to the right master (BID=%0x)", bid); log.error(msg);
+                        $sformat(msg, "Received a write completion not addressed to the right master (BID=%0x)", bid); log.error(msg);
                         `endif
                         bid_error[i] <= 1'b1;
                     end else begin
@@ -816,10 +820,8 @@ module mst_driver
 
         if (~aresetn) begin
             arvalid_lfsr <= 32'b0;
-            arid_cnt <= {AXI_ID_W{1'b0}};
         end else if (srst) begin
             arvalid_lfsr <= 32'b0;
-            arid_cnt <= {AXI_ID_W{1'b0}};
         end else if (en) begin
 
             // At startup init with LFSR default value
@@ -832,11 +834,6 @@ module mst_driver
                 arvalid_lfsr <= ar_lfsr;
             end
 
-            // ID counter
-            if (arvalid && arready) begin
-                if (arid_cnt==(OSTDREQ_NUM-1)) arid_cnt <= 'h0;
-                else arid_cnt <= arid_cnt + 1;
-            end
         end
     end
 
@@ -862,42 +859,32 @@ module mst_driver
     assign araddr = (ar_lfsr[AXI_ADDR_W-1:0]>addr_max) ? {araddr_ramp} :
                     (ar_lfsr[AXI_ADDR_W-1:0]<addr_min) ? {araddr_ramp} :
                                                          {ar_lfsr[AXI_ADDR_W-1:2], 2'h0} ;
+    always @ (posedge aclk or negedge aresetn) begin
+
+        if (~aresetn) begin
+            arid_cnt <= {AXI_ID_W{1'b0}};
+        end else if (srst) begin
+            arid_cnt <= {AXI_ID_W{1'b0}};
+        end else if (en) begin
+
+            // ID counter
+            if (arvalid && arready) begin
+                if (arid_cnt==(OSTDREQ_NUM-1)) arid_cnt <= 'h0;
+                else
+                    // if (araddr[8])
+                        arid_cnt <= arid_cnt + 1;
+            end
+        end
+    end
 
     generate
     if (AXI_SIGNALING>0) assign arlen = araddr[MAX_ALEN_BITS-1:0];
     else assign arlen = 8'b0;
     endgenerate
 
-    assign arvalid = arvalid_lfsr[0] & en & ~rd_orreq[arid_cnt];
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Monitor AR channel to detect timeout
-    ///////////////////////////////////////////////////////////////////////////
-
-    always @ (posedge aclk or negedge aresetn) begin
-        if (~aresetn) begin
-            artimer <= 0;
-            artimeout <= 1'b0;
-        end else if (srst) begin
-            artimer <= 0;
-            artimeout <= 1'b0;
-        end else if (en) begin
-            if (arvalid && ~arready) begin
-                artimer <= artimer + 1;
-            end else begin
-                artimer <= 0;
-            end
-            if (artimer >= TIMEOUT) begin
-                artimeout <= 1'b1;
-                `ifndef NODEBUG
-                log.error("AR Channel reached timeout");
-                `endif
-            end else begin
-                artimeout <= 1'b0;
-            end
-        end
-    end
+    assign arvalid = arvalid_lfsr[0] & en &
+                     or_id_avlb(arid_cnt, rdor_rptr[arid_cnt], rdor) &
+                     not_max_or(rdor);
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -940,51 +927,80 @@ module mst_driver
     assign rready = rready_lfsr[0];
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Monitor AR channel to detect timeout
+    ///////////////////////////////////////////////////////////////////////////
+
+    always @ (posedge aclk or negedge aresetn) begin
+        if (~aresetn) begin
+            artimer <= 0;
+            artimeout <= 1'b0;
+        end else if (srst) begin
+            artimer <= 0;
+            artimeout <= 1'b0;
+        end else if (en) begin
+            if (arvalid && ~arready) begin
+                artimer <= artimer + 1;
+            end else begin
+                artimer <= 0;
+            end
+            if (artimer >= TIMEOUT) begin
+                artimeout <= 1'b1;
+                `ifndef NODEBUG
+                log.error("AR Channel reached timeout");
+                `endif
+            end else begin
+                artimeout <= 1'b0;
+            end
+        end
+    end
+
+
+
+
     ///////////////////////////////////////////////////////////////////////////////
     // Read Oustanding Requests Management & Checking
     ///////////////////////////////////////////////////////////////////////////////
 
+    generate
+        for (genvar i=0; i<OSTDREQ_NUM; i++) begin
+            assign rdor_wptr_unpacked[i*8+:8] = rdor_wptr[i][7:0];
+            assign rdor_rptr_unpacked[i*8+:8] = rdor_rptr[i][7:0];
+        end
+    endgenerate
     always @ (posedge aclk or negedge aresetn) begin
 
         if (~aresetn) begin
 
-            rd_orreq <= '0;
-            rd_orreq_id <= '0;
-            rd_orreq_rdata <= '0;
-            rd_orreq_rresp <= '0;
-            rd_orreq_ruser <= '0;
-            rd_orreq_rlen <= '0;
+            rdor <= '0;
+            rdor_id <= '0;
+            rdor_rdata <= '0;
+            rdor_rresp <= '0;
+            rdor_ruser <= '0;
+            rdor_rlen <= '0;
+            rdor_mr <= '0;
             rresp_error <= '0;
             ruser_error <= '0;
             ror_error <= '0;
-            rlen_error <= '0;
             rid_error <= '0;
-            rd_orreq_mr <= '0;
+            rlen_error <= '0;
             rlen <= '0;
-
-            for (int i=0;i<OSTDREQ_NUM;i++) begin
-                rd_orreq_timeout[i] <= 0;
-            end
 
         end else if (srst) begin
 
-            rd_orreq <= '0;
-            rd_orreq_id <= '0;
-            rd_orreq_rdata <= '0;
-            rd_orreq_rresp <= '0;
-            rd_orreq_ruser <= '0;
-            rd_orreq_rlen <= '0;
+            rdor <= '0;
+            rdor_id <= '0;
+            rdor_rdata <= '0;
+            rdor_rresp <= '0;
+            rdor_ruser <= '0;
+            rdor_rlen <= '0;
+            rdor_mr <= '0;
             rresp_error <= '0;
             ruser_error <= '0;
             ror_error <= '0;
-            rlen_error <= '0;
             rid_error <= '0;
-            rd_orreq_mr <= '0;
+            rlen_error <= '0;
             rlen <= '0;
-
-            for (int i=0;i<OSTDREQ_NUM;i++) begin
-                rd_orreq_timeout[i] <= 0;
-            end
 
         end else if (en) begin
 
@@ -992,37 +1008,45 @@ module mst_driver
 
                 // Store the OR request on address channel handshake
                 if (arvalid && arready && i==arid_cnt) begin
-                    rd_orreq[i] <= 1'b1;
-                    rd_orreq_id[i*AXI_ID_W+:AXI_ID_W] <= arid;
-                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= gen_data(araddr);
-                    rd_orreq_rresp[i*2+:2] <= gen_resp(araddr);
-                    rd_orreq_rlen[i*8+:8] <= arlen;
-                    rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] <= gen_ruser(araddr);
-                    rd_orreq_mr[i] <= req_is_misroute(araddr);
-                // And release the OR when handshaking with RLAST
-                end else if (rvalid && rready && rlast &&
-                             rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
-                begin
-                    rd_orreq[i] <= 1'b0;
+
+                    // Increment write pointer on request
+                    if (rdor_wptr[i]==(OSTDREQ_NUM-1)) rdor_wptr[i] <= 0;
+                    else                               rdor_wptr[i] <= rdor_wptr[i] + 1;
+
+                    rdor[i*OSTDREQ_NUM+rdor_wptr[i]] <= 1'b1;
+                    rdor_mr[i*OSTDREQ_NUM+rdor_wptr[i]] <= req_is_misroute(araddr);
+                    rdor_id[(i*AXI_ID_W*OSTDREQ_NUM+rdor_wptr[i]*AXI_ID_W)+:AXI_ID_W] <= arid;
+                    rdor_rresp[(i*2*OSTDREQ_NUM+rdor_wptr[i]*2)+:2] <= gen_resp(araddr);
+                    rdor_ruser[(i*AXI_RUSER_W*OSTDREQ_NUM+rdor_wptr[i]*AXI_RUSER_W)+:AXI_RUSER_W] <= gen_ruser(araddr);
+                    rdor_rdata[(i*AXI_DATA_W*OSTDREQ_NUM+rdor_wptr[i]*AXI_DATA_W)+:AXI_DATA_W] <= gen_data(araddr);
+                    rdor_rlen[(i*8*OSTDREQ_NUM+rdor_wptr[i]*8)+:8] <= arlen;
+
                 end
 
-                // Check the completion is supposed to reach this master
-                if (rvalid && rready) begin
-                    if ((rid&MST_ID) != MST_ID) begin
-                        `ifndef NODEBUG
-                        $sformat(msg, "Received a completion not addressed to the right master (RID=%0x)", rid);
-                        log.error(msg);
-                        `endif
-                        rid_error[i] <= 1'b1;
-                    end else begin
-                        rid_error[i] <= 1'b0;
+            end
+
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+
+                // Release the OR on response handshake and check it
+                if (rvalid && rready &&
+                    ((rid ^ MST_ID) == i) &&
+                    rdor[i*OSTDREQ_NUM+rdor_rptr[i]] &&
+                    rdor_id[(i*AXI_ID_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_ID_W)+:AXI_ID_W]===rid)
+                begin
+
+                    if (rlast) begin
+
+                        // Increment read pointer on completion
+                        if (rdor_rptr[i]==(OSTDREQ_NUM-1)) rdor_rptr[i] <= 0;
+                        else                               rdor_rptr[i] <= rdor_rptr[i] + 1;
+
+                        // Reset the request attributes
+                        rdor[i*OSTDREQ_NUM+rdor_rptr[i]] <= 1'b0;
+                        rdor_mr[i*OSTDREQ_NUM+rdor_rptr[i]] <= '0;
+                        rdor_id[(i*AXI_ID_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_ID_W)+:AXI_ID_W] <= '0;
+                        rdor_rresp[(i*2*OSTDREQ_NUM+rdor_rptr[i]*2)+:2] <= '0;
+                        rdor_ruser[(i*AXI_RUSER_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_RUSER_W)+:AXI_RUSER_W] <= '0;
                     end
-                end
-
-                // Release the OR once read data channel hanshakes
-                if (rvalid && rready && rd_orreq[i] &&
-                    rd_orreq_id[i*AXI_ID_W+:AXI_ID_W]==rid)
-                begin
 
                     if (rlast) begin
                         rlen[i*8+:8] <= 0;
@@ -1030,10 +1054,10 @@ module mst_driver
                         rlen[i*8+:8] <= rlen[i*8+:8] + 1;
                     end
 
-                    rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] <= next_data(rdata);
+                    rdor_rdata[(i*AXI_DATA_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_DATA_W)+:AXI_DATA_W] <= next_data(rdata);
 
-                    if (rd_orreq_ruser[i*AXI_RUSER_W+:AXI_RUSER_W] != ruser &&
-                        !rd_orreq_mr[i] && USER_SUPPORT && CHECK_REPORT)
+                    if (rdor_ruser[(i*AXI_RUSER_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_RUSER_W)+:AXI_RUSER_W] !== ruser &&
+                        !rdor_mr[i*OSTDREQ_NUM+rdor_rptr[i]] && USER_SUPPORT && CHECK_REPORT)
                     begin
                         `ifndef NODEBUG
                         log.error("RUSER doesn't match expected value");
@@ -1041,40 +1065,39 @@ module mst_driver
                         ruser_error[i] <= 1'b1;
                     end
 
-                    if (rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W] != rdata &&
-                        !rd_orreq_mr[i] && CHECK_REPORT)
+                    if (rdor_rdata[(i*AXI_DATA_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_DATA_W)+:AXI_DATA_W] !== rdata &&
+                        !rdor_mr[i*OSTDREQ_NUM+rdor_rptr[i]] && CHECK_REPORT)
                     begin
                         `ifndef NODEBUG
                         log.error("RDATA doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RDATA: %x", rdata); log.error(msg);
-                        $sformat(msg, "  - Expected RDATA: %x", rd_orreq_rdata[i*AXI_DATA_W+:AXI_DATA_W]);
+                        $sformat(msg, "  - Expected RDATA: %x", rdor_rdata[(i*AXI_DATA_W*OSTDREQ_NUM+rdor_rptr[i]*AXI_DATA_W)+:AXI_DATA_W]);
                         log.error(msg);
                         `endif
                         rresp_error[i] <= 1'b1;
                     end
 
-                    if (rd_orreq_rresp[i*2+:2] != rresp &&
-                        CHECK_REPORT)
+                    if (rdor_rresp[(i*2*OSTDREQ_NUM+rdor_rptr[i]*2)+:2] !== rresp && CHECK_REPORT)
                     begin
                         `ifndef NODEBUG
                         log.error("RRESP doesn't match the expected value:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - RRESP: %x", rresp); log.error(msg);
-                        $sformat(msg, "  - Expected RRESP: %x", rd_orreq_rresp[i*2+:2]);
+                        $sformat(msg, "  - Expected RRESP: %x", rdor_rresp[(i*2*OSTDREQ_NUM+rdor_rptr[i]*2)+:2]);
                         log.error(msg);
                         `endif
                         rresp_error[i] <= 1'b1;
                     end
 
-                    if (rlast && rd_orreq_rlen[i*8+:8] != rlen[i*8+:8] &&
+                    if (rlast && rdor_rlen[(i*8*OSTDREQ_NUM+rdor_rptr[i]*8)+:8] != rlen[i*8+:8] &&
                         CHECK_REPORT)
                     begin
                         `ifndef NODEBUG
                         log.error("ARLEN doesn't match the expected beats:");
                         $sformat(msg, "  - RID: %x", rid); log.error(msg);
                         $sformat(msg, "  - ARLEN: %x", rlen[i*8+:8]); log.error(msg);
-                        $sformat(msg, "  - Expected ARLEN: %x", rd_orreq_rlen[i*8+:8]);
+                        $sformat(msg, "  - Expected ARLEN: %x", rdor_rlen[(i*8*OSTDREQ_NUM+rdor_rptr[i]*8)+:8]);
                         log.error(msg);
                         `endif
                         rlen_error[i] <= 1'b1;
@@ -1087,20 +1110,34 @@ module mst_driver
                 end
 
                 // Manage OR timeout
-                if (rd_orreq[i]) begin
-                    if (rd_orreq_timeout[i]==TIMEOUT) begin
+                for (int j=0;j<OSTDREQ_NUM;j++) begin
+                    if (rdor[i*OSTDREQ_NUM+j]) begin
+                        if (rdor_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW]==TIMEOUT) begin
+                            `ifndef NODEBUG
+                            $sformat(msg, "Read OR %0x reached timeout (MST_ID: %0x)", i, MST_ID); log.error(msg);
+                            `endif
+                            ror_error[i] <= 1'b1;
+                        end
+                        if (rdor_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW]<=TIMEOUT) begin
+                            rdor_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] <= rdor_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] + 1;
+                        end
+                    end else begin
+                        rdor_timer[(i*OSTDREQ_NUM*TMW+j*TMW)+:TMW] <= '0;
+                        ror_error[i] <= 1'b0;
+                    end
+                end
+
+                // Check the completion is supposed to reach this master
+                if (rvalid && rready) begin
+                    if ((rid & MST_ID) != MST_ID) begin
                         `ifndef NODEBUG
-                        $sformat(msg, "ERROR: Read OR %0x reached timeout (@ %g ns) (MST_ID: %0x)", i, $realtime, MST_ID);
+                        $sformat(msg, "Received a read completion not addressed to the right master (RID=%0x)", rid);
                         log.error(msg);
                         `endif
-                        ror_error[i] <= 1'b1;
+                        rid_error[i] <= 1'b1;
+                    end else begin
+                        rid_error[i] <= 1'b0;
                     end
-                    if (rd_orreq_timeout[i]<=TIMEOUT) begin
-                        rd_orreq_timeout[i] <= rd_orreq_timeout[i] + 1;
-                    end
-                end else begin
-                    rd_orreq_timeout[i] <= 0;
-                    ror_error[i] <= 1'b0;
                 end
             end
         end
