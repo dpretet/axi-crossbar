@@ -197,7 +197,7 @@ module axicb_slv_switch_rd
         .MST_ID_MASK     (MST_ID_MASK),
         .CCH_W           (RCH_W)
     )
-    bresp_ooo 
+    rresp_ooo 
     (
         .aclk    (aclk),
         .aresetn (aresetn),
@@ -290,7 +290,7 @@ module axicb_slv_switch_rd
     assign o_rready[2] = rch_grant[2] & i_rready & !rch_mr;
     assign o_rready[3] = rch_grant[3] & i_rready & !rch_mr;
 
-    assign i_rch = (!rch_mr)      ? {'0, 2'h3, rch_id} :
+    assign i_rch = (rch_mr)       ? {'0, 2'h3, rch_id} :
                    (rch_grant[0]) ? o_rch[0*RCH_W+:RCH_W] :
                    (rch_grant[1]) ? o_rch[1*RCH_W+:RCH_W] :
                    (rch_grant[2]) ? o_rch[2*RCH_W+:RCH_W] :

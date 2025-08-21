@@ -168,22 +168,27 @@ to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
 to 0 the input signals of an interface, and leave unconnected the outputs.
 
 
-### Ordering rules on Issuing
+### Ordering rules
 
-The core supports outstanding requests, and so manages traffic queues for each master.
+The core supports outstanding requests, and so manages traffic queues per master,
+this traffic can be:
+- in-order if a set of transactions use the same ID
+- out-of-order if a set of transactions use different IDs
 
-The core doesn't support ID reodering to enhance quality-of-service and so the user
-can be sure the read or write requests will be issued to the master interface(s)
-in the same order than received on a slave interface.
+The core doesn't manipulate IDs to enhance the quality-of-service or perform any optimization, so
+the user can be sure the read or write requests will be issued to the master interface(s) in the
+same order than received on a slave interface.
 
-The core doesn't support read/write completion reodering, so a master issuing
-with the same ID some requests to different slaves can't be sure the completions
-will follow the original order if the slaves don't have the same pace to complete
-a request. This concern will be addressed in a future release. Today, a user needs
-to use different IDs to identify the completions' source and so the slave responding.
+The core will transmit the completion in any order, depending of the slaves response time.
+However, the core ensures a stream of transactions using the same ID will be completed
+in-order as stated by AMBA AXI4 protocol, even if targeting different slaves completing
+transactions at different paces.
+
+Masters traffic queues are totally uncorrelated into the core, stored in different pieces
+of logic without any link.
 
 Read and write traffics are totally uncorrelated, no ordering can be garanteed
-between the read / write channels.
+between the read and write channels.
 
 The ordering rules mentioned above apply for device or memory regions.
 

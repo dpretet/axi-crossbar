@@ -883,7 +883,7 @@ module mst_driver
     endgenerate
 
     assign arvalid = arvalid_lfsr[0] & en &
-                     or_id_avlb(arid_cnt, rdor_rptr[arid_cnt], rdor) &
+                     or_id_avlb(arid_cnt, rdor_wptr[arid_cnt], rdor) &
                      not_max_or(rdor);
 
 
@@ -985,6 +985,10 @@ module mst_driver
             rid_error <= '0;
             rlen_error <= '0;
             rlen <= '0;
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+                rdor_wptr[i] <= 0;
+                rdor_rptr[i] <= 0;
+            end
 
         end else if (srst) begin
 
@@ -1001,6 +1005,10 @@ module mst_driver
             rid_error <= '0;
             rlen_error <= '0;
             rlen <= '0;
+            for (int i=0;i<OSTDREQ_NUM;i++) begin
+                rdor_wptr[i] <= 0;
+                rdor_rptr[i] <= 0;
+            end
 
         end else if (en) begin
 
