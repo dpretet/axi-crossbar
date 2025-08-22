@@ -276,7 +276,7 @@ module axicb_slv_ooo
             .i_ready (pipe_aready),
             .i_data  (pipe_in),
             .o_valid (pipe_valid),
-            .o_ready (c_ready),
+            .o_ready (c_end),
             .o_data  (pipe_out)
         );
 

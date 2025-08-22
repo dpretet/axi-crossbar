@@ -172,8 +172,8 @@ to 0 the input signals of an interface, and leave unconnected the outputs.
 
 The core supports outstanding requests, and so manages traffic queues per master,
 this traffic can be:
-- in-order if a set of transactions use the same ID
-- out-of-order if a set of transactions use different IDs
+- in-order if a set of transactions uses the same ID
+- out-of-order if a set of transactions uses different IDs
 
 The core doesn't manipulate IDs to enhance the quality-of-service or perform any optimization, so
 the user can be sure the read or write requests will be issued to the master interface(s) in the
