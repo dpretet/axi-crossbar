@@ -1,28 +1,31 @@
 [*]
 [*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
-[*] Wed Jun 18 19:00:26 2025
+[*] Sat Aug 23 13:46:59 2025
 [*]
 [dumpfile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.fst"
-[dumpfile_mtime] "Wed Jun 18 18:59:36 2025"
-[dumpfile_size] 32019750
+[dumpfile_mtime] "Sat Aug 23 13:46:57 2025"
+[dumpfile_size] 20504660
 [savefile] "/Users/damien/workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.gtkw"
-[timestart] 0
-[size] 1440 770
-[pos] -1 -1
-*-18.359474 1317000 76139000 76491000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 43395500
+[size] 2560 1440
+[pos] -1 -26
+*-15.245701 43558000 76139000 76491000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] axicb_crossbar_top_testbench.
 [treeopen] axicb_crossbar_top_testbench.dut.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.MST_SWITCHS_GEN[0].mst_switch.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NO_PATH_CPL.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_wr.bresp_ooo.NO_PATH_CPL.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.
-[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.
+[treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.CPL_PATH.
 [treeopen] axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.
-[sst_width] 255
+[sst_width] 442
 [signals_width] 331
 [sst_expanded] 1
-[sst_vpaned_height] 289
+[sst_vpaned_height] 712
 @200
 -
 @420
@@ -51,7 +54,9 @@ axicb_crossbar_top_testbench.mst_driver0.OSTDREQ_NUM
 @200
 -
 @22
+[color] 6
 axicb_crossbar_top_testbench.mst0_araddr[15:0]
+[color] 6
 axicb_crossbar_top_testbench.mst0_arid[7:0]
 axicb_crossbar_top_testbench.mst0_arlen[7:0]
 @28
@@ -77,22 +82,6 @@ axicb_crossbar_top_testbench.mst0_awvalid
 axicb_crossbar_top_testbench.mst0_awready
 @200
 -
-@28
-axicb_crossbar_top_testbench.mst_driver0.w_full
-axicb_crossbar_top_testbench.mst_driver0.w_empty
-@22
-axicb_crossbar_top_testbench.mst_driver0.wdata_w[31:0]
-axicb_crossbar_top_testbench.mst_driver0.awlen_w[7:0]
-@200
--
-@22
-axicb_crossbar_top_testbench.mst0_wdata[31:0]
-axicb_crossbar_top_testbench.mst0_wstrb[3:0]
-@28
-axicb_crossbar_top_testbench.mst0_wvalid
-axicb_crossbar_top_testbench.mst0_wready
-axicb_crossbar_top_testbench.mst0_wlast
-@200
 -
 @22
 axicb_crossbar_top_testbench.mst0_bid[7:0]
@@ -100,16 +89,6 @@ axicb_crossbar_top_testbench.mst0_bid[7:0]
 axicb_crossbar_top_testbench.mst0_bresp[1:0]
 axicb_crossbar_top_testbench.mst0_bvalid
 axicb_crossbar_top_testbench.mst0_bready
-@200
--
-@420
-axicb_crossbar_top_testbench.mst_driver0.OSTDREQ_NUM
-@28
-axicb_crossbar_top_testbench.mst_driver0.aclk
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver0.wror_timer[15:0]
 @200
 -
 @1401200
@@ -222,374 +201,185 @@ axicb_crossbar_top_testbench.mst2_bready
 -Mst2
 @200
 -
-@c00200
--Mst3
-@200
--
-@420
-axicb_crossbar_top_testbench.mst_driver3.wreq_cnt
-axicb_crossbar_top_testbench.mst_driver3.bcpl_cnt
-@200
--
-@28
-axicb_crossbar_top_testbench.mst_driver3.aclk
-axicb_crossbar_top_testbench.mst_driver3.aresetn
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver3.awaddr[15:0]
-axicb_crossbar_top_testbench.mst_driver3.awid[7:0]
-axicb_crossbar_top_testbench.mst_driver3.awlen[7:0]
-@28
-axicb_crossbar_top_testbench.mst_driver3.awvalid
-axicb_crossbar_top_testbench.mst_driver3.awready
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver3.wror_wptr_unpacked[39:0]
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver3.bid[7:0]
-@28
-axicb_crossbar_top_testbench.mst_driver3.bresp[1:0]
-axicb_crossbar_top_testbench.mst_driver3.bvalid
-axicb_crossbar_top_testbench.mst_driver3.bready
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver3.wror_rptr_unpacked[39:0]
-@200
--
-@c00022
-axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-@28
-(0)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(1)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(2)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(3)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(4)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(5)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(6)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(7)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(8)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(9)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(10)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(11)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(12)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(13)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(14)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(15)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(16)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(17)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(18)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(19)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(20)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(21)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(22)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(23)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-(24)axicb_crossbar_top_testbench.mst_driver3.wror[24:0]
-@1401200
--group_end
-@22
-axicb_crossbar_top_testbench.mst_driver3.wror_bresp[49:0]
-axicb_crossbar_top_testbench.mst_driver3.wror_buser[99:0]
-axicb_crossbar_top_testbench.mst_driver3.wror_id[199:0]
-axicb_crossbar_top_testbench.mst_driver3.wror_mr[24:0]
-axicb_crossbar_top_testbench.mst_driver3.wror_timer[399:0]
-@1401200
--Mst3
-@200
--
 @800200
--Switch 3
+-Mst3
+@22
+axicb_crossbar_top_testbench.mst3_araddr[15:0]
+[color] 7
+axicb_crossbar_top_testbench.mst3_arid[7:0]
+[color] 2
+axicb_crossbar_top_testbench.mst3_arlen[7:0]
+@28
+axicb_crossbar_top_testbench.mst3_arvalid
+axicb_crossbar_top_testbench.mst3_arready
+@200
+-
+@22
+axicb_crossbar_top_testbench.mst3_rdata[31:0]
+[color] 7
+axicb_crossbar_top_testbench.mst3_rid[7:0]
+@28
+axicb_crossbar_top_testbench.mst3_rresp[1:0]
+axicb_crossbar_top_testbench.mst3_rvalid
+axicb_crossbar_top_testbench.mst3_rready
+axicb_crossbar_top_testbench.mst3_rlast
+@1000200
+-Mst3
+@200
+-
+@c00200
+-Slv Switch 0
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_arch[56:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_arready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_arvalid
+@200
+-
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.ar_misrouting
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.ar_misrouting_c
+@200
+-
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_rch[45:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_rvalid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_rready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.i_rlast
+@200
+-
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_arch[56:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_arready[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_arvalid[3:0]
+@200
+-
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rch[183:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rvalid[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rready[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.o_rlast[3:0]
+@200
+-
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_en
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_en_r
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rch_full
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rfirst
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rlen[7:0]
+@200
+-
+-
 @420
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.AXI_ID_W
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.BCH_W
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.OSTDREQ_NUM
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NB_ID
 @200
 -
 @28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.aclk
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_full
 @22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_awch[56:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_id[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_ix[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_len[7:0]
 @28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_awready
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_awvalid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_mr
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_valid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.a_ready
 @200
 -
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_en
 @22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_bch[13:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_valid[3:0]
 @28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_bready
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.i_bvalid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_ready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_end
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_grant[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_id[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_len[7:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.c_mr
 @200
 -
-@c00022
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awvalid[3:0]
 @28
-(0)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awvalid[3:0]
-(1)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awvalid[3:0]
-(2)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awvalid[3:0]
-(3)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awvalid[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NO_PATH_CPL.pipe_aready
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NO_PATH_CPL.pipe_in[16:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NO_PATH_CPL.pipe_out[16:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[0].slv_switch.slv_switch_rd.rresp_ooo.NO_PATH_CPL.pipe_valid
 @1401200
--group_end
-@22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_awready[3:0]
+-Slv Switch 0
 @200
 -
-@c00022
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_arch[56:0]
 @28
-(0)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(1)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(2)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(3)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(4)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(5)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(6)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(7)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(8)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(9)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(10)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(11)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(12)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(13)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(14)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(15)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(16)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(17)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(18)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(19)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(20)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(21)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(22)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(23)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(24)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(25)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(26)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(27)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(28)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(29)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(30)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(31)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(32)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(33)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(34)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(35)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(36)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(37)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(38)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(39)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(40)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(41)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(42)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(43)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(44)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(45)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(46)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(47)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(48)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(49)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(50)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(51)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(52)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(53)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(54)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-(55)axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bch[55:0]
-@1401200
--group_end
-@22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bvalid[3:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.o_bready[3:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_arvalid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_arready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.ar_misrouting
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.ar_misrouting_c
 @200
 -
--
 @22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_id[7:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_ix[3:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_len[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_rch[45:0]
 @28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_mr
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_valid
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.a_ready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_rvalid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_rready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.i_rlast
 @200
 -
 @22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.id_empty[4:0]
+[color] 7
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_id[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_ix[3:0]
+[color] 2
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_len[7:0]
 @28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_en
-@22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_reqs[4:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_grant[3:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_select[12:0]
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.pull[4:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_mr
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_valid
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_ready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.a_full
 @200
 -
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rch_en
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rch_en_r
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rfirst
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rlen[7:0]
+@200
+-
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_en
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_grant[3:0]
+[color] 7
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_id[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_len[7:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_mr
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_valid[3:0]
+@28
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_ready
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.c_end
+@200
+-
+@22
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.id_empty[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.id_full[7:0]
+@200
+-
+@201
+-
+@29
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.CPL_PATH.cch_round_robin.en
 @23
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.mr_reqs[4:0]
-@22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_valid[3:0]
-@28
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_ready
-@22
-axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_wr.bresp_ooo.c_last[3:0]
-@200
--
-@1000200
--Switch 3
-@200
--
--
--
-@c00200
--mst if 1
-@22
-axicb_crossbar_top_testbench.dut.mst1_if.i_bch[13:0]
-@28
-axicb_crossbar_top_testbench.dut.mst1_if.i_bvalid
-axicb_crossbar_top_testbench.dut.mst1_if.i_bready
-@200
--
-@22
-axicb_crossbar_top_testbench.dut.mst1_if.o_bid[7:0]
-@28
-axicb_crossbar_top_testbench.dut.mst1_if.o_bresp[1:0]
-@22
-axicb_crossbar_top_testbench.dut.mst1_if.o_buser[3:0]
-@28
-axicb_crossbar_top_testbench.dut.mst1_if.o_bvalid
-axicb_crossbar_top_testbench.dut.mst1_if.o_bready
-@1401200
--mst if 1
-@200
--
-@c00200
--mst if 3
-@22
-axicb_crossbar_top_testbench.dut.mst3_if.i_bch[13:0]
-@28
-axicb_crossbar_top_testbench.dut.mst3_if.i_bvalid
-axicb_crossbar_top_testbench.dut.mst3_if.i_bready
-@200
--
-@22
-axicb_crossbar_top_testbench.dut.mst3_if.o_bid[7:0]
-@28
-axicb_crossbar_top_testbench.dut.mst3_if.o_bresp[1:0]
-@22
-axicb_crossbar_top_testbench.dut.mst3_if.o_buser[3:0]
-@28
-axicb_crossbar_top_testbench.dut.mst3_if.o_bvalid
-axicb_crossbar_top_testbench.dut.mst3_if.o_bready
-@1401200
--mst if 3
-@200
--
-@800200
--Slaves
-@200
--Slv 0
--
-@c00200
--slv0
-@22
-axicb_crossbar_top_testbench.slv_monitor0.awaddr[15:0]
-axicb_crossbar_top_testbench.slv_monitor0.awid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor0.awvalid
-axicb_crossbar_top_testbench.slv_monitor0.awready
-@200
--
-@22
-axicb_crossbar_top_testbench.slv_monitor0.bid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor0.bresp[1:0]
-axicb_crossbar_top_testbench.slv_monitor0.bvalid
-axicb_crossbar_top_testbench.slv_monitor0.bready
-@1401200
--slv0
-@200
--
--Slv 1
--
-@c00200
--slv1
-@28
-axicb_crossbar_top_testbench.slv_monitor1.aclk
-@22
-axicb_crossbar_top_testbench.slv_monitor1.awaddr[15:0]
-axicb_crossbar_top_testbench.slv_monitor1.awid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor1.awvalid
-axicb_crossbar_top_testbench.slv_monitor1.awready
-@200
--
-@22
-axicb_crossbar_top_testbench.slv_monitor1.bid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor1.bresp[1:0]
-axicb_crossbar_top_testbench.slv_monitor1.bvalid
-axicb_crossbar_top_testbench.slv_monitor1.bready
-@1401200
--slv1
-@200
--
--slv 2
--
-@c00200
--slv2
-@22
-axicb_crossbar_top_testbench.slv_monitor2.awaddr[15:0]
-axicb_crossbar_top_testbench.slv_monitor2.awid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor2.awvalid
-axicb_crossbar_top_testbench.slv_monitor2.awready
-@200
--
-@22
-axicb_crossbar_top_testbench.mst_driver1.bid[7:0]
-@28
-axicb_crossbar_top_testbench.mst_driver1.bresp[1:0]
-@22
-axicb_crossbar_top_testbench.mst_driver1.buser[3:0]
-@28
-axicb_crossbar_top_testbench.mst_driver1.bvalid
-axicb_crossbar_top_testbench.mst_driver1.bready
-@1401200
--slv2
-@200
--
--slv 3
--
-@c00200
--slv3
-@28
-axicb_crossbar_top_testbench.slv_monitor3.aclk
-@22
-axicb_crossbar_top_testbench.slv_monitor3.awaddr[15:0]
-axicb_crossbar_top_testbench.slv_monitor3.awid[7:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor3.awvalid
-axicb_crossbar_top_testbench.slv_monitor3.awready
-@200
--
-@22
-axicb_crossbar_top_testbench.slv_monitor3.bid[7:0]
-axicb_crossbar_top_testbench.slv_monitor3.buser[3:0]
-@28
-axicb_crossbar_top_testbench.slv_monitor3.bresp[1:0]
-axicb_crossbar_top_testbench.slv_monitor3.bvalid
-axicb_crossbar_top_testbench.slv_monitor3.bready
-@1401200
--slv3
-@200
--
-@1000200
--Slaves
-@200
--
--
--
--
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.CPL_PATH.cch_round_robin.req[7:0]
+axicb_crossbar_top_testbench.dut.switchs.SLV_SWITCHS_GEN[3].slv_switch.slv_switch_rd.rresp_ooo.CPL_PATH.cch_round_robin.grant[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

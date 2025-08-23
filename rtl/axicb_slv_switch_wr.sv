@@ -283,6 +283,8 @@ module axicb_slv_switch_wr
         end
     end
 
+    // TODO: is it really usefull ? round-robin should pass anyway a 
+    // grant value if unmasked value > 0
     assign bch_en = bch_en_c | bch_en_r;
 
     // Switching logic for BRESP channel
@@ -294,10 +296,10 @@ module axicb_slv_switch_wr
                       (bch_grant[3]) ? o_bvalid[3] :
                                        1'b0;
 
-    assign o_bready[0] = bch_grant[0] & i_bready;
-    assign o_bready[1] = bch_grant[1] & i_bready;
-    assign o_bready[2] = bch_grant[2] & i_bready;
-    assign o_bready[3] = bch_grant[3] & i_bready;
+    assign o_bready[0] = bch_grant[0] & i_bready & !bch_mr;
+    assign o_bready[1] = bch_grant[1] & i_bready & !bch_mr;
+    assign o_bready[2] = bch_grant[2] & i_bready & !bch_mr;
+    assign o_bready[3] = bch_grant[3] & i_bready & !bch_mr;
 
     assign i_bch = (bch_mr)        ? {2'h3, bch_id}:
                    (bch_grant[0])  ? o_bch[0*BCH_W+:BCH_W] :

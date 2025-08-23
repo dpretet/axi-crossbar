@@ -83,14 +83,12 @@ module axicb_slv_switch_rd
     logic [8         -1:0] a_len;
 
     logic                  rch_en;
-    logic                  rch_en_r;
     logic                  rfirst;
     logic                  rch_mr;
     logic [AXI_ID_W  -1:0] rch_id;
     logic [8         -1:0] rch_len;
     logic [SLV_NB    -1:0] rch_grant;
     logic [8         -1:0] rlen;
-    logic                  rch_running;
     logic                  rch_full;
     logic                  c_end;
 
@@ -144,15 +142,15 @@ module axicb_slv_switch_rd
 
     endgenerate
 
-    assign o_arvalid[0] = (slv_ar_targeted[0]) ? i_arvalid : 1'b0;
-    assign o_arvalid[1] = (slv_ar_targeted[1]) ? i_arvalid : 1'b0;
-    assign o_arvalid[2] = (slv_ar_targeted[2]) ? i_arvalid : 1'b0;
-    assign o_arvalid[3] = (slv_ar_targeted[3]) ? i_arvalid : 1'b0;
+    assign o_arvalid[0] = (slv_ar_targeted[0]) ? i_arvalid & !rch_full : 1'b0;
+    assign o_arvalid[1] = (slv_ar_targeted[1]) ? i_arvalid & !rch_full : 1'b0;
+    assign o_arvalid[2] = (slv_ar_targeted[2]) ? i_arvalid & !rch_full : 1'b0;
+    assign o_arvalid[3] = (slv_ar_targeted[3]) ? i_arvalid & !rch_full : 1'b0;
 
-    assign i_arready = (slv_ar_targeted[0]) ? o_arready[0]:
-                       (slv_ar_targeted[1]) ? o_arready[1]:
-                       (slv_ar_targeted[2]) ? o_arready[2]:
-                       (slv_ar_targeted[3]) ? o_arready[3]:
+    assign i_arready = (slv_ar_targeted[0]) ? o_arready[0] & !rch_full:
+                       (slv_ar_targeted[1]) ? o_arready[1] & !rch_full:
+                       (slv_ar_targeted[2]) ? o_arready[2] & !rch_full:
+                       (slv_ar_targeted[3]) ? o_arready[3] & !rch_full:
                                               ar_misrouting;
 
     assign o_arch = i_arch;
@@ -188,7 +186,7 @@ module axicb_slv_switch_rd
     endgenerate
 
     // OoO ID Management
-    axicb_slv_ooo 
+    axicb_slv_ooo
     #(
         .RD_PATH         (1),
         .AXI_ID_W        (AXI_ID_W),
@@ -197,7 +195,7 @@ module axicb_slv_switch_rd
         .MST_ID_MASK     (MST_ID_MASK),
         .CCH_W           (RCH_W)
     )
-    rresp_ooo 
+    rresp_ooo
     (
         .aclk    (aclk),
         .aresetn (aresetn),
@@ -223,7 +221,7 @@ module axicb_slv_switch_rd
 
     assign c_end = i_rvalid & i_rready & i_rlast;
 
-    // Follow-up rcompletion len for mis-routed traffic 
+    // Follow-up rcompletion len for mis-routed traffic
     // which need to be recreated
     always @ (posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
@@ -256,20 +254,10 @@ module axicb_slv_switch_rd
         end
     end
 
-    
-    always @ (posedge aclk or negedge aresetn) begin
-        if (!aresetn) begin
-            rch_en_r <= '0;
-        end else if (srst) begin
-            rch_en_r <= '0;
-        end else begin
-            if (rch_grant=='0) rch_en_r <= 1'b1;
-            else               rch_en_r <= 1'b0;
-        end
-    end
+    // Activates the arbiter in OoO module on first read completion dataphase
+    assign rch_en = rfirst;
 
-
-    assign rch_en = rfirst | rch_en_r;
+    // Switching logic for RRESP channel
 
     assign i_rvalid = (rch_mr)       ? 1'b1 :
                       (rch_grant[0]) ? o_rvalid[0] :
