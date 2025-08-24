@@ -221,8 +221,8 @@ module axicb_slv_switch_rd
 
     assign c_end = i_rvalid & i_rready & i_rlast;
 
-    // Follow-up rcompletion len for mis-routed traffic
-    // which need to be recreated
+    // Follow-up completion len for misrouted traffic
+    // to create RLAST flag
     always @ (posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
             rlen <= 8'h0;

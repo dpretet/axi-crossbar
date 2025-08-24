@@ -15,6 +15,6 @@ fi
 echo "INFO: Start synthesis flow"
 yosys -V
 
-yosys "$design"
+yosys "$design" > "$design.log"
 
 exit 0

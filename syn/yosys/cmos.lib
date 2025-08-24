@@ -1,5 +1,3 @@
-// test comment
-/* test comment */
 library(demo) {
   cell(BUF) {
     area: 6;

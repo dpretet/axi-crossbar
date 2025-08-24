@@ -91,6 +91,9 @@ module axicb_slv_switch_wr
     logic                  bch_full;
     logic                  wch_empty;
 
+    logic [AXI_ID_W  -1:0] a_id;
+    logic                  a_mr;
+
     logic                  bch_en;
     logic                  bch_en_c;
     logic                  bch_en_r;
@@ -161,7 +164,7 @@ module axicb_slv_switch_wr
                                               aw_misrouting;
 
     assign o_awch = i_awch;
-    
+
     assign aw_misrouting_c = slv_aw_targeted=='0;
 
     // Create a fake ready handshake in case a master agent targets a
@@ -192,7 +195,7 @@ module axicb_slv_switch_wr
     #(
         .PASS_THRU  (0),
         .ADDR_WIDTH (8),
-        .DATA_WIDTH (SLV_NB)
+        .DATA_WIDTH (1 + SLV_NB + AXI_ID_W)
     )
     wch_gnt_fifo
     (
@@ -200,10 +203,10 @@ module axicb_slv_switch_wr
         .aresetn  (aresetn),
         .srst     (srst),
         .flush    (1'b0),
-        .data_in  (slv_aw_targeted),
+        .data_in  ({aw_misrouting_c, slv_aw_targeted, i_awch[AXI_ADDR_W+:AXI_ID_W]}),
         .push     (i_awvalid & i_awready),
         .full     (wch_full),
-        .data_out (slv_w_targeted),
+        .data_out ({a_mr, slv_w_targeted, a_id}),
         .pull     (i_wvalid & i_wready & i_wlast),
         .empty    (wch_empty)
     );
@@ -234,7 +237,7 @@ module axicb_slv_switch_wr
     ///////////////////////////////////////////////////////////////////////////
 
     // OoO ID Management
-    axicb_slv_ooo 
+    axicb_slv_ooo
     #(
         .RD_PATH         (0),
         .AXI_ID_W        (AXI_ID_W),
@@ -243,18 +246,18 @@ module axicb_slv_switch_wr
         .MST_ID_MASK     (MST_ID_MASK),
         .CCH_W           (BCH_W)
     )
-    bresp_ooo 
+    bresp_ooo
     (
         .aclk    (aclk),
         .aresetn (aresetn),
         .srst    (srst),
-        .a_valid (i_awvalid),
-        .a_ready (i_awready),
+        .a_valid (i_wvalid & i_wlast & !wch_empty),
+        .a_ready (i_wready),
         .a_full  (bch_full),
-        .a_id    (i_awch[AXI_ADDR_W+:AXI_ID_W]),
+        .a_id    (a_id),
         .a_len   ('0),
-        .a_ix    (slv_aw_targeted),
-        .a_mr    (aw_misrouting_c),
+        .a_ix    (slv_w_targeted),
+        .a_mr    (a_mr),
         .c_en    (bch_en),
         .c_grant (bch_grant),
         .c_mr    (bch_mr),
@@ -283,7 +286,7 @@ module axicb_slv_switch_wr
         end
     end
 
-    // TODO: is it really usefull ? round-robin should pass anyway a 
+    // TODO: is it really usefull ? round-robin should pass anyway a
     // grant value if unmasked value > 0
     assign bch_en = bch_en_c | bch_en_r;
 

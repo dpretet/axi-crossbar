@@ -40,3 +40,6 @@ clean
 
 # write synthesized design
 write_verilog axicb_crossbar_lite_top.v
+
+# drop usage report
+stat -liberty cmos.lib

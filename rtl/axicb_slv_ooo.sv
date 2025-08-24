@@ -155,8 +155,6 @@ module axicb_slv_ooo
 
         // Back pressure to address channel, block any further transaction
         // as soon an ID FIFO is full.
-        // TODO: could be optimized but the loop back to the initiatior
-        //       from the FIFO could be unavoidable.
         always_comb a_full = |id_full;
 
     end
