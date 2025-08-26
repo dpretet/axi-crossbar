@@ -281,14 +281,19 @@ module axicb_slv_ooo
         // Granted completion is just the one active
         assign c_grant = c_valid;
 
-        always @ (*) begin
-            // Read completion path also comprise the ALEN
-            if (RD_PATH) begin
+        if (RD_PATH) begin: C_LEN_RD_PATH
+            always @ (*) begin
+                // Read completion path also comprise the ALEN
                 if (pipe_valid)
                     c_len = pipe_out[(1+AXI_ID_W)+:8];
                 else
                     c_len = '0;
             end
+        end else begin: NO_C_LEN_WR_PATH
+            assign c_len = '0;
+        end
+
+        always @ (*) begin
             // For read and write completion path
             // pass back the ID and misrouteed flag
             if (pipe_valid) begin
@@ -298,7 +303,6 @@ module axicb_slv_ooo
                 c_id = '0;
                 c_mr = '0;
             end
-
         end
 
     // OR > 1, Read completion path 
