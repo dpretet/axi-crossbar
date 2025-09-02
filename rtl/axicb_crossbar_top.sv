@@ -40,7 +40,7 @@ module axicb_crossbar_top
         // AXI Signals Supported:
         //   - 0: AXI4-lite
         //   - 1: AXI
-        parameter AXI_SIGNALING = 0,
+        parameter AXI_SIGNALING = 1,
 
         // USER fields transport enabling (0 deactivate, 1 activate)
         parameter USER_SUPPORT = 0,
@@ -708,9 +708,9 @@ module axicb_crossbar_top
                              MST1_ROUTES,
                              MST0_ROUTES};
 
-    localparam MST_OSTDREQ_NUM = {MST3_OSTDREQ_NUM[7:0], 
-                                  MST2_OSTDREQ_NUM[7:0], 
-                                  MST1_OSTDREQ_NUM[7:0], 
+    localparam MST_OSTDREQ_NUM = {MST3_OSTDREQ_NUM[7:0],
+                                  MST2_OSTDREQ_NUM[7:0],
+                                  MST1_OSTDREQ_NUM[7:0],
                                   MST0_OSTDREQ_NUM[7:0]};
 
     logic [MST_NB            -1:0] i_awvalid;
