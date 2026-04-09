@@ -32,15 +32,9 @@ module axicb_slv_switch_rd
         // Master ID mask
         parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
 
-        // Slaves memory mapping
-        parameter SLV0_START_ADDR = 0,
-        parameter SLV0_END_ADDR = 4095,
-        parameter SLV1_START_ADDR = 4096,
-        parameter SLV1_END_ADDR = 8191,
-        parameter SLV2_START_ADDR = 8192,
-        parameter SLV2_END_ADDR = 12287,
-        parameter SLV3_START_ADDR = 12288,
-        parameter SLV3_END_ADDR = 16383,
+        // Slave Memory Mapping
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -92,66 +86,55 @@ module axicb_slv_switch_rd
     logic                  rch_full;
     logic                  c_end;
 
-    logic [AXI_ADDR_W-1:0] slv0_start_addr = SLV0_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv0_end_addr =   SLV0_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv1_start_addr = SLV1_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv1_end_addr =   SLV1_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv2_start_addr = SLV2_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv2_end_addr =   SLV2_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv3_start_addr = SLV3_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv3_end_addr =   SLV3_END_ADDR[0+:AXI_ADDR_W];
+    // Extract start/end addresses from packed parameters (generic for SLV_NB)
+    logic [AXI_ADDR_W-1:0] slv_start_addr [0:SLV_NB-1];
+    logic [AXI_ADDR_W-1:0] slv_end_addr   [0:SLV_NB-1];
+
+    generate
+    genvar i;
+        for (i = 0; i < SLV_NB; i = i + 1) begin : SLV_ADDR_EXTRACT
+            assign slv_start_addr[i] = SLV_START_ADDR[i*AXI_ADDR_W+:AXI_ADDR_W];
+            assign slv_end_addr[i]   = SLV_END_ADDR[i*AXI_ADDR_W+:AXI_ADDR_W];
+        end
+    endgenerate
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
+    // Address decoding
     generate
-
-    if (MST_ROUTES[0]==1'b1) begin : SLV0_AR_ROUTE_ON
-        assign slv_ar_targeted[0] = (i_arch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
-                                     i_arch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1:
-                                                                                              1'b0;
-    end else begin : SLV0_AR_ROUTE_OFF
-        assign slv_ar_targeted[0] = 1'b0;
+    genvar j;
+    for (j = 0; j < SLV_NB; j = j + 1) begin : SLV_AR_ROUTE
+        if (MST_ROUTES[j]==1'b1) begin : ROUTE_ON
+            assign slv_ar_targeted[j] = (i_arch[0+:AXI_ADDR_W] >= slv_start_addr[j] &&
+                                         i_arch[0+:AXI_ADDR_W] <= slv_end_addr[j]) ? 1'b1 : 1'b0;
+        end else begin : ROUTE_OFF
+            assign slv_ar_targeted[j] = 1'b0;
+        end
     end
-
-    if (MST_ROUTES[1]==1'b1) begin : SLV1_AR_ROUTE_ON
-        assign slv_ar_targeted[1] = (i_arch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
-                                     i_arch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1 :
-                                                                                              1'b0;
-    end else begin : SLV1_AR_ROUTE_OFF
-        assign slv_ar_targeted[1] = 1'b0;
-    end
-
-    if (MST_ROUTES[2]==1'b1) begin : SLV2_AR_ROUTE_ON
-        assign slv_ar_targeted[2] = (i_arch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
-                                     i_arch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1 :
-                                                                                              1'b0;
-    end else begin : SLV2_AR_ROUTE_OFF
-        assign slv_ar_targeted[2] = 1'b0;
-    end
-
-    if (MST_ROUTES[3]==1'b1) begin : SLV3_AR_ROUTE_ON
-        assign slv_ar_targeted[3] = (i_arch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
-                                     i_arch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1 :
-                                                                                              1'b0;
-    end else begin : SLV3_AR_ROUTE_OFF
-        assign slv_ar_targeted[3] = 1'b0;
-    end
-
     endgenerate
 
-    assign o_arvalid[0] = (slv_ar_targeted[0]) ? i_arvalid & !rch_full : 1'b0;
-    assign o_arvalid[1] = (slv_ar_targeted[1]) ? i_arvalid & !rch_full : 1'b0;
-    assign o_arvalid[2] = (slv_ar_targeted[2]) ? i_arvalid & !rch_full : 1'b0;
-    assign o_arvalid[3] = (slv_ar_targeted[3]) ? i_arvalid & !rch_full : 1'b0;
+    // AR channel assignments
+    generate
+    genvar n;
+        for (n = 0; n < SLV_NB; n = n + 1) begin : SLV_AR_VALID
+            assign o_arvalid[n] = (slv_ar_targeted[n]) ? i_arvalid & !rch_full : 1'b0;
+        end
+    endgenerate
 
-    assign i_arready = (slv_ar_targeted[0]) ? o_arready[0] & !rch_full:
-                       (slv_ar_targeted[1]) ? o_arready[1] & !rch_full:
-                       (slv_ar_targeted[2]) ? o_arready[2] & !rch_full:
-                       (slv_ar_targeted[3]) ? o_arready[3] & !rch_full:
-                                              ar_misrouting;
+    // Ready back-pressure selection
+    always_comb begin
+
+        if (slv_ar_targeted == '0)
+            i_arready = ar_misrouting;
+        else
+            i_arready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (slv_ar_targeted[i])
+                    i_arready = o_arready[i] & !rch_full;
+    end
 
     assign o_arch = i_arch;
 
@@ -259,31 +242,49 @@ module axicb_slv_switch_rd
 
     // Switching logic for RRESP channel
 
-    assign i_rvalid = (rch_mr)       ? 1'b1 :
-                      (rch_grant[0]) ? o_rvalid[0] :
-                      (rch_grant[1]) ? o_rvalid[1] :
-                      (rch_grant[2]) ? o_rvalid[2] :
-                      (rch_grant[3]) ? o_rvalid[3] :
-                                       1'b0;
+    always_comb begin
 
-    assign i_rlast = (rch_mr)        ? (rlen==rch_len) & i_rvalid & i_rready :
-                     (rch_grant[0])  ? o_rlast[0] :
-                     (rch_grant[1])  ? o_rlast[1] :
-                     (rch_grant[2])  ? o_rlast[2] :
-                     (rch_grant[3])  ? o_rlast[3] :
-                                       1'b0;
+        i_rvalid = '0;
+        i_rlast = '0;
+        i_rch = '0;
 
-    assign o_rready[0] = rch_grant[0] & i_rready & !rch_mr;
-    assign o_rready[1] = rch_grant[1] & i_rready & !rch_mr;
-    assign o_rready[2] = rch_grant[2] & i_rready & !rch_mr;
-    assign o_rready[3] = rch_grant[3] & i_rready & !rch_mr;
+        // RVALID Signal
+        if (rch_mr)
+            i_rvalid = '1;
+        else if (rch_grant == '0)
+            i_rvalid = '0;
+        else
+            for (int i=0;i<SLV_NB;i++)
+                if (rch_grant[i])
+                    i_rvalid = o_rvalid[i];
 
-    assign i_rch = (rch_mr)       ? {'0, 2'h3, rch_id} :
-                   (rch_grant[0]) ? o_rch[0*RCH_W+:RCH_W] :
-                   (rch_grant[1]) ? o_rch[1*RCH_W+:RCH_W] :
-                   (rch_grant[2]) ? o_rch[2*RCH_W+:RCH_W] :
-                   (rch_grant[3]) ? o_rch[3*RCH_W+:RCH_W] :
-                                    {RCH_W{1'b0}};
+        // RLAST Signal
+        if (rch_mr)
+            i_rlast = (rlen==rch_len) & i_rvalid & i_rready;
+        else if (rch_grant == '0)
+            i_rlast = '0;
+        else
+            for (int i=0;i<SLV_NB;i++)
+                if (rch_grant[i])
+                    i_rlast = o_rlast[i];
+
+        // RRESP / RDATA / RUSER
+        if (rch_mr)
+            i_rch = {'0, 2'h3, rch_id} ;
+        else if (rch_grant == '0)
+            i_rch = '0;
+        else
+            for (int i=0;i<SLV_NB;i++)
+                if (rch_grant[i])
+                    i_rch = o_rch[i*RCH_W+:RCH_W];
+    end
+
+    generate
+    genvar m;
+        for (m = 0; m < SLV_NB; m = m + 1) begin : SLV_R_READY
+            assign o_rready[m] = rch_grant[m] & i_rready & !rch_mr;
+        end
+    endgenerate
 
 endmodule
 

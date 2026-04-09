@@ -32,15 +32,9 @@ module axicb_slv_switch_wr
         // Master ID mask
         parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
 
-        // Slaves memory mapping
-        parameter SLV0_START_ADDR = 0,
-        parameter SLV0_END_ADDR = 4095,
-        parameter SLV1_START_ADDR = 4096,
-        parameter SLV1_END_ADDR = 8191,
-        parameter SLV2_START_ADDR = 8192,
-        parameter SLV2_END_ADDR = 12287,
-        parameter SLV3_START_ADDR = 12288,
-        parameter SLV3_END_ADDR = 16383,
+        // Slave Memory Mapping
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -102,66 +96,55 @@ module axicb_slv_switch_wr
     logic [AXI_ID_W  -1:0] bch_id;
     logic                  c_end;
 
-    logic [AXI_ADDR_W-1:0] slv0_start_addr = SLV0_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv0_end_addr =   SLV0_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv1_start_addr = SLV1_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv1_end_addr =   SLV1_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv2_start_addr = SLV2_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv2_end_addr =   SLV2_END_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv3_start_addr = SLV3_START_ADDR[0+:AXI_ADDR_W];
-    logic [AXI_ADDR_W-1:0] slv3_end_addr =   SLV3_END_ADDR[0+:AXI_ADDR_W];
+    // Extract start/end addresses from packed parameters (generic for SLV_NB)
+    logic [AXI_ADDR_W-1:0] slv_start_addr [0:SLV_NB-1];
+    logic [AXI_ADDR_W-1:0] slv_end_addr   [0:SLV_NB-1];
+    
+    generate
+    genvar i;
+        for (i = 0; i < SLV_NB; i = i + 1) begin : SLV_ADDR_EXTRACT
+            assign slv_start_addr[i] = SLV_START_ADDR[i*AXI_ADDR_W+:AXI_ADDR_W];
+            assign slv_end_addr[i]   = SLV_END_ADDR[i*AXI_ADDR_W+:AXI_ADDR_W];
+        end
+    endgenerate
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Write Address Channel
     ///////////////////////////////////////////////////////////////////////////
 
+    // Address decoding
     generate
-
-    if (MST_ROUTES[0]==1'b1) begin : SLV0_AW_ROUTE_ON
-        assign slv_aw_targeted[0] = (i_awch[0+:AXI_ADDR_W] >= slv0_start_addr[0+:AXI_ADDR_W] &&
-                                     i_awch[0+:AXI_ADDR_W] <= slv0_end_addr[0+:AXI_ADDR_W]) ? 1'b1:
-                                                                                              1'b0;
-    end else begin : SLV0_AW_ROUTE_OFF
-        assign slv_aw_targeted[0] = 1'b0;
+    genvar j;
+    for (j = 0; j < SLV_NB; j = j + 1) begin : SLV_AW_ROUTE
+        if (MST_ROUTES[j]==1'b1) begin : ROUTE_ON
+            assign slv_aw_targeted[j] = (i_awch[0+:AXI_ADDR_W] >= slv_start_addr[j] &&
+                                         i_awch[0+:AXI_ADDR_W] <= slv_end_addr[j]) ? 1'b1 : 1'b0;
+        end else begin : ROUTE_OFF
+            assign slv_aw_targeted[j] = 1'b0;
+        end
     end
-
-    if (MST_ROUTES[1]==1'b1) begin : SLV1_AW_ROUTE_ON
-        assign slv_aw_targeted[1] = (i_awch[0+:AXI_ADDR_W] >= slv1_start_addr[0+:AXI_ADDR_W] &&
-                                     i_awch[0+:AXI_ADDR_W] <= slv1_end_addr[0+:AXI_ADDR_W]) ? 1'b1:
-                                                                                              1'b0;
-    end else begin : SLV1_AW_ROUTE_OFF
-        assign slv_aw_targeted[1] = 1'b0;
-    end
-
-    if (MST_ROUTES[2]==1'b1) begin : SLV2_AW_ROUTE_ON
-        assign slv_aw_targeted[2] = (i_awch[0+:AXI_ADDR_W] >= slv2_start_addr[0+:AXI_ADDR_W] &&
-                                     i_awch[0+:AXI_ADDR_W] <= slv2_end_addr[0+:AXI_ADDR_W]) ? 1'b1:
-                                                                                              1'b0;
-    end else begin : SLV2_AW_ROUTE_OFF
-        assign slv_aw_targeted[2] = 1'b0;
-    end
-
-    if (MST_ROUTES[3]==1'b1) begin : SLV3_AW_ROUTE_ON
-        assign slv_aw_targeted[3] = (i_awch[0+:AXI_ADDR_W] >= slv3_start_addr[0+:AXI_ADDR_W] &&
-                                     i_awch[0+:AXI_ADDR_W] <= slv3_end_addr[0+:AXI_ADDR_W]) ? 1'b1:
-                                                                                              1'b0;
-    end else begin : SLV3_AW_ROUTE_OFF
-        assign slv_aw_targeted[3] = 1'b0;
-    end
-
     endgenerate
 
-    assign o_awvalid[0] = (slv_aw_targeted[0]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
-    assign o_awvalid[1] = (slv_aw_targeted[1]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
-    assign o_awvalid[2] = (slv_aw_targeted[2]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
-    assign o_awvalid[3] = (slv_aw_targeted[3]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
+    // AW channel assignments
+    generate
+    genvar n;
+        for (n = 0; n < SLV_NB; n = n + 1) begin : SLV_AW_VALID
+            assign o_awvalid[n] = (slv_aw_targeted[n]) ? i_awvalid & !bch_full & !wch_full : 1'b0;
+        end
+    endgenerate
 
-    assign i_awready = (slv_aw_targeted[0]) ? o_awready[0] & !bch_full & !wch_full :
-                       (slv_aw_targeted[1]) ? o_awready[1] & !bch_full & !wch_full :
-                       (slv_aw_targeted[2]) ? o_awready[2] & !bch_full & !wch_full :
-                       (slv_aw_targeted[3]) ? o_awready[3] & !bch_full & !wch_full :
-                                              aw_misrouting;
+    // Ready back-pressure selection
+    always_comb begin
+
+        if (slv_aw_targeted == '0)
+            i_awready = aw_misrouting;
+        else
+            i_awready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (slv_aw_targeted[i])
+                    i_awready = o_awready[i] & !wch_full;
+    end
 
     assign o_awch = i_awch;
 
@@ -211,23 +194,31 @@ module axicb_slv_switch_wr
         .empty    (wch_empty)
     );
 
-    assign o_wvalid[0] = (!wch_empty & slv_w_targeted[0]) ? i_wvalid : 1'b0;
-    assign o_wvalid[1] = (!wch_empty & slv_w_targeted[1]) ? i_wvalid : 1'b0;
-    assign o_wvalid[2] = (!wch_empty & slv_w_targeted[2]) ? i_wvalid : 1'b0;
-    assign o_wvalid[3] = (!wch_empty & slv_w_targeted[3]) ? i_wvalid : 1'b0;
+    // Generic assignments for all slaves
+    genvar k;
+    generate
+        for (k = 0; k < SLV_NB; k = k + 1) begin : SLV_W_VALID
+            assign o_wvalid[k] = (!wch_empty & slv_w_targeted[k]) ? i_wvalid : 1'b0;
+            assign o_wlast[k] = (!wch_empty & slv_w_targeted[k]) ? i_wlast : 1'b0;
+        end
+    endgenerate
 
-    assign i_wready = (!wch_empty & slv_w_targeted[0]) ? o_wready[0] :
-                      (!wch_empty & slv_w_targeted[1]) ? o_wready[1] :
-                      (!wch_empty & slv_w_targeted[2]) ? o_wready[2] :
-                      (!wch_empty & slv_w_targeted[3]) ? o_wready[3] :
-                      // Targets an undefined or forbidden memory space
-                      (!wch_empty                    ) ? 1'b1 :
-                                                         1'b0;
+    // Ready back-pressure selection
+    always_comb begin
 
-    assign o_wlast[0] = (!wch_empty & slv_w_targeted[0]) ? i_wlast : 1'b0;
-    assign o_wlast[1] = (!wch_empty & slv_w_targeted[1]) ? i_wlast : 1'b0;
-    assign o_wlast[2] = (!wch_empty & slv_w_targeted[2]) ? i_wlast : 1'b0;
-    assign o_wlast[3] = (!wch_empty & slv_w_targeted[3]) ? i_wlast : 1'b0;
+        // IDLE
+        if (slv_w_targeted == '0 & wch_empty)
+            i_wready = '0;
+        // Targets an undefined or forbidden memory space
+        else if (slv_aw_targeted == '0 & !wch_empty)
+            i_wready = '1;
+        else
+            i_wready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (!wch_empty & slv_w_targeted[i])
+                    i_wready = o_wready[i];
+    end
+
 
     assign o_wch = i_wch;
 
@@ -292,24 +283,39 @@ module axicb_slv_switch_wr
 
     // Switching logic for BRESP channel
 
-    assign i_bvalid = (bch_mr) ? 1'b1 :
-                      (bch_grant[0]) ? o_bvalid[0] :
-                      (bch_grant[1]) ? o_bvalid[1] :
-                      (bch_grant[2]) ? o_bvalid[2] :
-                      (bch_grant[3]) ? o_bvalid[3] :
-                                       1'b0;
+    generate
+    genvar m;
+        for (m = 0; m < SLV_NB; m = m + 1) begin : SLV_B_READY
+            assign o_bready[m] = bch_grant[m] & i_bready & !bch_mr;
+        end
+    endgenerate
 
-    assign o_bready[0] = bch_grant[0] & i_bready & !bch_mr;
-    assign o_bready[1] = bch_grant[1] & i_bready & !bch_mr;
-    assign o_bready[2] = bch_grant[2] & i_bready & !bch_mr;
-    assign o_bready[3] = bch_grant[3] & i_bready & !bch_mr;
 
-    assign i_bch = (bch_mr)        ? {2'h3, bch_id}:
-                   (bch_grant[0])  ? o_bch[0*BCH_W+:BCH_W] :
-                   (bch_grant[1])  ? o_bch[1*BCH_W+:BCH_W] :
-                   (bch_grant[2])  ? o_bch[2*BCH_W+:BCH_W] :
-                   (bch_grant[3])  ? o_bch[3*BCH_W+:BCH_W] :
-                                     {BCH_W{1'b0}};
+    always_comb begin
+
+        i_bvalid = '0;
+        i_bch = '0;
+
+        // BVALID Signal
+        if (bch_mr)
+            i_bvalid = '1;
+        else if (bch_grant == '0)
+            i_bvalid = '0;
+        else
+            for (int i=0;i<SLV_NB;i++)
+                if (bch_grant[i])
+                    i_bvalid = o_bvalid[i];
+
+        // BRESP / BUSER
+        if (bch_mr)
+            i_bch = {2'h3, bch_id} ;
+        else if (bch_grant == '0)
+            i_bch = '0;
+        else
+            for (int i=0;i<SLV_NB;i++)
+                if (bch_grant[i])
+                    i_bch = o_bch[i*BCH_W+:BCH_W];
+    end
 
 
 endmodule

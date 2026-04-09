@@ -28,35 +28,23 @@ module axicb_switch_top
         parameter SLV_PIPELINE = 0,
 
         // Activate the timer to avoid deadlock
-        parameter TIMEOUT_ENABLE = 1,
+        parameter TIMEOUT_ENABLE = 0,
 
         // Routes to the slaves allowed per master
         parameter [MST_NB*SLV_NB -1:0] MST_ROUTES = 16'hFFFF,
 
         // Masters ID mask
-        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
-        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
-        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20,
-        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30,
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
-        parameter MST0_PRIORITY = 0,
-        parameter MST1_PRIORITY = 0,
-        parameter MST2_PRIORITY = 0,
-        parameter MST3_PRIORITY = 0,
+        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Masters Outstanding Requests Number
         parameter [MST_NB*8-1:0] MST_OSTDREQ_NUM = 'h4_4_4_4,
 
         // Slaves memory mapping
-        parameter SLV0_START_ADDR = 0,
-        parameter SLV0_END_ADDR = 4095,
-        parameter SLV1_START_ADDR = 4096,
-        parameter SLV1_END_ADDR = 8191,
-        parameter SLV2_START_ADDR = 8192,
-        parameter SLV2_END_ADDR = 12287,
-        parameter SLV3_START_ADDR = 12288,
-        parameter SLV3_END_ADDR = 16383,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -109,8 +97,6 @@ module axicb_switch_top
 
     genvar i, j;
         
-    parameter [4*AXI_ID_W-1:0] MST_ID_MASK = {MST3_ID_MASK,MST2_ID_MASK,MST1_ID_MASK,MST0_ID_MASK};
-
     // master <> slave logic routing
     logic [MST_NB*SLV_NB            -1:0] slv_awvalid;
     logic [MST_NB*SLV_NB            -1:0] slv_awready;
@@ -269,14 +255,8 @@ module axicb_switch_top
             .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM[i*8+:8]),
             .MST_ID_MASK     (MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W]),
             .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
-            .SLV0_START_ADDR (SLV0_START_ADDR),
-            .SLV0_END_ADDR   (SLV0_END_ADDR),
-            .SLV1_START_ADDR (SLV1_START_ADDR),
-            .SLV1_END_ADDR   (SLV1_END_ADDR),
-            .SLV2_START_ADDR (SLV2_START_ADDR),
-            .SLV2_END_ADDR   (SLV2_END_ADDR),
-            .SLV3_START_ADDR (SLV3_START_ADDR),
-            .SLV3_END_ADDR   (SLV3_END_ADDR),
+            .SLV_START_ADDR  (SLV_START_ADDR),
+            .SLV_END_ADDR    (SLV_END_ADDR),
             .AWCH_W          (AWCH_W),
             .WCH_W           (WCH_W),
             .BCH_W           (BCH_W),
@@ -407,14 +387,8 @@ module axicb_switch_top
             .AXI_DATA_W     (AXI_DATA_W),
             .MST_NB         (MST_NB),
             .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-            .MST0_ID_MASK   (MST0_ID_MASK),
-            .MST1_ID_MASK   (MST1_ID_MASK),
-            .MST2_ID_MASK   (MST2_ID_MASK),
-            .MST3_ID_MASK   (MST3_ID_MASK),
-            .MST0_PRIORITY  (MST0_PRIORITY),
-            .MST1_PRIORITY  (MST1_PRIORITY),
-            .MST2_PRIORITY  (MST2_PRIORITY),
-            .MST3_PRIORITY  (MST3_PRIORITY),
+            .MST_ID_MASK    (MST_ID_MASK),
+            .MST_PRIORITY   (MST_PRIORITY),
             .AWCH_W         (AWCH_W),
             .WCH_W          (WCH_W),
             .BCH_W          (BCH_W),

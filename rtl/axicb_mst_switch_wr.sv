@@ -19,16 +19,10 @@ module axicb_mst_switch_wr
         parameter TIMEOUT_ENABLE = 1,
 
         // Masters ID mask
-        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
-        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
-        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20,
-        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30,
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
-        parameter MST0_PRIORITY = 0,
-        parameter MST1_PRIORITY = 0,
-        parameter MST2_PRIORITY = 0,
-        parameter MST3_PRIORITY = 0,
+        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -78,10 +72,7 @@ module axicb_mst_switch_wr
 
     logic [MST_NB    -1:0] wch_grant;
 
-    logic                  mst0_bch_targeted;
-    logic                  mst1_bch_targeted;
-    logic                  mst2_bch_targeted;
-    logic                  mst3_bch_targeted;
+    logic [MST_NB    -1:0] mst_bch_targeted;
 
     logic                  wch_full;
     logic                  wch_empty;
@@ -96,10 +87,10 @@ module axicb_mst_switch_wr
     axicb_round_robin
     #(
         .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
+        .REQ0_PRIORITY (MST_PRIORITY[0*2+:2]),
+        .REQ1_PRIORITY (MST_PRIORITY[1*2+:2]),
+        .REQ2_PRIORITY (MST_PRIORITY[2*2+:2]),
+        .REQ3_PRIORITY (MST_PRIORITY[3*2+:2])
     )
     awch_round_robin
     (
@@ -111,11 +102,14 @@ module axicb_mst_switch_wr
         .grant   (awch_grant)
     );
 
-    assign o_awvalid = (awch_grant[0]) ? i_awvalid[0] :
-                       (awch_grant[1]) ? i_awvalid[1] :
-                       (awch_grant[2]) ? i_awvalid[2] :
-                       (awch_grant[3]) ? i_awvalid[3] :
-                                         1'b0;
+    always_comb begin
+
+        o_awvalid = '0;
+
+        for (int i=0; i<MST_NB; i++)
+            if (awch_grant[i])
+                o_awvalid = i_awvalid[i];
+    end
 
     assign i_awready = awch_grant & {MST_NB{o_awready & !wch_full}};
 
@@ -134,11 +128,18 @@ module axicb_mst_switch_wr
 
     assign awch_en = awch_en_c | awch_en_r;
 
-    assign o_awch = (awch_grant[0]) ? i_awch[0*AWCH_W+:AWCH_W] :
-                    (awch_grant[1]) ? i_awch[1*AWCH_W+:AWCH_W] :
-                    (awch_grant[2]) ? i_awch[2*AWCH_W+:AWCH_W] :
-                    (awch_grant[3]) ? i_awch[3*AWCH_W+:AWCH_W] :
-                                      {AWCH_W{1'b0}};
+    always_comb begin
+
+        o_awch = '0;
+
+        if (awch_grant == '0)
+            o_awch = '0;
+        else
+            for (int i=0;i<MST_NB;i++)
+                if (awch_grant[i])
+                    o_awch = i_awch[i*AWCH_W+:AWCH_W];
+    end
+
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -165,26 +166,33 @@ module axicb_mst_switch_wr
     .empty    (wch_empty)
     );
 
-    assign o_wvalid = (~wch_empty & wch_grant[0]) ? i_wvalid[0] :
-                      (~wch_empty & wch_grant[1]) ? i_wvalid[1] :
-                      (~wch_empty & wch_grant[2]) ? i_wvalid[2] :
-                      (~wch_empty & wch_grant[3]) ? i_wvalid[3] :
-                                                    1'b0;
-
-    assign o_wlast = (~wch_empty & wch_grant[0]) ? i_wlast[0] :
-                     (~wch_empty & wch_grant[1]) ? i_wlast[1] :
-                     (~wch_empty & wch_grant[2]) ? i_wlast[2] :
-                     (~wch_empty & wch_grant[3]) ? i_wlast[3] :
-                                                   1'b0;
-
     assign i_wready = (wch_empty) ? {MST_NB{1'b0}} :
                                      wch_grant & {MST_NB{o_wready}};
 
-    assign o_wch = (~wch_empty & wch_grant[0]) ? i_wch[0*WCH_W+:WCH_W] :
-                   (~wch_empty & wch_grant[1]) ? i_wch[1*WCH_W+:WCH_W] :
-                   (~wch_empty & wch_grant[2]) ? i_wch[2*WCH_W+:WCH_W] :
-                   (~wch_empty & wch_grant[3]) ? i_wch[3*WCH_W+:WCH_W] :
-                                                 {WCH_W{1'b0}};
+    always_comb begin
+
+        o_wvalid = '0;
+        o_wlast = '0;
+        o_wch = '0;
+
+        if (wch_empty) begin
+            o_wvalid = '0;
+            o_wlast = '0;
+            o_wch = '0;
+        end else if (wch_grant == '0) begin
+            o_wvalid = '0;
+            o_wlast = '0;
+            o_wch = '0;
+        end else begin
+            for (int i=0;i<MST_NB;i++) begin
+                if (wch_grant[i]) begin
+                    o_wvalid = i_wvalid[i];
+                    o_wlast = i_wlast[i];
+                    o_wch = i_wch[i*WCH_W+:WCH_W];
+                end
+            end
+        end 
+    end
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -193,21 +201,22 @@ module axicb_mst_switch_wr
 
     // BCH = {RESP, ID}
 
-    assign mst0_bch_targeted = ((MST0_ID_MASK & o_bch[0+:AXI_ID_W]) == MST0_ID_MASK);
-    assign mst1_bch_targeted = ((MST1_ID_MASK & o_bch[0+:AXI_ID_W]) == MST1_ID_MASK);
-    assign mst2_bch_targeted = ((MST2_ID_MASK & o_bch[0+:AXI_ID_W]) == MST2_ID_MASK);
-    assign mst3_bch_targeted = ((MST3_ID_MASK & o_bch[0+:AXI_ID_W]) == MST3_ID_MASK);
+    generate
+    genvar i;
+        for (i = 0; i < MST_NB; i = i + 1) begin : MST_BCH_TARGET
+            assign mst_bch_targeted[i] = ((MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W] & o_bch[0+:AXI_ID_W]) == MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W]);
+            assign i_bvalid[i] = (mst_bch_targeted[i]) ? o_bvalid : 1'b0;
+        end
+    endgenerate
 
-    assign i_bvalid[0] = (mst0_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[1] = (mst1_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[2] = (mst2_bch_targeted) ? o_bvalid : 1'b0;
-    assign i_bvalid[3] = (mst3_bch_targeted) ? o_bvalid : 1'b0;
-
-    assign o_bready = (mst0_bch_targeted) ? i_bready[0] :
-                      (mst1_bch_targeted) ? i_bready[1] :
-                      (mst2_bch_targeted) ? i_bready[2] :
-                      (mst3_bch_targeted) ? i_bready[3] :
-                                            1'b0;
+    always_comb begin
+        o_bready = '0;
+        if (mst_bch_targeted == '0)
+            o_bready = '0;
+        else for (int i=0; i<MST_NB; i++)
+            if (mst_bch_targeted[i])
+                o_bready = i_bready[i];
+    end
 
     assign i_bch = o_bch;
 

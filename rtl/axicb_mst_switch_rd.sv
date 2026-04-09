@@ -19,16 +19,10 @@ module axicb_mst_switch_rd
         parameter TIMEOUT_ENABLE = 1,
 
         // Masters ID mask
-        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h00,
-        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h10,
-        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h20,
-        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h30,
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
-        parameter MST0_PRIORITY = 0,
-        parameter MST1_PRIORITY = 0,
-        parameter MST2_PRIORITY = 0,
-        parameter MST3_PRIORITY = 0,
+        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -70,11 +64,7 @@ module axicb_mst_switch_rd
     logic [MST_NB    -1:0] arch_req;
     logic [MST_NB    -1:0] arch_grant;
 
-    logic                  mst0_rch_targeted;
-    logic                  mst1_rch_targeted;
-    logic                  mst2_rch_targeted;
-    logic                  mst3_rch_targeted;
-
+    logic [MST_NB    -1:0] mst_rch_targeted;
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Address Channel
@@ -85,10 +75,10 @@ module axicb_mst_switch_rd
     axicb_round_robin
     #(
         .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST0_PRIORITY),
-        .REQ1_PRIORITY (MST1_PRIORITY),
-        .REQ2_PRIORITY (MST2_PRIORITY),
-        .REQ3_PRIORITY (MST3_PRIORITY)
+        .REQ0_PRIORITY (MST_PRIORITY[0*2+:2]),
+        .REQ1_PRIORITY (MST_PRIORITY[1*2+:2]),
+        .REQ2_PRIORITY (MST_PRIORITY[2*2+:2]),
+        .REQ3_PRIORITY (MST_PRIORITY[3*2+:2])
     )
     arch_round_robin
     (
@@ -100,11 +90,14 @@ module axicb_mst_switch_rd
         .grant   (arch_grant)
     );
 
-    assign o_arvalid = (arch_grant[0]) ? i_arvalid[0] :
-                       (arch_grant[1]) ? i_arvalid[1] :
-                       (arch_grant[2]) ? i_arvalid[2] :
-                       (arch_grant[3]) ? i_arvalid[3] :
-                                         1'b0;
+    always_comb begin
+
+        o_arvalid = '0;
+
+        for (int i=0; i<MST_NB; i++)
+            if (arch_grant[i])
+                o_arvalid = i_arvalid[i];
+    end
 
     assign i_arready = arch_grant & {MST_NB{o_arready}};
 
@@ -123,38 +116,41 @@ module axicb_mst_switch_rd
 
     assign arch_en = arch_en_c | arch_en_r;
 
-    assign o_arch = (arch_grant[0]) ? i_arch[0*ARCH_W+:ARCH_W] :
-                    (arch_grant[1]) ? i_arch[1*ARCH_W+:ARCH_W] :
-                    (arch_grant[2]) ? i_arch[2*ARCH_W+:ARCH_W] :
-                    (arch_grant[3]) ? i_arch[3*ARCH_W+:ARCH_W] :
-                                      {ARCH_W{1'b0}};
+    always_comb begin
+
+        o_arch = '0;
+
+        if (arch_grant == '0)
+            o_arch = '0;
+        else
+            for (int i=0;i<MST_NB;i++)
+                if (arch_grant[i])
+                    o_arch = i_arch[i*ARCH_W+:ARCH_W];
+    end
 
     ///////////////////////////////////////////////////////////////////////////
     // Read Response Channel
     ///////////////////////////////////////////////////////////////////////////
 
     // RCH = {RESP, ID, DATA}
+    generate
+    genvar i;
+        for (i = 0; i < MST_NB; i = i + 1) begin : MST_RCH_TARGET
+            assign mst_rch_targeted[i] = ((MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W] & o_rch[0+:AXI_ID_W]) == MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W]);
+            assign i_rvalid[i] = (mst_rch_targeted[i]) ? o_rvalid : 1'b0;
+            assign i_rlast[i] = (mst_rch_targeted[i]) ? o_rlast : 1'b0;
+        end
+    endgenerate
 
-    assign mst0_rch_targeted = ((MST0_ID_MASK & o_rch[0+:AXI_ID_W]) == MST0_ID_MASK);
-    assign mst1_rch_targeted = ((MST1_ID_MASK & o_rch[0+:AXI_ID_W]) == MST1_ID_MASK);
-    assign mst2_rch_targeted = ((MST2_ID_MASK & o_rch[0+:AXI_ID_W]) == MST2_ID_MASK);
-    assign mst3_rch_targeted = ((MST3_ID_MASK & o_rch[0+:AXI_ID_W]) == MST3_ID_MASK);
+    always_comb begin
+        o_rready = '0;
+        if (mst_rch_targeted == '0)
+            o_rready = '0;
+        else for (int i=0; i<MST_NB; i++)
+            if (mst_rch_targeted[i])
+                o_rready = i_rready[i];
+    end
 
-    assign i_rvalid[0] = (mst0_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[1] = (mst1_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[2] = (mst2_rch_targeted) ? o_rvalid : 1'b0;
-    assign i_rvalid[3] = (mst3_rch_targeted) ? o_rvalid : 1'b0;
-
-    assign i_rlast[0] = (mst0_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[1] = (mst1_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[2] = (mst2_rch_targeted) ? o_rlast : 1'b0;
-    assign i_rlast[3] = (mst3_rch_targeted) ? o_rlast : 1'b0;
-
-    assign o_rready = (mst0_rch_targeted) ? i_rready[0] :
-                      (mst1_rch_targeted) ? i_rready[1] :
-                      (mst2_rch_targeted) ? i_rready[2] :
-                      (mst3_rch_targeted) ? i_rready[3] :
-                                            1'b0;
 
     assign i_rch = o_rch;
 

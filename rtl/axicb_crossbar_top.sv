@@ -703,15 +703,41 @@ module axicb_crossbar_top
 
     localparam RCH_W = AXI_DATA_W + AXI_ID_W + 2 + RUSER_W;
 
-    localparam MST_ROUTES = {MST3_ROUTES,
-                             MST2_ROUTES,
-                             MST1_ROUTES,
-                             MST0_ROUTES};
+    localparam [MST_NB*SLV_NB -1:0] MST_ROUTES = {
+        MST3_ROUTES,
+        MST2_ROUTES,
+        MST1_ROUTES,
+        MST0_ROUTES};
 
-    localparam MST_OSTDREQ_NUM = {MST3_OSTDREQ_NUM[7:0],
-                                  MST2_OSTDREQ_NUM[7:0],
-                                  MST1_OSTDREQ_NUM[7:0],
-                                  MST0_OSTDREQ_NUM[7:0]};
+    localparam [2*MST_NB-1:0] MST_PRIORITY = {
+        MST3_PRIORITY[0+:2],
+        MST2_PRIORITY[0+:2],
+        MST1_PRIORITY[0+:2],
+        MST0_PRIORITY[0+:2]};
+
+    localparam [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = {
+        MST3_ID_MASK,
+        MST2_ID_MASK,
+        MST1_ID_MASK,
+        MST0_ID_MASK};
+
+    localparam [MST_NB*8-1:0] MST_OSTDREQ_NUM = {
+        MST3_OSTDREQ_NUM[7:0],
+        MST2_OSTDREQ_NUM[7:0],
+        MST1_OSTDREQ_NUM[7:0],
+        MST0_OSTDREQ_NUM[7:0]};
+
+    parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = {
+        SLV3_START_ADDR[0+:AXI_ADDR_W],
+        SLV2_START_ADDR[0+:AXI_ADDR_W],
+        SLV1_START_ADDR[0+:AXI_ADDR_W],
+        SLV0_START_ADDR[0+:AXI_ADDR_W]};
+
+    parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = {
+        SLV3_END_ADDR[0+:AXI_ADDR_W],
+        SLV2_END_ADDR[0+:AXI_ADDR_W],
+        SLV1_END_ADDR[0+:AXI_ADDR_W],
+        SLV0_END_ADDR[0+:AXI_ADDR_W]};
 
     logic [MST_NB            -1:0] i_awvalid;
     logic [MST_NB            -1:0] i_awready;
@@ -1148,24 +1174,12 @@ module axicb_crossbar_top
     .MST_PIPELINE       (MST_PIPELINE),
     .SLV_PIPELINE       (SLV_PIPELINE),
     .TIMEOUT_ENABLE     (TIMEOUT_ENABLE),
-    .MST0_ID_MASK       (MST0_ID_MASK),
-    .MST1_ID_MASK       (MST1_ID_MASK),
-    .MST2_ID_MASK       (MST2_ID_MASK),
-    .MST3_ID_MASK       (MST3_ID_MASK),
+    .MST_ID_MASK        (MST_ID_MASK),
     .MST_OSTDREQ_NUM    (MST_OSTDREQ_NUM),
     .MST_ROUTES         (MST_ROUTES),
-    .MST0_PRIORITY      (MST0_PRIORITY),
-    .MST1_PRIORITY      (MST1_PRIORITY),
-    .MST2_PRIORITY      (MST2_PRIORITY),
-    .MST3_PRIORITY      (MST3_PRIORITY),
-    .SLV0_START_ADDR    (SLV0_START_ADDR),
-    .SLV0_END_ADDR      (SLV0_END_ADDR),
-    .SLV1_START_ADDR    (SLV1_START_ADDR),
-    .SLV1_END_ADDR      (SLV1_END_ADDR),
-    .SLV2_START_ADDR    (SLV2_START_ADDR),
-    .SLV2_END_ADDR      (SLV2_END_ADDR),
-    .SLV3_START_ADDR    (SLV3_START_ADDR),
-    .SLV3_END_ADDR      (SLV3_END_ADDR),
+    .MST_PRIORITY       (MST_PRIORITY),
+    .SLV_START_ADDR     (SLV_START_ADDR),
+    .SLV_END_ADDR       (SLV_END_ADDR),
     .AWCH_W             (AWCH_W),
     .WCH_W              (WCH_W),
     .BCH_W              (BCH_W),
