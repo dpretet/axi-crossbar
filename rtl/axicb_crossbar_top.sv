@@ -55,6 +55,8 @@ module axicb_crossbar_top
         // Activate the timer to avoid deadlock (UNUSED)
         parameter TIMEOUT_ENABLE = 1,
 
+        // Maximum number of priority in Round-Robin for Masters selections
+        parameter NUM_PRIORITY_LVL = 4,
 
         ///////////////////////////////////////////////////////////////////////
         //
@@ -710,11 +712,14 @@ module axicb_crossbar_top
         MST0_ROUTES[0+:SLV_NB]
     };
 
-    localparam [2*MST_NB-1:0] MST_PRIORITY = {
-        MST3_PRIORITY[0+:2],
-        MST2_PRIORITY[0+:2],
-        MST1_PRIORITY[0+:2],
-        MST0_PRIORITY[0+:2]
+    localparam _NUM_PRIORITY_LVL = (NUM_PRIORITY_LVL <= 1) ? 1 : NUM_PRIORITY_LVL;
+    localparam PRIORITY_W = $clog2(_NUM_PRIORITY_LVL);
+
+    localparam [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = {
+        MST3_PRIORITY[0+:PRIORITY_W],
+        MST2_PRIORITY[0+:PRIORITY_W],
+        MST1_PRIORITY[0+:PRIORITY_W],
+        MST0_PRIORITY[0+:PRIORITY_W]
     };
 
     localparam [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = {
@@ -1186,6 +1191,8 @@ module axicb_crossbar_top
     .OR_NUM_W           (OR_NUM_W),
     .MST_OSTDREQ_NUM    (MST_OSTDREQ_NUM),
     .MST_ROUTES         (MST_ROUTES),
+    .PRIORITY_W         (PRIORITY_W),
+    .NUM_PRIORITY_LVL   (_NUM_PRIORITY_LVL),
     .MST_PRIORITY       (MST_PRIORITY),
     .SLV_START_ADDR     (SLV_START_ADDR),
     .SLV_END_ADDR       (SLV_END_ADDR),

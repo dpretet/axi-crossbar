@@ -15,11 +15,10 @@ module axicb_round_robin
     #(
         // Number of requesters
         parameter REQ_NB = 4,
-        // Masters priorities
-        parameter REQ0_PRIORITY = 0,
-        parameter REQ1_PRIORITY = 0,
-        parameter REQ2_PRIORITY = 0,
-        parameter REQ3_PRIORITY = 0
+        // Requesters priorities
+        parameter PRIORITY_W = 2,
+        parameter NUM_PRIORITY_LVL = 4,
+        parameter [PRIORITY_W*REQ_NB-1:0] PRIORITY = 0
     )(
         input  wire                   aclk,
         input  wire                   aresetn,
@@ -29,55 +28,81 @@ module axicb_round_robin
         output logic [REQ_NB    -1:0] grant
     );
 
-    logic                  p0_active;
-    logic                  p1_active;
-    logic                  p2_active;
-    logic                  p3_active;
+    ////////////////////////////////////////
+    // Local functions to mux granting
+    ////////////////////////////////////////
 
-    logic [REQ_NB    -1:0] req_p0;
-    logic [REQ_NB    -1:0] req_p1;
-    logic [REQ_NB    -1:0] req_p2;
-    logic [REQ_NB    -1:0] req_p3;
+    function [REQ_NB-1:0] grant_lvl4(
+        input [REQ_NB-1:0] grant_p3,
+        input [REQ_NB-1:0] grant_p2,
+        input [REQ_NB-1:0] grant_p1,
+        input [REQ_NB-1:0] grant_p0
+    );
 
-    logic [REQ_NB    -1:0] grant_p0;
-    logic [REQ_NB    -1:0] grant_p1;
-    logic [REQ_NB    -1:0] grant_p2;
-    logic [REQ_NB    -1:0] grant_p3;
+        grant_lvl4 = (|grant_p3) ? grant_p3 :
+                     (|grant_p2) ? grant_p2 :
+                     (|grant_p1) ? grant_p1 :
+                                   grant_p0 ;
+    endfunction
 
-    logic p0 = REQ0_PRIORITY;
-    logic p1 = REQ1_PRIORITY;
-    logic p2 = REQ2_PRIORITY;
-    logic p3 = REQ3_PRIORITY;
 
-    assign req_p0[0] = (REQ0_PRIORITY==0) ? req[0] : 1'b0;
-    assign req_p0[1] = (REQ1_PRIORITY==0) ? req[1] : 1'b0;
-    assign req_p0[2] = (REQ2_PRIORITY==0) ? req[2] : 1'b0;
-    assign req_p0[3] = (REQ3_PRIORITY==0) ? req[3] : 1'b0;
+    function [REQ_NB-1:0] grant_lvl3(
+        input [REQ_NB-1:0] grant_p2,
+        input [REQ_NB-1:0] grant_p1,
+        input [REQ_NB-1:0] grant_p0
+    );
 
-    assign req_p1[0] = (REQ0_PRIORITY==1) ? req[0] : 1'b0;
-    assign req_p1[1] = (REQ1_PRIORITY==1) ? req[1] : 1'b0;
-    assign req_p1[2] = (REQ2_PRIORITY==1) ? req[2] : 1'b0;
-    assign req_p1[3] = (REQ3_PRIORITY==1) ? req[3] : 1'b0;
+        grant_lvl3 = (|grant_p2) ? grant_p2 :
+                     (|grant_p1) ? grant_p1 :
+                                   grant_p0 ;
+    endfunction
 
-    assign req_p2[0] = (REQ0_PRIORITY==2) ? req[0] : 1'b0;
-    assign req_p2[1] = (REQ1_PRIORITY==2) ? req[1] : 1'b0;
-    assign req_p2[2] = (REQ2_PRIORITY==2) ? req[2] : 1'b0;
-    assign req_p2[3] = (REQ3_PRIORITY==2) ? req[3] : 1'b0;
 
-    assign req_p3[0] = (REQ0_PRIORITY==3) ? req[0] : 1'b0;
-    assign req_p3[1] = (REQ1_PRIORITY==3) ? req[1] : 1'b0;
-    assign req_p3[2] = (REQ2_PRIORITY==3) ? req[2] : 1'b0;
-    assign req_p3[3] = (REQ3_PRIORITY==3) ? req[3] : 1'b0;
+    function [REQ_NB-1:0] grant_lvl2(
+        input [REQ_NB-1:0] grant_p1,
+        input [REQ_NB-1:0] grant_p0
+    );
 
-    assign p3_active = |req_p3;
-    assign p2_active = |req_p2 & ~p3_active;
-    assign p1_active = |req_p1 & ~p2_active;
-    assign p0_active = |req_p0 & ~p1_active;
+        grant_lvl2 = (|grant_p1) ? grant_p1 :
+                                   grant_p0 ;
+    endfunction
 
+    ////////////////////////////////////////
+    // Local variables
+    ////////////////////////////////////////
+
+    logic [REQ_NB    -1:0] reqs[NUM_PRIORITY_LVL-1:0];
+    logic [REQ_NB    -1:0] grants[NUM_PRIORITY_LVL-1:0];
+    logic [NUM_PRIORITY_LVL-1:0] p_active;
+
+    genvar i, j;
+
+    // Sort the requesters by priority levels
+    generate
+
+        for (i=0; i<REQ_NB; i++) begin: GEN_REQS
+            for (j=0; j<NUM_PRIORITY_LVL; j++) begin: GEN_PRIO
+                assign reqs[j][i] = (PRIORITY[i*PRIORITY_W+:PRIORITY_W] == j) ? req[i] : '0;
+            end
+        end
+
+    endgenerate
 
     generate
 
-    if (REQ0_PRIORITY==0 || REQ1_PRIORITY==0 || REQ2_PRIORITY==0 || REQ3_PRIORITY==0) begin : P0_ON
+        if (NUM_PRIORITY_LVL > 1) begin: LVL_GEN_ACTIVE
+            for (i=NUM_PRIORITY_LVL-1; i>=0; i--) begin: GEN_P_ACTIVE
+                if (i==NUM_PRIORITY_LVL-1) begin: LVL_ACTIVE_MAX
+                    assign p_active[i] = |reqs[i];
+                end else begin: LVL_ACTIVE_N
+                    assign p_active[i] = |reqs[i] & !p_active[i+1];
+                end
+            end
+        end else begin: NO_LVL_GEN_ACTIVE
+            assign p_active[0] = |reqs[0];
+        end
+
+    endgenerate
 
     axicb_round_robin_core
     #(
@@ -88,87 +113,47 @@ module axicb_round_robin
         .aclk    (aclk),
         .aresetn (aresetn),
         .srst    (srst),
-        .en      (en & p0_active),
-        .req     (req_p0),
-        .grant   (grant_p0)
+        .en      (en & p_active[0]),
+        .req     (reqs[0]),
+        .grant   (grants[0])
     );
 
-    end else begin : P0_OFF
-        assign grant_p0 = {REQ_NB{1'b0}};
+    generate
+
+    if (NUM_PRIORITY_LVL > 1) begin: LVL_RR
+        for (i=1; i<NUM_PRIORITY_LVL; i++) begin: GEN_RR
+            axicb_round_robin_core
+            #(
+                .REQ_NB (REQ_NB)
+            )
+            rr_core
+            (
+                .aclk    (aclk),
+                .aresetn (aresetn),
+                .srst    (srst),
+                .en      (en & p_active[i]),
+                .req     (reqs[i]),
+                .grant   (grants[i])
+            );
+        end
     end
     endgenerate
 
     generate
-    if (REQ0_PRIORITY==1 || REQ1_PRIORITY==1 || REQ2_PRIORITY==1 || REQ3_PRIORITY==1) begin : P1_ON
 
-    axicb_round_robin_core
-    #(
-        .REQ_NB (REQ_NB)
-    )
-    rr_p1
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (en & p1_active),
-        .req     (req_p1),
-        .grant   (grant_p1)
-    );
+        if (NUM_PRIORITY_LVL == 4) begin: GRANT_L4
+            assign grant = grant_lvl4(grants[3], grants[2], grants[1], grants[0]);
+        end else if (NUM_PRIORITY_LVL == 3) begin: GRANT_L3
+            assign grant = grant_lvl3(grants[2], grants[1], grants[0]);
+        end else if (NUM_PRIORITY_LVL == 2) begin: GRANT_L2
+            assign grant = grant_lvl2(grants[1], grants[0]);
+        end else begin: GRANT_L1
+            assign grant = grants[0];
+        end
 
-    end else begin : P1_OFF
-        assign grant_p1 = {REQ_NB{1'b0}};
-    end
     endgenerate
-
-    generate
-    if (REQ0_PRIORITY==2 || REQ1_PRIORITY==2 || REQ2_PRIORITY==2 || REQ3_PRIORITY==2) begin : P2_ON
-
-    axicb_round_robin_core
-    #(
-        .REQ_NB (REQ_NB)
-    )
-    rr_p2
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (en & p2_active),
-        .req     (req_p2),
-        .grant   (grant_p2)
-    );
-
-    end else begin : P2_OFF
-        assign grant_p2 = {REQ_NB{1'b0}};
-    end
-    endgenerate
-
-    generate
-    if (REQ0_PRIORITY==3 || REQ1_PRIORITY==3 || REQ2_PRIORITY==3 || REQ3_PRIORITY==3) begin : P3_ON
-
-    axicb_round_robin_core
-    #(
-        .REQ_NB (REQ_NB)
-    )
-    rr_p3
-    (
-        .aclk    (aclk),
-        .aresetn (aresetn),
-        .srst    (srst),
-        .en      (en & p3_active),
-        .req     (req_p3),
-        .grant   (grant_p3)
-    );
-
-    end else begin : P3_OFF
-        assign grant_p3 = {REQ_NB{1'b0}};
-    end
-    endgenerate
-
-    assign grant = (|grant_p3) ? grant_p3 :
-                   (|grant_p2) ? grant_p2 :
-                   (|grant_p1) ? grant_p1 :
-                                 grant_p0 ;
 
 endmodule
+
 
 `resetall

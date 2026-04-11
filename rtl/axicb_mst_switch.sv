@@ -18,10 +18,14 @@ module axicb_mst_switch
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
 
+        // Maximum number of priority in Round-Robin for Masters selections
+        parameter NUM_PRIORITY_LVL = 4,
+
         // Masters ID mask
         parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
+        parameter PRIORITY_W = 2,
         parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Channels' width (concatenated)
@@ -75,17 +79,19 @@ module axicb_mst_switch
 
     axicb_mst_switch_wr
     #(
-        .AXI_ID_W       (AXI_ID_W),
-        .AXI_DATA_W     (AXI_DATA_W),
-        .MST_NB         (MST_NB),
-        .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-        .MST_ID_MASK    (MST_ID_MASK),
-        .MST_PRIORITY   (MST_PRIORITY),
-        .AWCH_W         (AWCH_W),
-        .WCH_W          (WCH_W),
-        .BCH_W          (BCH_W),
-        .ARCH_W         (ARCH_W),
-        .RCH_W          (RCH_W)
+        .AXI_ID_W         (AXI_ID_W),
+        .AXI_DATA_W       (AXI_DATA_W),
+        .MST_NB           (MST_NB),
+        .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+        .MST_ID_MASK      (MST_ID_MASK),
+        .PRIORITY_W       (PRIORITY_W),
+        .NUM_PRIORITY_LVL (NUM_PRIORITY_LVL),
+        .MST_PRIORITY     (MST_PRIORITY),
+        .AWCH_W           (AWCH_W),
+        .WCH_W            (WCH_W),
+        .BCH_W            (BCH_W),
+        .ARCH_W           (ARCH_W),
+        .RCH_W            (RCH_W)
     )
     mst_switch_wr
     (
@@ -116,17 +122,19 @@ module axicb_mst_switch
 
     axicb_mst_switch_rd
     #(
-        .AXI_ID_W       (AXI_ID_W),
-        .AXI_DATA_W     (AXI_DATA_W),
-        .MST_NB         (MST_NB),
-        .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-        .MST_ID_MASK    (MST_ID_MASK),
-        .MST_PRIORITY   (MST_PRIORITY),
-        .AWCH_W         (AWCH_W),
-        .WCH_W          (WCH_W),
-        .BCH_W          (BCH_W),
-        .ARCH_W         (ARCH_W),
-        .RCH_W          (RCH_W)
+        .AXI_ID_W         (AXI_ID_W),
+        .AXI_DATA_W       (AXI_DATA_W),
+        .MST_NB           (MST_NB),
+        .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+        .MST_ID_MASK      (MST_ID_MASK),
+        .PRIORITY_W       (PRIORITY_W),
+        .NUM_PRIORITY_LVL (NUM_PRIORITY_LVL),
+        .MST_PRIORITY     (MST_PRIORITY),
+        .AWCH_W           (AWCH_W),
+        .WCH_W            (WCH_W),
+        .BCH_W            (BCH_W),
+        .ARCH_W           (ARCH_W),
+        .RCH_W            (RCH_W)
     )
     mst_switch_rd
     (

@@ -30,6 +30,9 @@ module axicb_switch_top
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 0,
 
+        // Maximum number of priority in Round-Robin for Masters selections
+        parameter NUM_PRIORITY_LVL = 4,
+
         // Routes to the slaves allowed per master
         parameter [MST_NB*SLV_NB -1:0] MST_ROUTES = 16'hFFFF,
 
@@ -37,7 +40,8 @@ module axicb_switch_top
         parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
-        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Masters Outstanding Requests Number
         parameter OR_NUM_W = 8,
@@ -384,17 +388,19 @@ module axicb_switch_top
 
         axicb_mst_switch
         #(
-            .AXI_ID_W       (AXI_ID_W),
-            .AXI_DATA_W     (AXI_DATA_W),
-            .MST_NB         (MST_NB),
-            .TIMEOUT_ENABLE (TIMEOUT_ENABLE),
-            .MST_ID_MASK    (MST_ID_MASK),
-            .MST_PRIORITY   (MST_PRIORITY),
-            .AWCH_W         (AWCH_W),
-            .WCH_W          (WCH_W),
-            .BCH_W          (BCH_W),
-            .ARCH_W         (ARCH_W),
-            .RCH_W          (RCH_W)
+            .AXI_ID_W         (AXI_ID_W),
+            .AXI_DATA_W       (AXI_DATA_W),
+            .MST_NB           (MST_NB),
+            .TIMEOUT_ENABLE   (TIMEOUT_ENABLE),
+            .MST_ID_MASK      (MST_ID_MASK),
+            .PRIORITY_W       (PRIORITY_W),
+            .NUM_PRIORITY_LVL (NUM_PRIORITY_LVL),
+            .MST_PRIORITY     (MST_PRIORITY),
+            .AWCH_W           (AWCH_W),
+            .WCH_W            (WCH_W),
+            .BCH_W            (BCH_W),
+            .ARCH_W           (ARCH_W),
+            .RCH_W            (RCH_W)
         )
         mst_switch
         (

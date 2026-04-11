@@ -15,6 +15,9 @@ module axicb_mst_switch_wr
         // Number of master(s)
         parameter MST_NB = 4,
 
+        // Maximum number of priority in Round-Robin for Masters selections
+        parameter NUM_PRIORITY_LVL = 4,
+
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
 
@@ -22,7 +25,8 @@ module axicb_mst_switch_wr
         parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
 
         // Masters priorities
-        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Channels' width (concatenated)
         parameter AWCH_W = 8,
@@ -86,11 +90,10 @@ module axicb_mst_switch_wr
 
     axicb_round_robin
     #(
-        .REQ_NB        (MST_NB),
-        .REQ0_PRIORITY (MST_PRIORITY[0*2+:2]),
-        .REQ1_PRIORITY (MST_PRIORITY[1*2+:2]),
-        .REQ2_PRIORITY (MST_PRIORITY[2*2+:2]),
-        .REQ3_PRIORITY (MST_PRIORITY[3*2+:2])
+        .REQ_NB           (MST_NB),
+        .PRIORITY_W       (PRIORITY_W),
+        .NUM_PRIORITY_LVL (NUM_PRIORITY_LVL),
+        .PRIORITY         (MST_PRIORITY)
     )
     awch_round_robin
     (

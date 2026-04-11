@@ -50,6 +50,8 @@ module axicb_crossbar_lite_top
         // Activate the timer to avoid deadlock
         parameter TIMEOUT_ENABLE = 1,
 
+        // Maximum number of priority in Round-Robin for Masters selections
+        parameter NUM_PRIORITY_LVL = 4,
 
         ///////////////////////////////////////////////////////////////////////
         //
@@ -508,6 +510,7 @@ module axicb_crossbar_lite_top
     .AXI_RUSER_W         (AXI_RUSER_W),
     .TIMEOUT_VALUE       (TIMEOUT_VALUE),
     .TIMEOUT_ENABLE      (TIMEOUT_ENABLE),
+    .NUM_PRIORITY_LVL    (NUM_PRIORITY_LVL),
     .MST0_CDC            (MST0_CDC),
     .MST0_OSTDREQ_NUM    (MST0_OSTDREQ_NUM),
     .MST0_OSTDREQ_SIZE   (1),

@@ -37,6 +37,10 @@
     - Specify in bit the width of read data sideband signals
     - Apply to both read and write address channels
     - Any value from 1 bit
+- NUM_PRIORITY_LVL
+    - Specify the number of possible priority value assignable to a master
+    - 0 or 1 disable arbitration per priority in master switch
+    - Any value from 0
 
 Follow description of parameters common to all interfaces on which
 a master agent is connected:
