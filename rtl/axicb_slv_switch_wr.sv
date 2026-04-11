@@ -210,7 +210,7 @@ module axicb_slv_switch_wr
         if (slv_w_targeted == '0 & wch_empty)
             i_wready = '0;
         // Targets an undefined or forbidden memory space
-        else if (slv_aw_targeted == '0 & !wch_empty)
+        else if (slv_w_targeted == '0 & !wch_empty)
             i_wready = '1;
         else
             i_wready = '0;

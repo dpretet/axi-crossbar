@@ -40,7 +40,8 @@ module axicb_switch_top
         parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
 
         // Masters Outstanding Requests Number
-        parameter [MST_NB*8-1:0] MST_OSTDREQ_NUM = 'h4_4_4_4,
+        parameter OR_NUM_W = 8,
+        parameter [MST_NB*OR_NUM_W-1:0] MST_OSTDREQ_NUM = 'h4_4_4_4,
 
         // Slaves memory mapping
         parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
@@ -252,7 +253,7 @@ module axicb_switch_top
             .AXI_SIGNALING   (AXI_SIGNALING),
             .SLV_NB          (SLV_NB),
             .MST_ROUTES      (MST_ROUTES[i*SLV_NB+:SLV_NB]),
-            .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM[i*8+:8]),
+            .MST_OSTDREQ_NUM (MST_OSTDREQ_NUM[i*OR_NUM_W+:OR_NUM_W]),
             .MST_ID_MASK     (MST_ID_MASK[i*AXI_ID_W+:AXI_ID_W]),
             .TIMEOUT_ENABLE  (TIMEOUT_ENABLE),
             .SLV_START_ADDR  (SLV_START_ADDR),

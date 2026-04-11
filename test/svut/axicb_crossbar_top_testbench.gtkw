@@ -1,13 +1,13 @@
 [*]
 [*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
-[*] Thu Apr  9 15:33:38 2026
+[*] Thu Apr  9 17:46:02 2026
 [*]
 [dumpfile] "/Users/damien/Workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.fst"
-[dumpfile_mtime] "Thu Apr  9 15:32:12 2026"
-[dumpfile_size] 113625753
+[dumpfile_mtime] "Thu Apr  9 17:39:05 2026"
+[dumpfile_size] 24508658
 [savefile] "/Users/damien/Workspace/hdl/axi-crossbar/test/svut/axicb_crossbar_top_testbench.gtkw"
 [timestart] 3698900
-[size] 2560 1324
+[size] 1440 784
 [pos] -1 -1
 *-14.709675 3798000 76139000 76491000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] axicb_crossbar_top_testbench.
