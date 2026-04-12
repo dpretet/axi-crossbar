@@ -37,6 +37,7 @@ module axicb_crossbar_top_testbench();
     parameter AXI_RUSER_W = 4;
     parameter TIMEOUT_VALUE = `TIMEOUT;
     parameter TIMEOUT_ENABLE = 1;
+    parameter NUM_PRIORITY_LVL = `NUM_PRIORITY_LVL;
     parameter MST0_CDC = `MST0_CDC;
     parameter MST0_OSTDREQ_NUM = `MST0_OSTDREQ_NUM;
     parameter MST0_OSTDREQ_SIZE = `MST0_OSTDREQ_SIZE;
@@ -496,6 +497,7 @@ module axicb_crossbar_top_testbench();
     .AXI_BUSER_W            (AXI_BUSER_W),
     .AXI_RUSER_W            (AXI_RUSER_W),
     .TIMEOUT_VALUE          (TIMEOUT_VALUE),
+    .NUM_PRIORITY_LVL       (NUM_PRIORITY_LVL),
     .TIMEOUT_ENABLE         (TIMEOUT_ENABLE),
     .MST0_CDC               (MST0_CDC),
     .MST0_OSTDREQ_NUM       (MST0_OSTDREQ_NUM),
