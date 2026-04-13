@@ -677,6 +677,12 @@ module axicb_crossbar_top
 
         `CHECKER((MST3_ID_MASK==0), "MST3 mask ID must be greater than 0");
 
+        `CHECKER((NUM_PRIORITY_LVL>4), "Can't select more than 4 levels of priority");
+
+        `CHECKER((SLV_NB>32), "Can't select more than 32 slaves");
+
+        `CHECKER((MST_NB>32), "Can't select more than 32 masters");
+
     end
 
 
@@ -713,14 +719,16 @@ module axicb_crossbar_top
     };
 
     localparam _NUM_PRIORITY_LVL = (NUM_PRIORITY_LVL <= 1) ? 1 : NUM_PRIORITY_LVL;
-    localparam PRIORITY_W = $clog2(_NUM_PRIORITY_LVL);
+    localparam PRIORITY_W = (NUM_PRIORITY_LVL <= 1) ? 1 : $clog2(_NUM_PRIORITY_LVL);
 
+    generate 
     localparam [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = {
         MST3_PRIORITY[0+:PRIORITY_W],
         MST2_PRIORITY[0+:PRIORITY_W],
         MST1_PRIORITY[0+:PRIORITY_W],
         MST0_PRIORITY[0+:PRIORITY_W]
     };
+    endgenerate
 
     localparam [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = {
         MST3_ID_MASK[AXI_ID_W-1:0],

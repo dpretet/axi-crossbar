@@ -71,8 +71,8 @@ module axicb_round_robin
     // Local variables
     ////////////////////////////////////////
 
-    logic [REQ_NB    -1:0] reqs[NUM_PRIORITY_LVL-1:0];
-    logic [REQ_NB    -1:0] grants[NUM_PRIORITY_LVL-1:0];
+    logic [REQ_NB          -1:0] reqs[NUM_PRIORITY_LVL-1:0];
+    logic [REQ_NB          -1:0] grants[NUM_PRIORITY_LVL-1:0];
     logic [NUM_PRIORITY_LVL-1:0] p_active;
 
     genvar i, j;
@@ -80,16 +80,23 @@ module axicb_round_robin
     // Sort the requesters by priority levels
     generate
 
-        for (i=0; i<REQ_NB; i++) begin: GEN_REQS
-            for (j=0; j<NUM_PRIORITY_LVL; j++) begin: GEN_PRIO
-                assign reqs[j][i] = (PRIORITY[i*PRIORITY_W+:PRIORITY_W] == j) ? req[i] : '0;
+        if (NUM_PRIORITY_LVL > 1) begin: LVL_REQS
+            for (i=0; i<REQ_NB; i++) begin: GEN_REQS
+                for (j=0; j<NUM_PRIORITY_LVL; j++) begin: GEN_PRIO
+                    assign reqs[j][i] = (PRIORITY[i*PRIORITY_W+:PRIORITY_W] == j) ? req[i] : '0;
+                end
             end
+        end else begin: NO_LVL_REQS
+            assign reqs[0] = req;
         end
 
     endgenerate
 
+    // Enable a round robin layer
     generate
 
+        // With priority level bigger than 1, a layer is active only if
+        // the upper layers are not
         if (NUM_PRIORITY_LVL > 1) begin: LVL_GEN_ACTIVE
             for (i=NUM_PRIORITY_LVL-1; i>=0; i--) begin: GEN_P_ACTIVE
                 if (i==NUM_PRIORITY_LVL-1) begin: LVL_ACTIVE_MAX
@@ -98,8 +105,9 @@ module axicb_round_robin
                     assign p_active[i] = |reqs[i] & !p_active[i+1];
                 end
             end
+        // One layer to always active
         end else begin: NO_LVL_GEN_ACTIVE
-            assign p_active[0] = |reqs[0];
+            assign p_active[0] = '1;
         end
 
     endgenerate
@@ -141,6 +149,7 @@ module axicb_round_robin
 
     generate
 
+        // TODO: Can we select the grant output based in p_active ?
         if (NUM_PRIORITY_LVL == 4) begin: GRANT_L4
             assign grant = grant_lvl4(grants[3], grants[2], grants[1], grants[0]);
         end else if (NUM_PRIORITY_LVL == 3) begin: GRANT_L3
@@ -154,6 +163,5 @@ module axicb_round_robin
     endgenerate
 
 endmodule
-
 
 `resetall
