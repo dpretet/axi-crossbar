@@ -33,6 +33,9 @@ module axicb_crossbar_top
         // Number of slave(s)
         parameter SLV_NB = 4,
 
+        // Maximum number of Outstanding Request bit width
+        parameter OR_NUM_W = 8,
+
         // Switching logic pipelining (0 deactivate, 1 enable)
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
@@ -679,10 +682,11 @@ module axicb_crossbar_top
 
         `CHECKER((NUM_PRIORITY_LVL>4), "Can't select more than 4 levels of priority");
 
-        `CHECKER((SLV_NB>32), "Can't select more than 32 slaves");
+        `CHECKER((SLV_NB>4), "Can't select more than 4 slaves");
 
-        `CHECKER((MST_NB>32), "Can't select more than 32 masters");
+        `CHECKER((MST_NB>4), "Can't select more than 4 masters");
 
+        // TODO: Check maximum OR number per master / slave
     end
 
 
@@ -721,14 +725,12 @@ module axicb_crossbar_top
     localparam _NUM_PRIORITY_LVL = (NUM_PRIORITY_LVL <= 1) ? 1 : NUM_PRIORITY_LVL;
     localparam PRIORITY_W = (NUM_PRIORITY_LVL <= 1) ? 1 : $clog2(_NUM_PRIORITY_LVL);
 
-    generate 
     localparam [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = {
         MST3_PRIORITY[0+:PRIORITY_W],
         MST2_PRIORITY[0+:PRIORITY_W],
         MST1_PRIORITY[0+:PRIORITY_W],
         MST0_PRIORITY[0+:PRIORITY_W]
     };
-    endgenerate
 
     localparam [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = {
         MST3_ID_MASK[AXI_ID_W-1:0],
@@ -736,8 +738,6 @@ module axicb_crossbar_top
         MST1_ID_MASK[AXI_ID_W-1:0],
         MST0_ID_MASK[AXI_ID_W-1:0]
     };
-
-    localparam OR_NUM_W = 8;
 
     localparam [MST_NB*OR_NUM_W-1:0] MST_OSTDREQ_NUM = {
         MST3_OSTDREQ_NUM[OR_NUM_W-1:0],
