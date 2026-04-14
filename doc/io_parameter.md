@@ -41,6 +41,10 @@
     - Specify the number of possible priority value assignable to a master
     - 0 or 1 disable arbitration per priority in master switch
     - Any value from 0
+- OR_NUM_W
+    - Specify the number of bits to encode OSTDREQ_NUM parameters
+    - Equals log2(Biggest OSTDREQ_NUM value among masters)
+    - Any value from 1
 
 Follow description of parameters common to all interfaces on which
 a master agent is connected:
