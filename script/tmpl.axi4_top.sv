@@ -59,7 +59,7 @@ module axicb_crossbar_top
         parameter TIMEOUT_ENABLE = {{ global.TIMEOUT_ENABLE }},
 
         // Maximum number of priority in Round-Robin for Masters selections
-        parameter NUM_PRIORITY_LVL = {{ global.NUM_PRIORITY_LVL }}
+        parameter NUM_PRIORITY_LVL = {{ global.NUM_PRIORITY_LVL }},
 
         ///////////////////////////////////////////////////////////////////////
         //

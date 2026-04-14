@@ -5,3 +5,6 @@ obj_dir
 *.fst
 tags
 .DS_Store
+
+venv
+__pycache__

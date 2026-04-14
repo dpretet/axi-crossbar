@@ -18,6 +18,8 @@ while [ -h "$SOURCE" ]; do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
+# Python virtual environment directory
+VENV_DIR="$DIR/script/venv"
 # Functions to install the flow
 source script/setup.sh
 
@@ -60,6 +62,8 @@ help() {
     echo ""
     echo "      ./flow.sh help"
     echo ""
+    echo "      ./flow.sh gen [axi4|axi4lite]"
+    echo ""
     echo "      ./flow.sh syn"
     echo ""
     echo "      ./flow.sh sim"
@@ -71,6 +75,11 @@ help() {
     echo "      ./flow.sh help|-h"
     echo ""
     echo "      Print the help menu"
+    echo ""
+    echo "      ./flow.sh gen|generate|tui [axi4|axi4lite] [-o output.sv]"
+    echo ""
+    echo "      Launch the TUI generator (Textual interface)"
+    echo "      Default: AXI4 protocol, output: axicb_crossbar_top.sv"
     echo ""
     echo "      ./flow.sh syn"
     echo ""
@@ -95,6 +104,69 @@ help() {
     echo -e "${NC}"
 }
 
+generate_rtl() {
+    local axi_type="axi4"
+    local output_file=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            axi4|axi4lite)
+                axi_type="$1"
+                shift
+                ;;
+            -o|--output)
+                output_file="$2"
+                shift 2
+                ;;
+            *)
+                output_file="$1"
+                shift
+                ;;
+        esac
+    done
+    
+    # -----------------------------
+    # Create or activate virtualenv
+    # -----------------------------
+    if [ ! -d "$VENV_DIR" ]; then
+        echo "🐍 Creating virtual environment in $VENV_DIR..."
+        python3 -m venv "$VENV_DIR"
+    fi
+
+    echo "✅ Activating virtual environment..."
+    if [ -f "$VENV_DIR/bin/activate" ]; then
+        source "$VENV_DIR/bin/activate"
+    elif [ -f "$VENV_DIR/Scripts/activate" ]; then
+        source "$VENV_DIR/Scripts/activate"
+    else
+        echo "❌ Could not find virtualenv activation script"
+        exit 1
+    fi
+    
+    # -----------------------------
+    # Install Python dependencies
+    # -----------------------------
+    if [ -f "$DIR/script/requirements.txt" ]; then
+        echo "📦 Installing Python dependencies..."
+        if pip install -r "$DIR/script/requirements.txt" > /dev/null 2>&1; then
+            echo "✅ Dependencies installed"
+        else
+            echo "⚠️  Failed to install some dependencies, continuing anyway..."
+        fi
+    fi
+    
+    # -----------------------------
+    # Launch the TUI generator
+    # -----------------------------
+    echo "🚀 Launching AXI Crossbar Generator (${axi_type})..."
+    echo "   Press 'q' or ESC to exit the TUI"
+    echo ""
+    
+    cd "$DIR/script" || exit 1
+    python3 tui_generator.py --type "$axi_type" "$output_file"
+}
+
 main() {
 
     echo ""
@@ -112,6 +184,13 @@ main() {
         exit 0
     fi
 
+
+    # Generator TUI
+    if [[ $1 == "gen" || $1 == "generate" || $1 == "tui" ]]; then
+        shift
+        generate_rtl "$@"
+        exit 0
+    fi
 
     if [[ $1 == "lint" ]]; then
 
@@ -205,6 +284,11 @@ main() {
 
         echo "Execution status: $ret"
         exit $ret
+    fi
+
+    if [[ $1 == "generator" ]]; then
+
+        generate_rtl
     fi
 }
 

@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "axi-crossbar-generator"
+version = "1.0.0"
+description = "AXI Crossbar Top Level Generator with TUI"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "AXI Crossbar Team"}
+]
+keywords = ["axi", "crossbar", "verilog", "systemverilog", "template", "generator"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Code Generators",
+]
+
+dependencies = [
+    "jinja2>=3.0.0",
+    "textual>=8.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pylint>=3.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+generate-tui = "tui_generator:initialize_app"
+
+[project.urls]
+Homepage = "https://github.com/your-repo/axi-crossbar"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tui_generator*", "template*"]
