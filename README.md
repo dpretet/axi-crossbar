@@ -43,7 +43,7 @@ processor(s) with the peripherals like memories, IOs, co-processors...
 
 Features
 
-- 4x4 master/slave interfaces
+- MxN master/slave interfaces, configurable with a wizard
 - Master/slave buffering capability, configurable per interface
     - Outstanding request number and payload configurable
     - Seamless support of AXI4 vs AXI4-lite
@@ -64,6 +64,11 @@ Features
     - Configurable for each channel (AW, AR, W, B, R)
     - Common to all master/slave interfaces if activated
 
+To launch the wizard and generate a specific core:
+
+```bash
+./flow.sh wizard
+```
 
 ## Implementation Details
 
@@ -116,10 +121,6 @@ Core features:
 - New Checkers:
     - Check address overlap (start+end vs next slave start address)
     - ID overlap: mask ID + OR number supported up to next slave ID
-
-Wizard:
-- Number of master and slave agents configurable
-- RTL generator
 
 AXI Goodies:
 - Interface datapath width conversion

@@ -107,7 +107,7 @@ help() {
 generate_rtl() {
     local axi_type="axi4"
     local output_file=""
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -125,7 +125,7 @@ generate_rtl() {
                 ;;
         esac
     done
-    
+
     # -----------------------------
     # Create or activate virtualenv
     # -----------------------------
@@ -143,7 +143,7 @@ generate_rtl() {
         echo "❌ Could not find virtualenv activation script"
         exit 1
     fi
-    
+
     # -----------------------------
     # Install Python dependencies
     # -----------------------------
@@ -155,14 +155,14 @@ generate_rtl() {
             echo "⚠️  Failed to install some dependencies, continuing anyway..."
         fi
     fi
-    
+
     # -----------------------------
     # Launch the TUI generator
     # -----------------------------
     echo "🚀 Launching AXI Crossbar Generator (${axi_type})..."
     echo "   Press 'q' or ESC to exit the TUI"
     echo ""
-    
+
     cd "$DIR/script" || exit 1
     python3 tui_generator.py --type "$axi_type" "$output_file"
 }
@@ -286,7 +286,7 @@ main() {
         exit $ret
     fi
 
-    if [[ $1 == "generator" ]]; then
+    if [[ $1 == "wizard" ]]; then
 
         generate_rtl
     fi

@@ -165,7 +165,9 @@ applies for both AXI4 and AXI4-lite configuration.
 The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a
 top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up
 to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
-to 0 the input signals of an interface, and leave unconnected the outputs.
+to 0 the input signals of an interface, and leave unconnected the outputs. If 
+need more, a wizard is proposed to configure the number of master and slave,
+and their associated parameters. Run `./flow.sh wizard` to launch the wizard's TUI.
 
 
 ### Ordering rules
