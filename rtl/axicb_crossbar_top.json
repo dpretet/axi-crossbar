@@ -1,0 +1,94 @@
+{
+  "name": "axicb_crossbar_top",
+  "global": {
+    "AXI_ADDR_W": 8,
+    "AXI_ID_W": 8,
+    "AXI_DATA_W": 8,
+    "MST_NB": 4,
+    "SLV_NB": 4,
+    "OR_NUM_W": 8,
+    "MST_PIPELINE": 0,
+    "SLV_PIPELINE": 0,
+    "AXI_SIGNALING": 1,
+    "USER_SUPPORT": 0,
+    "AXI_AUSER_W": 1,
+    "AXI_WUSER_W": 1,
+    "AXI_BUSER_W": 1,
+    "AXI_RUSER_W": 1,
+    "TIMEOUT_VALUE": 10000,
+    "TIMEOUT_ENABLE": 1,
+    "NUM_PRIORITY_LVL": 4
+  },
+  "masters": [
+    {
+      "CDC": 0,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "PRIORITY": 0,
+      "ROUTES": "4'b1_1_1_1",
+      "ID_MASK": "'h10",
+      "RW": 0
+    },
+    {
+      "CDC": 0,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "PRIORITY": 0,
+      "ROUTES": "4'b1_1_1_1",
+      "ID_MASK": "'h20",
+      "RW": 0
+    },
+    {
+      "CDC": 0,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "PRIORITY": 0,
+      "ROUTES": "4'b1_1_1_1",
+      "ID_MASK": "'h30",
+      "RW": 0
+    },
+    {
+      "CDC": 0,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "PRIORITY": 0,
+      "ROUTES": "4'b1_1_1_1",
+      "ID_MASK": "'h40",
+      "RW": 0
+    }
+  ],
+  "slaves": [
+    {
+      "CDC": 0,
+      "START_ADDR": 0,
+      "END_ADDR": 4095,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "KEEP_BASE_ADDR": 0
+    },
+    {
+      "CDC": 0,
+      "START_ADDR": 4096,
+      "END_ADDR": 8191,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "KEEP_BASE_ADDR": 0
+    },
+    {
+      "CDC": 0,
+      "START_ADDR": 8192,
+      "END_ADDR": 12287,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "KEEP_BASE_ADDR": 0
+    },
+    {
+      "CDC": 0,
+      "START_ADDR": 12288,
+      "END_ADDR": 16383,
+      "OSTDREQ_NUM": 4,
+      "OSTDREQ_SIZE": 1,
+      "KEEP_BASE_ADDR": 0
+    }
+  ]
+}

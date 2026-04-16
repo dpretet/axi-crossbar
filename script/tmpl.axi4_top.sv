@@ -290,9 +290,9 @@ module axicb_crossbar_top
         {%- endfor %}
         `CHECKER((NUM_PRIORITY_LVL>4), "Can't select more than 4 levels of priority");
 
-        `CHECKER((SLV_NB>4), "Can't select more than 4 slaves");
+        `CHECKER((SLV_NB> {{ global.SLV_NB }}), "Can't select more than {{ global.SLV_NB }} slaves");
 
-        `CHECKER((MST_NB>4), "Can't select more than 4 masters");
+        `CHECKER((MST_NB> {{ global.MST_NB }}), "Can't select more than {{ global.MST_NB }} masters");
 
         // TODO: Check maximum OR number per master / slave
     end

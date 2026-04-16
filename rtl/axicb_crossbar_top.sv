@@ -723,7 +723,7 @@ module axicb_crossbar_top
     };
 
     localparam _NUM_PRIORITY_LVL = (NUM_PRIORITY_LVL <= 1) ? 1 : NUM_PRIORITY_LVL;
-    localparam PRIORITY_W = (NUM_PRIORITY_LVL <= 1) ? 1 : $clog2(_NUM_PRIORITY_LVL);
+    localparam PRIORITY_W = (NUM_PRIORITY_LVL <= 1) ? 1 : $clog2(NUM_PRIORITY_LVL);
 
     localparam [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = {
         MST3_PRIORITY[0+:PRIORITY_W],

@@ -33,6 +33,9 @@ module axicb_crossbar_lite_top
         // Number of slave(s)
         parameter SLV_NB = 4,
 
+        // Maximum number of Outstanding Request bit width
+        parameter OR_NUM_W = 8,
+
         // Switching logic pipelining (0 deactivate, 1 enable)
         parameter MST_PIPELINE = 0,
         parameter SLV_PIPELINE = 0,
@@ -500,6 +503,7 @@ module axicb_crossbar_lite_top
     .AXI_DATA_W          (AXI_DATA_W),
     .MST_NB              (MST_NB),
     .SLV_NB              (SLV_NB),
+    .OR_NUM_W            (OR_NUM_W),
     .MST_PIPELINE        (MST_PIPELINE),
     .SLV_PIPELINE        (SLV_PIPELINE),
     .AXI_SIGNALING       (0),

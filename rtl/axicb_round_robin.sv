@@ -33,38 +33,41 @@ module axicb_round_robin
     ////////////////////////////////////////
 
     function [REQ_NB-1:0] grant_lvl4(
+        input [REQ_NB-1:0] lvl,
         input [REQ_NB-1:0] grant_p3,
         input [REQ_NB-1:0] grant_p2,
         input [REQ_NB-1:0] grant_p1,
         input [REQ_NB-1:0] grant_p0
     );
 
-        grant_lvl4 = (|grant_p3) ? grant_p3 :
-                     (|grant_p2) ? grant_p2 :
-                     (|grant_p1) ? grant_p1 :
-                                   grant_p0 ;
+        grant_lvl4 = (lvl[3]) ? grant_p3 :
+                     (lvl[2]) ? grant_p2 :
+                     (lvl[1]) ? grant_p1 :
+                                grant_p0 ;
     endfunction
 
 
     function [REQ_NB-1:0] grant_lvl3(
+        input [REQ_NB-1:0] lvl,
         input [REQ_NB-1:0] grant_p2,
         input [REQ_NB-1:0] grant_p1,
         input [REQ_NB-1:0] grant_p0
     );
 
-        grant_lvl3 = (|grant_p2) ? grant_p2 :
-                     (|grant_p1) ? grant_p1 :
-                                   grant_p0 ;
+        grant_lvl3 = (lvl[2]) ? grant_p2 :
+                     (lvl[1]) ? grant_p1 :
+                                grant_p0 ;
     endfunction
 
 
     function [REQ_NB-1:0] grant_lvl2(
+        input [REQ_NB-1:0] lvl,
         input [REQ_NB-1:0] grant_p1,
         input [REQ_NB-1:0] grant_p0
     );
 
-        grant_lvl2 = (|grant_p1) ? grant_p1 :
-                                   grant_p0 ;
+        grant_lvl2 = (lvl[1]) ? grant_p1 :
+                                grant_p0 ;
     endfunction
 
     ////////////////////////////////////////
@@ -151,11 +154,11 @@ module axicb_round_robin
 
         // TODO: Can we select the grant output based in p_active ?
         if (NUM_PRIORITY_LVL == 4) begin: GRANT_L4
-            assign grant = grant_lvl4(grants[3], grants[2], grants[1], grants[0]);
+            assign grant = grant_lvl4(p_active, grants[3], grants[2], grants[1], grants[0]);
         end else if (NUM_PRIORITY_LVL == 3) begin: GRANT_L3
-            assign grant = grant_lvl3(grants[2], grants[1], grants[0]);
+            assign grant = grant_lvl3(p_active, grants[2], grants[1], grants[0]);
         end else if (NUM_PRIORITY_LVL == 2) begin: GRANT_L2
-            assign grant = grant_lvl2(grants[1], grants[0]);
+            assign grant = grant_lvl2(p_active, grants[1], grants[0]);
         end else begin: GRANT_L1
             assign grant = grants[0];
         end

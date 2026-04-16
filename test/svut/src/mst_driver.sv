@@ -45,6 +45,9 @@ module mst_driver
         // and channels handshakes
         parameter TIMEOUT = 100,
 
+        // Priority of this master
+        parameter PRIORITY = 0,
+
         // Slaves mapping in the memory space
         parameter SLV0_START_ADDR = 0,
         parameter SLV0_END_ADDR = 4095,
