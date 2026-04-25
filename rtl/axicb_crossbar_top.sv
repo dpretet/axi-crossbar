@@ -686,7 +686,41 @@ module axicb_crossbar_top
 
         `CHECKER((MST_NB>4), "Can't select more than 4 masters");
 
-        // TODO: Check maximum OR number per master / slave
+        `CHECKER((MST0_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+            "Master 0 priority is bigger than number of priority level");
+
+        `CHECKER((MST1_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+            "Master 1 priority is bigger than number of priority level");
+
+        `CHECKER((MST2_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+            "Master 2 priority is bigger than number of priority level");
+
+        `CHECKER((MST3_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+            "Master 3 priority is bigger than number of priority level");
+
+        `CHECKER((MST0_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Master 0 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((MST1_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Master 1 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((MST2_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Master 2 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((MST3_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Master 3 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((SLV0_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Slave 0 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((SLV1_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Slave 1 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((SLV2_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Slave 2 oustanding request number is too big compared to OR_NUM_W parameter");
+
+        `CHECKER((SLV3_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Slave 3 oustanding request number is too big compared to OR_NUM_W parameter");
     end
 
 

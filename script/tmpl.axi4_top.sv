@@ -294,7 +294,20 @@ module axicb_crossbar_top
 
         `CHECKER((MST_NB> {{ global.MST_NB }}), "Can't select more than {{ global.MST_NB }} masters");
 
-        // TODO: Check maximum OR number per master / slave
+        {%- for mst_idx in range(global.MST_NB) %}
+        `CHECKER((MST{{ mst_idx }}_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+            "Master {{ mst_idx }} priority is bigger than number of priority level");
+        {%- endfor %
+
+        {%- for mst_idx in range(global.MST_NB) %}
+        `CHECKER((MST{{ mst_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Master {{ mst_idx }} oustanding request number is too big compared to OR_NUM_W parameter");
+        {%- endfor %}
+
+        {%- for slv_idx in range(global.SLV_NB) %}
+        `CHECKER((SLV{{ slv_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)), 
+            "Slave {{ slv_idx }} oustanding request number is too big compared to OR_NUM_W parameter");
+        {%- endfor %}
     end
 
 

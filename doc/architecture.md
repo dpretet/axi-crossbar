@@ -319,20 +319,20 @@ completion if needed by its internal core.
                                          From slave interface
 
 
-       AW Channel                 W Channel         B channel         AR Channel        R Channel
+       AW Channel                W Channel          B channel         AR Channel        R Channel
 
-            │                         │                 ▲                  │                ▲
-            │                         │                 │                  │                │
-            ▼                         ▼                 │                  ▼                │
-    ┌──────────────┐   ┌────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-    │decoder+router│──▶│FIFO│──│decoder+router│  │arbiter+switch│  │decoder+router│  │arbiter+switch│
-    └──────────────┘   └────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-       │        │                 │        │        ▲        ▲        │        │        ▲        ▲
-       │        │                 │        │        │        │        │        │        │        │
-       ▼        ▼                 ▼        ▼        │        │        ▼        ▼        │        │
-
+            │                        │                 ▲                  │                ▲
+            │                        │                 │                  │                │
+            ▼                        ▼                 │                  ▼                │
+    ┌──────────────┐   ┌────┐ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │decoder+router│──▶│FIFO│─│    router    │  │arbiter+switch│  │decoder+router│  │arbiter+switch│
+    └──────────────┘   └────┘ └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+       │        │                │        │        ▲        ▲        │        │        ▲        ▲
+       │        │                │        │        │        │        │        │        │        │
+       ▼        ▼                ▼        ▼        │        │        ▼        ▼        │        │
 
                                         To master switches
+
 ```
 
 ### Switching Logic to Master Interfaces
@@ -345,17 +345,17 @@ completion are routed back to the requester by decoding the ID.
                                         From slave switches
 
 
-       AW Channels       W Channels        B channels        AR Channels        R Channels
+   AW Channels               W Channels        B channels        AR Channels      R Channels
 
-       │        │        │        │        ▲        ▲        │        │        ▲        ▲
-       │        │        │        │        │        │        │        │        │        │
-       ▼        ▼        ▼        ▼        │        │        ▼        ▼        │        │
-    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-    │arbiter+switch│  │arbiter+switch│  │arbiter+switch│  │decoder+router│  │decoder+router│
-    └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-            │                 │                 ▲                │                 ▲
-            │                 │                 │                │                 │
-            ▼                 ▼                 │                ▼                 │
+   │        │                │        │        ▲        ▲        │        │       ▲         ▲
+   │        │                │        │        │        │        │        │       │         │
+   ▼        ▼                ▼        ▼        │        │        ▼        ▼       │         │
+┌──────────────┐   ┌────┐ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│arbiter+switch│──▶│FIFO│─│    switch    │  │decoder+router│  │arbiter+switch│  │decoder+router│
+└──────────────┘   └────┘ └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+        │                         │                 ▲                │                 ▲
+        │                         │                 │                │                 │
+        ▼                         ▼                 │                ▼                 │
 
 
                                         To master interface

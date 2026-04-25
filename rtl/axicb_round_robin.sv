@@ -152,7 +152,6 @@ module axicb_round_robin
 
     generate
 
-        // TODO: Can we select the grant output based in p_active ?
         if (NUM_PRIORITY_LVL == 4) begin: GRANT_L4
             assign grant = grant_lvl4(p_active, grants[3], grants[2], grants[1], grants[0]);
         end else if (NUM_PRIORITY_LVL == 3) begin: GRANT_L3
