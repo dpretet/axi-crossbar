@@ -1,0 +1,79 @@
+Screen {
+    align: center middle;
+}
+
+Container {
+    width: 100%;
+    max-width: 120;
+}
+
+#protocol-container,
+#global-scroll,
+#masters-scroll,
+#slaves-scroll,
+#generate-scroll {
+    height: 100%;
+    width: 100%;
+    padding: 1 2;
+}
+
+.card {
+    border: round $primary;
+    border-title-color: $primary;
+    padding: 1;
+    margin: 1 0;
+    width: 100%;
+    max-height: 20;
+    overflow-y: auto;
+}
+
+Label {
+    width: 100%;
+    text-align: left;
+}
+
+Input {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+Button {
+    margin: 0 1;
+    min-width: 15;
+}
+
+Switch {
+    margin: 0 0 1 0;
+}
+
+RadioSet {
+    margin: 1 0;
+}
+
+#protocol-title,
+#global-title,
+#masters-title,
+#slaves-title,
+#preview-title {
+    text-style: bold;
+    text-align: center;
+    padding-bottom: 1;
+}
+
+#master-actions,
+#slave-actions,
+#generate-actions {
+    layout: horizontal;
+    height: auto;
+    margin: 1 0;
+    width: 100%;
+    align: center middle;
+}
+
+#masters-list,
+#slaves-list {
+    layout: vertical;
+    height: auto;
+    max-height: 40;
+    overflow-y: scroll;
+}

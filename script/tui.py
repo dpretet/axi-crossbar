@@ -69,7 +69,7 @@ class AXIConfig:
         }
         self.masters: List[Dict] = []
         self.slaves: List[Dict] = []
-        self.axi_type = "axi4"  # or "axi4lite"
+        self.axi_type = "axi4"
 
     def to_template_dict(self) -> Dict:
         """Convert to dictionary format expected by template_top_level.py"""
@@ -89,15 +89,6 @@ class AXIConfig:
         }
         with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
-
-    def load(self, filepath: str):
-        """Load configuration from JSON file"""
-        with open(filepath, "r") as f:
-            data = json.load(f)
-        self.global_config = data.get("global", {})
-        self.masters = data.get("masters", [])
-        self.slaves = data.get("slaves", [])
-        self.axi_type = data.get("axi_type", "axi4")
 
     def add_master(self):
         """Add a new master with default values"""
@@ -228,31 +219,6 @@ class SlaveCard(ScrollableContainer):
 # Screens
 # ============================================================================
 
-class ProtocolScreen(Screen):
-    """Screen for selecting AXI protocol type"""
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        with Container(id="protocol-container", classes="center"):
-            yield Label("[bold]Select AXI Protocol[/bold]", id="protocol-title")
-            yield Label("")
-            with RadioSet(id="protocol-select"):
-                yield RadioButton("AXI4", value="axi4", id="radio-axi4")
-                yield RadioButton("AXI4-Lite", value="axi4lite", id="radio-axi4lite" )
-            yield Label("")
-            yield Button("Continue", id="continue-btn", variant="primary")
-            yield Button("Quit", id="quit-btn", variant="error")
-        yield Footer()
-
-    def on_radio_button_changed(self, event: RadioButton.Changed) -> None:
-        config.axi_type = event.radio_button.value
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "continue-btn":
-            self.app.switch_screen("global")
-        elif event.button.id == "quit-btn":
-            self.app.exit()
-
 
 class GlobalSettingsScreen(Screen):
     """Screen for global configuration"""
@@ -262,6 +228,13 @@ class GlobalSettingsScreen(Screen):
         with ScrollableContainer(id="global-scroll"):
             yield Label("[bold]Global Settings[/bold]", id="global-title")
             yield Label("")
+
+            # AXI Interface
+            yield Label("[bold]AXI Protocol[/bold]")
+            yield Label("Apply to the whole fabric")
+            with RadioSet(id="protocol-select"):
+                yield RadioButton("AXI4", value="axi4", id="radio-axi4")
+                yield RadioButton("AXI4-lite", value="axi4lite", id="radio-axi4lite" )
 
             # Address/ID/Data Width
             yield Label("[bold]Bus Widths[/bold]")
@@ -304,26 +277,23 @@ class GlobalSettingsScreen(Screen):
             yield Label("")
 
             # Timeout
-            yield Label("[bold]Timeout Settings[/bold]")
-            yield Label("Timeout Value")
-            yield Input(value=str(config.global_config.get("TIMEOUT_VALUE", 10000)), id="timeout-value")
-            yield Label("Enable Timeout")
-            yield Switch(value=bool(config.global_config.get("TIMEOUT_ENABLE", 1)), id="timeout-enable")
+            # yield Label("[bold]Timeout Settings[/bold]")
+            # yield Label("Timeout Value")
+            # yield Input(value=str(config.global_config.get("TIMEOUT_VALUE", 10000)), id="timeout-value")
+            # yield Label("Enable Timeout")
+            # yield Switch(value=bool(config.global_config.get("TIMEOUT_ENABLE", 1)), id="timeout-enable")
             yield Label("Priority Levels")
             yield Input(value=str(config.global_config.get("NUM_PRIORITY_LVL", 4)), id="priority-lvl")
             yield Label("")
 
             # Navigation
-            yield Button("Back", id="back-btn")
             yield Button("Next: Masters", id="next-masters", variant="primary")
+
         yield Footer()
 
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "back-btn":
-            # Save current values
-            self._save_values()
-            self.app.switch_screen("protocol")
-        elif event.button.id == "next-masters":
+        if event.button.id == "next-masters":
             self._save_values()
             # Update master/slave counts
             config.global_config["MST_NB"] = int(self.query_one("#mst-nb", Input).value or "2")
@@ -339,6 +309,15 @@ class GlobalSettingsScreen(Screen):
                 config.remove_slave(len(config.slaves) - 1)
             self.app.switch_screen("masters")
 
+    def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
+        protocol = str(event.pressed.label)
+        if (protocol == "AXI4-lite"):
+            config.global_config["AXI_SIGNALING"] = "0"
+            config.axi_type = "axi4lite"
+        else:
+            config.global_config["AXI_SIGNALING"] = "1"
+            config.axi_type = "axi4"
+
     def _save_values(self):
         """Save all input values to config"""
         config.global_config["AXI_ADDR_W"] = int(self.query_one("#addr-w", Input).value or "8")
@@ -351,8 +330,8 @@ class GlobalSettingsScreen(Screen):
         config.global_config["AXI_WUSER_W"] = int(self.query_one("#wuser-w", Input).value or "1")
         config.global_config["AXI_BUSER_W"] = int(self.query_one("#buser-w", Input).value or "1")
         config.global_config["AXI_RUSER_W"] = int(self.query_one("#ruser-w", Input).value or "1")
-        config.global_config["TIMEOUT_VALUE"] = int(self.query_one("#timeout-value", Input).value or "10000")
-        config.global_config["TIMEOUT_ENABLE"] = int(self.query_one("#timeout-enable", Switch).value)
+        # config.global_config["TIMEOUT_VALUE"] = int(self.query_one("#timeout-value", Input).value or "10000")
+        # config.global_config["TIMEOUT_ENABLE"] = int(self.query_one("#timeout-enable", Switch).value)
         config.global_config["NUM_PRIORITY_LVL"] = int(self.query_one("#priority-lvl", Input).value or "4")
 
 
@@ -508,18 +487,10 @@ class GenerateScreen(Screen):
 
             yield Label("")
 
-            # Output settings
-            yield Label("[bold]Output Settings[/bold]")
-            yield Label("Output File")
-            yield Input(value=config.global_config.get("OUTPUT_FILE", "axicb_crossbar_top.sv"), id="output-file")
-            yield Label("")
-
             # Actions
             with Container(id="generate-actions"):
                 yield Button("Back", id="back-btn")
-                yield Button("Save Config", id="save-config")
-                yield Button("Load Config", id="load-config")
-                yield Button("[bold]Generate![/bold]", id="generate-btn", variant="success")
+                yield Button("[bold]Generate[/bold]", id="generate-btn", variant="success")
 
             yield Static(id="status")
         yield Footer()
@@ -564,85 +535,21 @@ class GenerateScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back-btn":
             self.app.switch_screen("slaves")
-        elif event.button.id == "save-config":
-            default_name = "axi_config.json"
-            # In a real app, you'd use a file dialog
-            config.save(default_name)
-            status = self.query_one("#status", Static)
-            status.update(f"[green]Configuration saved to {default_name}[/green]")
-        elif event.button.id == "load-config":
-            default_name = "axi_config.json"
-            try:
-                config.load(default_name)
-                status = self.query_one("#status", Static)
-                status.update(f"[green]Configuration loaded from {default_name}[/green]")
-            except FileNotFoundError:
-                status = self.query_one("#status", Static)
-                status.update(f"[red]File {default_name} not found[/red]")
         elif event.button.id == "generate-btn":
             self._generate_output()
 
     def _generate_output(self):
         """Generate the output file using template_top_level.py"""
-        import importlib.util
 
-        # Load template_top_level module
-        spec = importlib.util.spec_from_file_location("template_top_level",
-                    os.path.join(SCRIPTDIR, "template_top_level.py"))
-        template_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(template_module)
+        config.save(config.global_config["OUTPUT_FILE"])
 
-        # Get values from form
-        output_file = self.query_one("#output-file", Input).value or "axicb_crossbar_top.sv"
-
-        # Build args for template_top_level.main()
-        # The template_top_level.main() expects: [output_file] [mst_nb] [slv_nb] --type
-        args = [
-            output_file,
-            str(config.global_config.get('MST_NB', 2)),
-            str(config.global_config.get('SLV_NB', 2)),
-            "--type",
-            config.axi_type,
-        ]
-
-        try:
-            # Use the template module to generate
-            template_config = config.to_template_dict()
-
-            # Apply AXI_SIGNALING based on type
-            if config.axi_type == "axi4lite":
-                template_config["global"]["AXI_SIGNALING"] = 0
-            else:
-                template_config["global"]["AXI_SIGNALING"] = 1
-
-            # Generate using template
-            tmpl_path = os.path.join(SCRIPTDIR, "tmpl.axi4_top.sv" if config.axi_type == "axi4" else "tmpl.axi4lite_top.sv")
-            from jinja2 import Template
-            from pathlib import Path
-            tmpl = Path(tmpl_path).read_text(encoding="utf-8")
-            rendered = Template(tmpl).render(**template_config)
-
-            # Save output
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(rendered)
-
-            status = self.query_one("#status", Static)
-            status.update(f"[green]Generated {output_file} with {config.global_config.get('MST_NB')} masters and {config.global_config.get('SLV_NB')} slaves ({config.axi_type.upper()})[/green]")
-        except Exception as e:
-            status = self.query_one("#status", Static)
-            status.update(f"[red]Error: {str(e)}[/red]")
-
-
-# ============================================================================
-# Main App
-# ============================================================================
 
 class AXICrossbarTUI(App):
     """Main TUI Application for AXI Crossbar Generator"""
 
     TITLE = "AXI Crossbar Top Level Generator"
     SUBTITLE = "Generate customized AXI4/AXI4-Lite crossbar top modules"
-    CSS_PATH = None  # We'll use inline styles
+    CSS_PATH = os.path.join(SCRIPTDIR, "tui.css")
 
     BINDINGS = [
         ("q", "quit", "Quit"),
@@ -651,23 +558,20 @@ class AXICrossbarTUI(App):
     ]
 
     SCREENS = {
-        "protocol": ProtocolScreen,
         "global": GlobalSettingsScreen,
         "masters": MastersScreen,
         "slaves": SlavesScreen,
         "generate": GenerateScreen,
     }
 
-    def __init__(self, initial_type=None, initial_output=None):
+    def __init__(self, output=None):
         super().__init__()
         # Initialize with default config
         global config
         config = AXIConfig()
-        # Apply initial settings from command line
-        if initial_type:
-            config.axi_type = initial_type
-        if initial_output:
-            config.global_config["OUTPUT_FILE"] = initial_output
+
+        if output:
+            config.global_config["OUTPUT_FILE"] = output
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -675,126 +579,34 @@ class AXICrossbarTUI(App):
 
     def on_ready(self) -> None:
         """When app is ready, switch to protocol screen"""
-        self.push_screen("protocol")
+        self.push_screen("global")
 
     def on_key(self, event) -> None:
         """Handle key bindings"""
         if event.key == "b":
             # Go back to previous screen
-            current = self.screen_stack[-1]
             if len(self.screen_stack) > 1:
                 self.switch_screen(self.screen_stack[-2])
 
 
-# ============================================================================
-# Styles (inline for now)
-# ============================================================================
-
-STYLES = """
-Screen {
-    align: center middle;
-}
-
-Container {
-    width: 100%;
-    max-width: 120;
-}
-
-#protocol-container, #global-scroll, #masters-scroll, #slaves-scroll, #generate-scroll {
-    height: 100%;
-    width: 100%;
-    padding: 1 2;
-}
-
-.card {
-    border: round $primary;
-    border-title-color: $primary;
-    padding: 1;
-    margin: 1 0;
-    width: 100%;
-}
-
-Label {
-    width: 100%;
-    text-align: left;
-}
-
-Input {
-    width: 100%;
-    margin: 0 0 1 0;
-}
-
-Button {
-    margin: 0 1;
-    min-width: 15;
-}
-
-Switch {
-    margin: 0 0 1 0;
-}
-
-RadioSet {
-    margin: 1 0;
-}
-
-#protocol-title, #global-title, #masters-title, #slaves-title, #preview-title {
-    text-style: bold;
-    text-align: center;
-    padding-bottom: 1;
-}
-
-#master-actions, #slave-actions, #generate-actions {
-    layout: horizontal;
-    height: auto;
-    margin: 1 0;
-    width: 100%;
-    align: center middle;
-}
-.card {
-    border: round $primary;
-    border-title-color: $primary;
-    padding: 1;
-    margin: 1 0;
-    width: 100%;
-    max-height: 20;  /* Hauteur maximale pour chaque carte */
-    overflow-y: auto;  /* Active le scroll si le contenu dépasse */
-}
-
-#masters-list, #slaves-list {
-    layout: vertical;
-    height: auto;
-    max-height: 40;  /* Ajuste selon le nombre de cartes */
-    overflow-y: scroll;
-}
-"""
-
-
-# Inject styles
-def initialize_app(axi_type=None, output_file=None):
-    """Create and run the TUI application"""
-    app = AXICrossbarTUI(initial_type=axi_type, initial_output=output_file)
-    app.CSS = STYLES
-    app.run()
-
 
 def main():
+    """ Main """
+
     parser = argparse.ArgumentParser(
-        description="AXI Crossbar Top Level Generator - TUI Interface"
+        description="TUI Interface for AXI Crossbar Top Level Generator"
     )
+
     parser.add_argument(
-        "--type",
-        choices=["axi4", "axi4lite"],
-        default="axi4",
-        help="AXI protocol type (default: axi4)"
+        "-o", "--output",
+        default="config.json",
+        help="Output config name (default: config.json)"
     )
-    parser.add_argument(
-        "output",
-        nargs="?",
-        default="axicb_crossbar_top.sv",
-        help="Output file name (default: axicb_crossbar_top.sv)"
-    )
+
     args = parser.parse_args()
-    initialize_app(axi_type=args.type, output_file=args.output)
+
+    app = AXICrossbarTUI(args.output)
+    app.run()
 
 
 if __name__ == "__main__":

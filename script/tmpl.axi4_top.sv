@@ -104,8 +104,8 @@ module axicb_crossbar_top
         parameter MST{{ loop.index0 }}_OSTDREQ_SIZE = {{ mst.OSTDREQ_SIZE }},
         parameter MST{{ loop.index0 }}_PRIORITY = {{ mst.PRIORITY }},
         parameter [SLV_NB-1:0] MST{{ loop.index0 }}_ROUTES = {{ mst.ROUTES }},
-        parameter [AXI_ID_W-1:0] MST{{ loop.index0 }}_ID_MASK = 'h{{ "%0x"|format(mst.ID_MASK) }},
-        parameter MST{{ loop.index0 }}_RW = {{ mst.RW }},
+        parameter [AXI_ID_W-1:0] MST{{ loop.index0 }}_ID_MASK = {{ mst.ID_MASK }},
+        parameter MST{{ loop.index0 }}_RW = {{ mst.RW }},  // (UNUSED)
         {%- endfor %}
 
         ///////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ module axicb_crossbar_top
         input  wire                       slv{{ mst_idx }}_arlock,
         input  wire  [4             -1:0] slv{{ mst_idx }}_arcache,
         input  wire  [3             -1:0] slv{{ mst_idx }}_arprot,
-        input  wire  [4             -1:0] slv{{ mst_idx }}_awqos,
+        input  wire  [4             -1:0] slv{{ mst_idx }}_arqos,
         input  wire  [4             -1:0] slv{{ mst_idx }}_arregion,
         input  wire  [AXI_ID_W      -1:0] slv{{ mst_idx }}_arid,
         input  wire  [AXI_AUSER_W   -1:0] slv{{ mst_idx }}_aruser,
@@ -281,31 +281,34 @@ module axicb_crossbar_top
             "MST{{ mst_idx }} is setup with oustanding request but their size must be greater than 0");
 
         {%- endfor %}
-        {%- for mst_idx in range(global.MST_NB) %}
-        `CHECKER((MST{{ mst_idx }}_ID_MASK==0), "MST{{ mst_idx }} mask ID must be greater than 0");
-        {%- endfor %}
+
         {%- for slv_idx in range(global.SLV_NB) %}
         `CHECKER((SLV{{ slv_idx }}_OSTDREQ_NUM>0 && SLV{{ slv_idx }}_OSTDREQ_SIZE==0),
             "SLV{{ slv_idx }} is setup with oustanding request but their size must be greater than 0");
         {%- endfor %}
+
+        {%- for mst_idx in range(global.MST_NB) %}
+        `CHECKER((MST{{ mst_idx }}_ID_MASK==0), "MST{{ mst_idx }} mask ID must be greater than 0");
+        {%- endfor %}
+
         `CHECKER((NUM_PRIORITY_LVL>4), "Can't select more than 4 levels of priority");
 
-        `CHECKER((SLV_NB> {{ global.SLV_NB }}), "Can't select more than {{ global.SLV_NB }} slaves");
+        `CHECKER((SLV_NB>{{ global.SLV_NB }}), "Can't select more than {{ global.SLV_NB }} slaves");
 
-        `CHECKER((MST_NB> {{ global.MST_NB }}), "Can't select more than {{ global.MST_NB }} masters");
+        `CHECKER((MST_NB>{{ global.MST_NB }}), "Can't select more than {{ global.MST_NB }} masters");
 
         {%- for mst_idx in range(global.MST_NB) %}
-        `CHECKER((MST{{ mst_idx }}_PRIORITY > (NUM_PRIORITY_LVL-1)), 
+        `CHECKER((MST{{ mst_idx }}_PRIORITY > (NUM_PRIORITY_LVL-1)),
             "Master {{ mst_idx }} priority is bigger than number of priority level");
-        {%- endfor %
+        {%- endfor %}
 
         {%- for mst_idx in range(global.MST_NB) %}
-        `CHECKER((MST{{ mst_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)), 
+        `CHECKER((MST{{ mst_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)),
             "Master {{ mst_idx }} oustanding request number is too big compared to OR_NUM_W parameter");
         {%- endfor %}
 
         {%- for slv_idx in range(global.SLV_NB) %}
-        `CHECKER((SLV{{ slv_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)), 
+        `CHECKER((SLV{{ slv_idx }}_OSTDREQ_NUM > (2**OR_NUM_W)),
             "Slave {{ slv_idx }} oustanding request number is too big compared to OR_NUM_W parameter");
         {%- endfor %}
     end
@@ -338,7 +341,7 @@ module axicb_crossbar_top
 
     localparam [MST_NB*SLV_NB -1:0] MST_ROUTES = {
         {%- for mst_idx in range(global.MST_NB - 1, -1, -1) %}
-        MST{{ mst_idx }}_ROUTES[0+:SLV_NB],
+        MST{{ mst_idx }}_ROUTES[0+:SLV_NB]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
@@ -347,31 +350,31 @@ module axicb_crossbar_top
 
     localparam [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = {
         {%- for mst_idx in range(global.MST_NB - 1, -1, -1) %}
-        MST{{ mst_idx }}_PRIORITY[0+:PRIORITY_W],
+        MST{{ mst_idx }}_PRIORITY[0+:PRIORITY_W]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
     localparam [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = {
         {%- for mst_idx in range(global.MST_NB - 1, -1, -1) %}
-        MST{{ mst_idx }}_ID_MASK[AXI_ID_W-1:0],
+        MST{{ mst_idx }}_ID_MASK[AXI_ID_W-1:0]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
     localparam [MST_NB*OR_NUM_W-1:0] MST_OSTDREQ_NUM = {
         {%- for mst_idx in range(global.MST_NB - 1, -1, -1) %}
-        MST{{ mst_idx }}_OSTDREQ_NUM[OR_NUM_W-1:0],
+        MST{{ mst_idx }}_OSTDREQ_NUM[OR_NUM_W-1:0]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
     parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = {
         {%- for slv_idx in range(global.SLV_NB - 1, -1, -1) %}
-        SLV{{ slv_idx }}_START_ADDR[0+:AXI_ADDR_W],
+        SLV{{ slv_idx }}_START_ADDR[0+:AXI_ADDR_W]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
     parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = {
         {%- for slv_idx in range(global.SLV_NB - 1, -1, -1) %}
-        SLV{{ slv_idx }}_END_ADDR[0+:AXI_ADDR_W],
+        SLV{{ slv_idx }}_END_ADDR[0+:AXI_ADDR_W]{% if not loop.last %},{% endif %}
         {%- endfor %}
     };
 
@@ -663,7 +666,7 @@ module axicb_crossbar_top
         .o_arlen      (mst{{ slv_idx }}_arlen),
         .o_arsize     (mst{{ slv_idx }}_arsize),
         .o_arburst    (mst{{ slv_idx }}_arburst),
-        .o_arlock     (mst{{ slv_idx }}_awlock),
+        .o_arlock     (mst{{ slv_idx }}_arlock),
         .o_arcache    (mst{{ slv_idx }}_arcache),
         .o_arprot     (mst{{ slv_idx }}_arprot),
         .o_arqos      (mst{{ slv_idx }}_arqos),

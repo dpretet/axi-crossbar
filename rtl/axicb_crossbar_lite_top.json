@@ -90,5 +90,6 @@
       "OSTDREQ_SIZE": 1,
       "KEEP_BASE_ADDR": 0
     }
-  ]
+  ],
+  "axi_type" : "axi4lite"
 }

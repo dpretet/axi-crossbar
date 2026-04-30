@@ -75,6 +75,11 @@ module axicb_crossbar_lite_top
         //                    determine which master to route back the
         //                    BRESP/RRESP completions.
         //
+        //   - MSTx_RW: Select if the interface is
+        //         - Read/Write (=0)
+        //         - Read-only (=1)
+        //         - Write-only (=2)
+        //
         // The size of a master's internal buffer is equal to:
         //
         // SIZE = AXI_DATA_W * MSTx_OSTDREQ_NUM * MSTx_OSTDREQ_SIZE (in bits)

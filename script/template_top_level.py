@@ -11,27 +11,14 @@ import json
 import sys
 from pathlib import Path
 from jinja2 import Template
+import shutil
+
 
 SCRIPTDIR = Path(__file__).resolve().parent
 
 
-def main():
-    """Main function"""
-    parser = argparse.ArgumentParser(description="Render Jinja2 template with JSON data")
-    parser.add_argument("--json", "-j", required=True, help="Path to JSON file")
-    parser.add_argument("--type", choices=["axi4", "axi4lite"], default="axi4", help="AXI type")
-    args = parser.parse_args()
+def gen(template_path, data, path):
 
-    json_path = Path(args.json)
-    if not json_path.exists():
-        print(f"Error: JSON file not found: {json_path}")
-        return 1
-
-    with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-
-    template_map = {"axi4": "tmpl.axi4_top.sv", "axi4lite": "tmpl.axi4lite_top.sv"}
-    template_path = SCRIPTDIR / template_map[args.type]
     if not template_path.exists():
         print(f"Error: Template not found: {template_path}")
         return 1
@@ -39,9 +26,43 @@ def main():
     tmpl = Template(template_path.read_text(encoding="utf-8"))
     rendered = tmpl.render(**data)
 
-    output_path = json_path.with_suffix(".sv")
-    output_path.write_text(rendered, encoding="utf-8")
-    print(f"Generated: {output_path}")
+    p = Path(path)
+    p.write_text(rendered, encoding="utf-8")
+    print(f"Generated: {path}")
+    return 0
+
+
+def main():
+    """Main function"""
+    parser = argparse.ArgumentParser(description="Render Jinja2 template with JSON data")
+    parser.add_argument("--json", "-j", required=True, help="Path to JSON file")
+    args = parser.parse_args()
+
+    json_path = Path(args.json)
+    if not json_path.exists():
+        print(f"Error: {json_path} file not found")
+        return 1
+
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    iptype = data["axi_type"]
+
+    template_map = {"axi4": "tmpl.axi4_top.sv", "axi4lite": "tmpl.axi4lite_top.sv"}
+    template_path = SCRIPTDIR / template_map[iptype]
+
+    # First generate the AXI4-lite version is requested
+    if iptype == "axi4lite":
+        # Generate
+        gen(template_path, data, "axicb_crossbar_lite_top.sv")
+        # Then prepare the AXI4 submodule
+        data["axi_type"] = "axi4lite"
+        data["global"]["AXI_SIGNALING"] = "1"
+
+    # Then, anyway generate an AXI4 version
+    template_path = SCRIPTDIR / template_map[iptype]
+    gen(template_path, data, "axicb_crossbar_top.sv")
+
     return 0
 
 

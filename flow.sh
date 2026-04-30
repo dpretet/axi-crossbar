@@ -6,10 +6,7 @@
 # -o pipefail: causes a pipeline to fail if any command fails
 set -e -o pipefail
 
-#-------------------------------------------------------------
 # Get current script path (applicable even if is a symlink)
-#-------------------------------------------------------------
-
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
   DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
@@ -20,8 +17,12 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 # Python virtual environment directory
 VENV_DIR="$DIR/script/venv"
+
 # Functions to install the flow
 source script/setup.sh
+
+# Function to manage the RTL generator
+source script/generator.sh
 
 ret=0
 
@@ -62,7 +63,7 @@ help() {
     echo ""
     echo "      ./flow.sh help"
     echo ""
-    echo "      ./flow.sh gen [axi4|axi4lite]"
+    echo "      ./flow.sh wizard"
     echo ""
     echo "      ./flow.sh syn"
     echo ""
@@ -76,10 +77,13 @@ help() {
     echo ""
     echo "      Print the help menu"
     echo ""
-    echo "      ./flow.sh gen|generate|tui [axi4|axi4lite] [-o output.sv]"
+    echo "      ./flow.sh wizard [--tui] [-input input.json] [-o output.sv]"
     echo ""
-    echo "      Launch the TUI generator (Textual interface)"
-    echo "      Default: AXI4 protocol, output: axicb_crossbar_top.sv"
+    echo "      ./flow.sh wizard --tui"
+    echo ""
+    echo "      ./flow.sh wizard -input input.json [-o output.sv]"
+    echo ""
+    echo "      Launch the wizard to generate a new configuration"
     echo ""
     echo "      ./flow.sh syn"
     echo ""
@@ -104,67 +108,32 @@ help() {
     echo -e "${NC}"
 }
 
-generate_rtl() {
-    local axi_type="axi4"
-    local output_file=""
-
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            axi4|axi4lite)
-                axi_type="$1"
-                shift
-                ;;
-            -o|--output)
-                output_file="$2"
-                shift 2
-                ;;
-            *)
-                output_file="$1"
-                shift
-                ;;
-        esac
-    done
-
-    # -----------------------------
-    # Create or activate virtualenv
-    # -----------------------------
+venv() {
+    # Create virtualenv
     if [ ! -d "$VENV_DIR" ]; then
         echo "🐍 Creating virtual environment in $VENV_DIR..."
         python3 -m venv "$VENV_DIR"
     fi
 
+    # Activate venv
     echo "✅ Activating virtual environment..."
     if [ -f "$VENV_DIR/bin/activate" ]; then
         source "$VENV_DIR/bin/activate"
-    elif [ -f "$VENV_DIR/Scripts/activate" ]; then
-        source "$VENV_DIR/Scripts/activate"
     else
         echo "❌ Could not find virtualenv activation script"
         exit 1
     fi
 
-    # -----------------------------
     # Install Python dependencies
-    # -----------------------------
     if [ -f "$DIR/script/requirements.txt" ]; then
         echo "📦 Installing Python dependencies..."
         if pip install -r "$DIR/script/requirements.txt" > /dev/null 2>&1; then
             echo "✅ Dependencies installed"
         else
-            echo "⚠️  Failed to install some dependencies, continuing anyway..."
+            echo "❌ Failed to install some dependencies"
+            exit 1
         fi
     fi
-
-    # -----------------------------
-    # Launch the TUI generator
-    # -----------------------------
-    echo "🚀 Launching AXI Crossbar Generator (${axi_type})..."
-    echo "   Press 'q' or ESC to exit the TUI"
-    echo ""
-
-    cd "$DIR/script" || exit 1
-    python3 tui_generator.py --type "$axi_type" "$output_file"
 }
 
 main() {
@@ -185,8 +154,8 @@ main() {
     fi
 
 
-    # Generator TUI
-    if [[ $1 == "gen" || $1 == "generate" || $1 == "tui" ]]; then
+    # RTL Generator
+    if [[ $1 == "wizard" ]]; then
         shift
         generate_rtl "$@"
         exit 0
@@ -284,11 +253,6 @@ main() {
 
         echo "Execution status: $ret"
         exit $ret
-    fi
-
-    if [[ $1 == "wizard" ]]; then
-
-        generate_rtl
     fi
 }
 
