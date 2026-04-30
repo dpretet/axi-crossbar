@@ -96,7 +96,7 @@ module axicb_crossbar_lite_top
         parameter MST{{ loop.index0 }}_OSTDREQ_NUM = {{ mst.OSTDREQ_NUM }},
         parameter MST{{ loop.index0 }}_PRIORITY = {{ mst.PRIORITY }},
         parameter [SLV_NB-1:0] MST{{ loop.index0 }}_ROUTES = {{ mst.ROUTES }},
-        parameter [AXI_ID_W-1:0] MST{{ loop.index0 }}_ID_MASK = 'h{{ "%0x"|format(mst.ID_MASK) }},
+        parameter [AXI_ID_W-1:0] MST{{ loop.index0 }}_ID_MASK = {{ mst.ID_MASK }},
         parameter MST{{ loop.index0 }}_RW = {{ mst.RW }},
         {%- endfor %}
 
