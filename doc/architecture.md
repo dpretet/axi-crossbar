@@ -126,10 +126,10 @@ In order to boot properly the interconnect infrastructure, the user must follow 
 sequence:
 1. Drive low all the reset inputs
 2. Source all the clocks of the active interface
-3. Wait for several clock cycles, for each clock domain, to be sure the whole logic has been reset
-4. Before releasing the resets, be sure all the domains has been completly reset (point 3). Some
-   clock can be very slower than another domain, be sure to take it in account.
-5. Release the resets
+3. Wait for several clock cycles, for each clock domain, to be sure the whole logic has been reset.
+   Some clock can be very slower than another domain, be sure to take it in account.
+5. Release the resets, first the masters', then the fabric and finally the slaves. This ensures
+   no RDC issue could occurs in the AXI system.
 6. Start to issue request in the core
 
 
@@ -165,7 +165,7 @@ applies for both AXI4 and AXI4-lite configuration.
 The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a
 top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up
 to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
-to 0 the input signals of an interface, and leave unconnected the outputs. If 
+to 0 the input signals of an interface, and leave unconnected the outputs. If
 need more, a wizard is proposed to configure the number of master and slave,
 and their associated parameters. Run `./flow.sh wizard` to launch the wizard's TUI.
 

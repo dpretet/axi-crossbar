@@ -66,26 +66,25 @@ Features
 
 ## Wizard
 
-The core is provided with a 4 masters x 4 slaves topology but a user would want to size the
-slave and master interface number to his design needs. Hence, a wizard is provided to generate
-a personal configuration.
+The core is provided with a 4 masters x 4 slaves topology in `rtl` folder but a user would want to
+size the slave and master interface number fitting his design needs. Hence, a wizard is provided to
+generate a personal configuration.
 
-A first option is to create a JSON file, based on the existing ones in rtl folder and source them in
-the generator:
+A first option is to create a JSON file, based on the existing ones in `rtl` folder and source it in
+the wizard:
 
 ```bash
-./flow.sh wizard -i ./my_config.json
+./flow.sh wizard -c ./my_config.json
 ```
 
-The SystemVerilog file(s) will be generated at root level of the repository, along flow.sh.
-
-Another option is to create a configuration with the wizard and its TUI. To launch the wizard and
-generate a specific core:
+Another option is to create a configuration with the wizard and its TUI:
 
 ```bash
 ./flow.sh wizard --tui
 ```
-The JSON file and the top level(s) are generated in the same place, at root level of the repo.
+
+The JSON file and the top level(s) are generated at root level of the repo. If generating an
+AXI4-lite IP, an AXI4 top level is also generated, being instanciated in the AXI4-lite top level.
 
 ## Implementation Details
 

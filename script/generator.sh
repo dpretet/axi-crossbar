@@ -19,7 +19,7 @@ generate_rtl() {
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -i|--input)
+            -c|--config)
                 input_file="$2"
                 shift 2
                 ;;

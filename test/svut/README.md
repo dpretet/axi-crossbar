@@ -9,31 +9,31 @@ Icarus Verilog 11 and relies on
 binded by a Bash front-end.
 
 This testbench is focused on the configuration of the crossbar with
-following setup:
-
-- 4 masters
-- 4 slaves
-- All masters have the same priority in arbitration stages
-- All masters can access the four slaves
+4 masters and 4 slaves.
 
 The master model is very simple and limited to a basic behavior. It doesn't
 widely cover the corner cases of a complex crossbar. Further and better
 coverage should be attained with a more advanced testbench architecture,
 planned in the future with BFMs to validate the AXI4 protocol support. However,
 usage of LFSR and more generally its inner randomized behavior should ensure
-a decent coverage of the core's features.
+a decent coverage of the core's features. The master is able to generate
+read and write traffic at the same time. It can generate trnsaction with the same ID
+or with different IDs, to stress in-order and out-of-order traffic completion.
 
 Slaves are mapped over small memory spaces to ease and speed verification.
 Traffic injection is timely random, can be continuous or sparse, as the
-completions. Slave monitor also uses LFSR to handshake with the core.
+completions. Slave monitor also uses LFSR to handshake with the core. A
+slave doesn't store data, it's not a memory, it replies ideal, generated
+data matching if no errors the expected ones bu the masters. Both the master
+and the slave use the same function to generate data.
 
 ## Scenario
 
 1/ Master initiates a read/write request
 - use a range of address for each slave (start/stop)
-- generate a random address + random sideband signals (PROT, ...)
-- generate a random data from address
-- generate a random response
+- generate a random address + random sideband signals (ID, PROT, ...)
+- generate a random data from address to check later if issuing read transaction
+- generate a random response to check later if issuing read or write transaction
 
 2/ Slave receives a request and completes it
 
@@ -44,13 +44,13 @@ completions. Slave monitor also uses LFSR to handshake with the core.
 
 3/ Master receives the completion
 
-- check response received against the generated one
+- check response received against the generated one at step 1
 
 
 The drivers can detect the following errors:
 
 - AW request timeout
-- W request timeout
+- B request timeout
 - AR request timeout
 - R completion error
 - BRESP response error
@@ -99,7 +99,7 @@ To run the complete testsuite:
 ```bash
 ./run.sh
 ```
-During the execution, 1000 AXI4(-lite) requests are injected into each of the 9 scenarios available.
+During the execution, 5000 AXI4(-lite) requests are injected into each of the 9 scenarios available.
 A default timeout is setup to ensure the whole requests can be completed.
 
 The number of requests can be setup to any value, the user just needs to take
