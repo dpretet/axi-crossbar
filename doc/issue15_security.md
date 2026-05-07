@@ -81,19 +81,19 @@ denied, the master receives a `DECERR` on the response channel.
 
 | PROTECTION | RESTRICTED | MEANING                   | TYPICAL USAGE |
 |------------|------------|---------------------------|---------------|
-| `000`      | No         | No restriction            | Open memory / debug |
-| `000`      | Yes        | No restriction            | Trusted-only shared region |
-| `001`      | No         | Privileged                | Kernel (non-secure) |
-| `001`      | Yes        | Privileged                | Trusted kernel space |
-| `010`      | No         | Secure                    | Secure shared buffer |
-| `010`      | Yes        | Secure                    | Trusted secure region |
-| `011`      | No         | Privileged + Secure       | Weak secure policy (APROT-only) ⚠️ |
-| `011`      | Yes        | Privileged + Secure       | Strong secure CPU region ✅ |
-| `100`      | No         | Instruction / Data filter | Code/Data separation |
-| `100`      | Yes        | Instruction / Data filter | Trusted execution/data |
-| `101`      | No         | Privileged + Instruction  | Privileged code |
-| `101`      | Yes        | Privileged + Instruction  | Trusted privileged code ✅ |
-| `110`      | No         | Secure + Instruction      | Secure code (weak) ⚠️ |
-| `110`      | Yes        | Secure + Instruction      | Trusted secure execution ✅ |
-| `111`      | No         | Full constraint           | Over-constrained (rare) ⚠️ |
-| `111`      | Yes        | Full constraint           | Fully trusted execution ✅ |
+| `000`      | No         | No restriction            | Open memory region. Used for debug buffers, shared RAM, or scratch space where no access control is required. Must not contain sensitive data. |
+| `000`      | Yes        | No restriction            | Trusted-only shared region. Used when filtering is based solely on master identity (e.g., internal CPU communication buffers, debug mailbox restricted to trusted cores). |
+| `001`      | No         | Privileged                | Kernel-accessible memory in non-secure world. Typical OS kernel data structures or control registers accessible to any master able to assert privileged APROT. Weak protection if masters are not trusted. |
+| `001`      | Yes        | Privileged                | Trusted privileged region. Used for critical kernel structures, system control registers, or hypervisor-managed memory. Prevents DMA or accelerators from accessing privileged state. |
+| `010`      | No         | Secure                    | Secure-tagged shared memory. Used for communication between secure-capable masters. Relies only on APROT → should not store highly sensitive assets unless all masters are trusted. |
+| `010`      | Yes        | Secure                    | Trusted secure storage. Suitable for cryptographic material, secure services state, or TEE shared memory. Enforces both secure attribute and trusted origin. |
+| `011`      | No         | Privileged + Secure       | Weak secure kernel region. Used in systems where all masters are implicitly trusted. Not recommended in heterogeneous SoCs due to APROT spoofing risk. ⚠️ |
+| `011`      | Yes        | Privileged + Secure       | Strong secure kernel region. Typical TEE kernel memory, secure monitor, or root-of-trust firmware. Only accessible by trusted, privileged, secure masters. ✅ |
+| `100`      | No         | Instruction / Data filter | Code vs data separation without trust enforcement. Used to prevent accidental execution from data regions or writes to code regions in loosely controlled systems. |
+| `100`      | Yes        | Instruction / Data filter | Trusted execution/data separation. Used for executable regions (ROM, boot code) or data regions where execution must be prevented and only trusted masters can fetch instructions. |
+| `101`      | No         | Privileged + Instruction  | Privileged code region. OS kernel text section in systems without strong trust separation. Vulnerable if untrusted masters can forge APROT. ⚠️ |
+| `101`      | Yes        | Privileged + Instruction  | Trusted privileged code. Kernel/firmware executable region protected against DMA or external masters. Ensures only CPU-like trusted agents execute code. ✅ |
+| `110`      | No         | Secure + Instruction      | Secure code (APROT-only). Used in simple systems with no adversarial masters. Not sufficient for real security guarantees. ⚠️ |
+| `110`      | Yes        | Secure + Instruction      | Trusted secure execution. TEE code region, secure boot stages, or cryptographic firmware. Requires both secure attribute and trusted master. ✅ |
+| `111`      | No         | Full constraint           | Fully constrained via APROT only. Rare in practice. Can be used for strict debugging or validation scenarios but not robust against malicious masters. ⚠️ |
+| `111`      | Yes        | Full constraint           | Maximum security region. Root-of-trust assets, key storage, or critical firmware requiring strictest enforcement (trusted + privileged + secure + instruction). ✅ |
