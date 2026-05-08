@@ -5,9 +5,10 @@
 This feature implements a lightweight access control mechanism using:
 
 - Full exploitation of AXI `APROT[2:0]` attributes
-- A static, non-forgeable `TRUSTED` signal per master port
-- A static, non-forgeable `RESTRICTED` signal per slave port
-- A static, non-forgeable `PROTECTION` vector signal per slave port
+- A static, non-forgeable `TRUSTED` attribute per master port
+- A static, non-forgeable `ENFORCE` vector attribute per master port (optional)
+- A static, non-forgeable `RESTRICTED` attribute per slave port (optional)
+- A static, non-forgeable `PROTECTION` vector attribute per slave port
 
 It enforces transaction consistency with system policy, without introducing full master identity
 tracking or a dedicated firewall. It complements the routing setup by ensuring the transactions
@@ -24,7 +25,7 @@ AXI provides access permissions signals that can be used to protect against ille
 
 These bits are treated as orthogonal attributes.
 
-In the crossbar fabric, each AXI master port is statically configured with a `TRUSTED` label.
+In the crossbar fabric, each AXI master port is statically configured with a `TRUSTED` attribute.
 
 `TRUSTED` : 1 bit
 
@@ -43,6 +44,22 @@ DMA claiming privileged + secure access → denied if region requires `TRUSTED`
 
 This ensures that untrusted masters cannot escalate privileges through an `APROT` exploit.
 
+In addition to region-based access control, a master may detect and optionally restrict accesses
+where the transaction attributes represent a downgrade compared to its current state with `ENFORCE`.
+
+Possibly:
+- privileged access targeting non-privileged memory
+- secure access targeting non-secure memory
+- instruction fetch targeting non-executable memory
+
+Such situations are not necessarily forbidden from a system perspective, but may indicate software
+bugs, misconfigurations, or unintended behavior.
+
+Blocking instruction fetches to non-executable regions is strongly recommended. Other downgrade
+cases should typically be monitored rather than systematically prevented, unless stricter security
+policies are required.
+
+`ENFORCE` explicitly indicates the `APROT` attributes a slave must support. It follows its semantic.
 
 ## 3. Slave Configuration
 
@@ -66,14 +83,17 @@ To evaluate if a transaction can be routed to a slave, each master access is eva
 Address match:
 `START_ADDR` <= addr <= `END_ADDR`
 
-APROT match:
+Slave `PROTECTION` policy:
 (`APROT` & `PROTECTION`) == `PROTECTION`
+
+Master `ENFORCE` policy:
+(`ENFORCE` & `PROTECTION`) == `ENFORCE`
 
 Trusted check:
 (!`RESTRICTED`) OR (`TRUSTED`)
 
 Final decision: all above evaluations must be positive, else access is denied. If the access is
-denied, the master receives a `DECERR` on the response channel.
+denied, the master receives a `DECERR` on the corresponding response channel.
 
 
 ## 5. Policies
