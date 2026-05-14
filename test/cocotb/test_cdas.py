@@ -11,6 +11,7 @@ Testcase to explore the CDAS feature
 
 import cocotb
 from cocotb.triggers import FallingEdge, Timer
+from tb import create_tb
 
 
 async def generate_clock(dut):
@@ -27,9 +28,9 @@ async def generate_clock(dut):
 async def cdas_tc(dut):
     """Try accessing the design."""
 
-    cocotb.start_soon(generate_clock(dut))  # run the clock "in the background"
+    tb = await create_tb(dut)
 
-    await Timer(5, unit="ns")  # wait a bit
+    await Timer(1, unit="us")  # wait a bit
     await FallingEdge(dut.aclk)  # wait for falling edge/"negedge"
 
     cocotb.log.info("slv0_awready is %s", dut.slv0_awready.value)

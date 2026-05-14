@@ -226,9 +226,9 @@ main() {
         # Run all testsuites
         cd "$DIR/test/svut"
         if [[ $2 == "axi4" ]]; then
-            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "tb_config/axi4_*.cfg"
+            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "../tb_config/axi4_*.cfg"
         elif  [[ $2 == "axi4lite" ]]; then
-            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "tb_config/axi4lite_*.cfg"
+            ./run.sh --no-debug-log --no-wave -m 10000 -t 0 --tc "../tb_config/axi4lite_*.cfg"
         else
             ./run.sh --no-debug-log --no-wave -m 10000 -t 0
         fi

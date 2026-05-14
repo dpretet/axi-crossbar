@@ -8,3 +8,5 @@ tags
 
 venv
 __pycache__
+
+*.fst.hier

@@ -64,6 +64,7 @@ run() {
 
     echo "INFO: Start CocoTB Testbench"
     venv
+    rm -fr ./sim_build
     make
 }
 

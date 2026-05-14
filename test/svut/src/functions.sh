@@ -89,7 +89,7 @@ read_config() {
 
     DEFINES=""
 
-    while IFS=, read -r name value; do
+    while IFS=\= read -r name value; do
         DEFINES="${DEFINES}${name}=${value};"
     done < "$1"
 

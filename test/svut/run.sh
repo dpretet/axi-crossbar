@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 DEFINES=""
 MAX_TRAFFIC=5000
 TIMEOUT=700000
-TC="./tb_config/*.cfg"
+TC="../tb_config/*.cfg"
 NOWAVE=0
 NODEBUG=0
 
