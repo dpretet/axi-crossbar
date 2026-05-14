@@ -13,7 +13,6 @@ set -e -o pipefail
 generate_rtl() {
 
     local input_file="config.json"
-    local output_file=""
     local tui=0
 
     # Parse arguments
@@ -29,11 +28,6 @@ generate_rtl() {
                 ;;
         esac
     done
-
-    if [[ $tui -eq 1 && -n $input_file ]]; then
-        echo "ERROR: TUI can't be used with a JSON file"
-        exit 1
-    fi
 
     if [[ $tui -eq 0 && -z $input_file ]]; then
         echo "ERROR: no config file passed to the RTL generator"

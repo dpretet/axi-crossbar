@@ -159,6 +159,7 @@ main() {
     # RTL Generator
     if [[ $1 == "wizard" ]]; then
         shift
+        echo "Start Wizard"
         generate_rtl "$@"
         exit 0
     fi
