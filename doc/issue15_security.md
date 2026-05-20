@@ -87,7 +87,7 @@ Slave `PROTECTION` policy:
 (`APROT` & `PROTECTION`) == `PROTECTION`
 
 Master `ENFORCE` policy:
-(`ENFORCE` & `PROTECTION`) == `ENFORCE`
+(`APROT[i]` & `ENFORCE[i]`) => `PROTECTION[i] == 1`
 
 Trusted check:
 (!`RESTRICTED`) OR (`TRUSTED`)
