@@ -1,25 +1,21 @@
-# Feature: Cyclic Dependency Avoidance (CDA)
-
+# Feature: Deadlock & Cyclic Dependency Avoidance (DCDA)
 
 ## 1. Introduction
 
-Modern AXI-based interconnects support multiple outstanding transactions, out-of-order completion, and independent channels (AW, W, B, AR, R).
-While these features enable high performance, they also introduce the possibility of **cyclic resource dependencies**, which can lead to **deadlock**.
+This feature is the continuation of #9 dev which enforced the ID ordering rules for completion.
+Before #9 was completed, a master sending two requests with the ID to two different slaves wasn’t
+ensured to receive the completion in the right order. By using an ID scoreboard on the slave switch,
+tracking the transaction attributes and the slave targeted, the completion flow now routes correctly
+the read / write completion bursts.
 
-A deadlock occurs when a set of transactions cannot make forward progress because each of them is waiting for resources held by others in the system.
+However, this development didn’t handle a problem every interconnect suffers: cyclic dependency. A
+cyclic dependency occurs when multiple transactions between masters and slaves block each other due
+to the order in which the read and write channels (R and B channels) must complete.
 
-This document describes:
-- the origin of cyclic dependencies in AXI interconnects
-- typical deadlock scenarios
-- the difference between protocol-induced and topology-induced deadlocks
-- high-level strategies to prevent deadlocks
-
-
-## 2. General Deadlock Principle
-
-A deadlock arises when the following condition is met:
-
-> A cycle exists in the resource dependency graph.
+Specifically, a dependency cycle appears when:
+1. A master is waiting for the completion of a transaction to be able to release or issue the next one.
+2. That completion itself is blocked by a transaction coming from another master.
+3. The other master is in turn blocked by the first one, forming a closed loop.
 
 Formally:
 ```
@@ -30,242 +26,40 @@ Resource N waits for Resource A
 ```
 
 In hardware interconnects, "resources" typically include:
-- buffers (FIFOs)
+- internal buffers (FIFOs)
 - arbitration grants
+- switchs
 - target ports (slaves)
 - protocol ordering constraints
 
-
-## 3. Deadlock in AXI Interconnect
-
-In AXI systems:
-- transactions are split across independent channels
-- ordering rules and backpressure create implicit dependencies
-
-Deadlock is not caused by routing, but by:
-- **protocol-level dependencies**
-- **resource allocation policies**
-
-> AXI deadlocks are primarily caused by *when transactions are admitted*, not how they are routed.
-
-
-## 4. AXI-Specific Sources of Dependency
-
-### 4.1 Channel Coupling
-- Write transactions require:
-  - AW (address)
-  - W (data)
-  - B (response)
-- Progress depends on correct sequencing across channels
-
-
-### 4.2 Backpressure Propagation
-- READY/VALID handshake can stall channels
-- Blocking in one channel can indirectly block others
-
-
-### 4.3 Outstanding Transactions
-- Multiple in-flight transactions consume shared resources
-- Limited buffering can create contention cycles
-
-
-### 4.4 Ordering Constraints
-- Same ID transactions must respect ordering rules
-- Some interconnects enforce stronger ordering than required
-
-
-### 4.5 Shared Target Resources
-- Slaves may serialize requests
-- Internal slave buffering can contribute to system-level dependencies
-
-
-## 5. Canonical Deadlock Scenarios
-
-### 5.1 Cross-Dependency Between Masters and Slaves
-
-Two or more masters issue transactions to different slaves, then attempt cross-access:
-
-```
-M0 → S0 (holds resources)
-M1 → S1 (holds resources)
-
-M0 → S1 (blocked)
-M1 → S0 (blocked)
-```
-
-If:
-- S0 waits for completion of M0
-- S1 waits for completion of M1
-- and neither can progress
-
-→ cyclic dependency forms.
-
-
-### 5.2 AW/W Decoupling Deadlock
-
-AXI allows AW and W channels to be independent.
-
-Scenario:
-- AW transactions are fully accepted into slave-side buffers
-- W channel is stalled (e.g. arbitration or buffering limits)
-
-Effects:
-- slaves wait for W data to complete writes
-- masters cannot send W because of congestion
-- AW buffers remain full, blocking new transactions
-
-→ cycle between AW buffers and W channel availability
-
-
-### 5.3 Buffer Exhaustion Deadlock
-
-Finite buffering can create global dependencies:
-
-- all buffers in the system are occupied by partially completed transactions
-- none can progress because they require additional resources
-
-Example:
-- W data cannot advance because output buffers are full
-- output buffers cannot drain because responses are blocked
-- responses depend on completion of stalled writes
-
-
-### 5.4 Ordering-Induced Deadlock (ID Constraints)
-
-AXI enforces ordering per ID.
-
-Scenario:
-```
-Txn0 (ID=X) → S0 (blocked)
-Txn1 (ID=X) → S1 (must wait for Txn0)
-```
-
-If:
-- Txn0 depends (directly or indirectly) on progress of Txn1
-
-→ hidden cyclic dependency via ordering rules
-
-
-### 5.5 Response Channel Backpressure
-
-Write response (B) or read response (R) channels can create feedback loops:
-
-- slave cannot send response (B/R blocked)
-- therefore cannot free internal resources
-- therefore cannot accept new transactions
-- upstream components stall
-
-
-### 5.6 Starvation Leading to Effective Deadlock
-
-Not a strict cycle initially, but:
-
-- arbitration permanently favors some flows
-- others never make progress
-- system fills with blocked transactions
-
-→ system reaches a state indistinguishable from deadlock
-
-
-## 6. Key Observation
-
-All AXI deadlock scenarios can be reduced to:
-
-> A cyclic dependency between:
-> - admission control
-> - buffering
-> - channel progression
-> - ordering constraints
-
-
-## 7. Deadlock Prevention Strategies
-
-### 7.1 Admission Control (Core Principle)
-
-Control when a transaction is allowed into the system.
-
-Goal:
-- avoid introducing a transaction that could complete a dependency cycle
-
-Typical techniques:
-- limit outstanding transactions per destination
-- require availability of all required downstream resources before accepting
-
-
-### 7.2 Channel Coupling Constraints
-
-Enforce relationships between AW and W:
-- accept AW only if W can be guaranteed to progress
-- track write data availability before admitting address
-
-
-### 7.3 Resource Reservation
-
-Reserve all required resources upfront:
-- buffers
-- path to destination
-- response capacity
-
-Prevents partial allocation that leads to deadlock
-
-
-### 7.4 Strict Ordering / Serialization
-
-Reduce concurrency to eliminate cycles:
-- per-master or per-slave serialization
-- ordered transaction issue
-
-Trade-off:
-- reduced performance
-
-
-### 7.5 Virtual Channels / Resource Partitioning
-
-Separate traffic classes:
-- independent buffering domains
-- break cyclic dependencies
-
-More common in NoC, but applicable to AXI buffering structures
-
-
-### 7.6 Fair Arbitration
-
-Prevent starvation:
-- round-robin or age-based arbitration
-- forward progress guarantees
-
-
-### 7.7 Protocol-Conscious Design
-
-Design interconnect behavior aligned with AXI semantics:
-- avoid over-constraining ordering
-- ensure forward progress on all channels
-
-
-## 8. Design Guidelines
-
-- Deadlock prevention must be handled at **transaction admission points**
-- Avoid partial resource allocation without completion guarantees
-- Always consider **cross-channel dependencies (AW/W/B, AR/R)**
-- Model the system as a **resource dependency graph**
-- Validate using stress scenarios with:
-  - multiple masters
-  - full buffering
-  - worst-case ordering constraints
-
-
-## 9. Summary
-
-Deadlocks in AXI interconnects are not caused by routing, but by **protocol-level interactions and resource management policies**.
-
-A correct design ensures:
-- no cyclic dependency can be formed
-- every accepted transaction is guaranteed to eventually complete
-
-Cyclic Dependency Avoidance (CDAS) is therefore a fundamental requirement for any robust AXI interconnect implementation.
-
-To study / keywords
-- protocol-level deadlock
+Typical example with two masters and two slaves:
+* M0 sends a write to S0 and then to S1.
+* M1 sends a write to S1 and then to S0.
+* S0 waits to finish the transaction with M1 to free its resources.
+* S1 waits to finish the transaction with M0.
+
+In this situation, each element waits for the other to release: none can progress, creating a deadlock.
+
+In an AXI crossbar or fabric, these cycles can occur if:
+* The per-ID buffers are saturated.
+* The routing of the completion channels (B and R) is blocked.
+* Masters reuse the same ID for requests to different slaves.
+
+Handling cyclic dependencies requires either:
+* Prevention: sizing and routing policies that avoid forming a cycle. QoS arbitration and VCs are
+  the most solution. Not the solution chosen for this development
+* Detection: mechanisms to break the cycle, for example by deprioritizing certain transactions or
+  forcing a flush.
+
+The current architecture also doesn’t handle  a problem which is not formally a cyclic dependency
+issue but a temporal coherence issue:
+
+- A master M0 issues a write request to the slave S0 to store a for instance a descriptor
+- Then it writes to the slave S1 a register to start an operation
+
+If the slave S0 is very slower than slave S1, or if it’s occupied by a current transfer or an
+internal operation, the register could be written before the descriptor, and most likely corrupt the
+operation to execute with the system. The same solution will be applied to address this problem.
 
 ## Resources
 - https://www.youtube.com/watch?v=2r-tLn6BPy0
