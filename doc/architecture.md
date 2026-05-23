@@ -219,6 +219,21 @@ Since the crossbar does not perform protocol adaptation:
 
 Improper protocol usage may lead to undefined behavior, which is not checked by the crossbar.
 
+### Cache Attributes Handling
+
+The `AxCACHE` signals encode the cacheability and buffering properties of a
+transaction, such as bufferable and cacheable behavior, and are primarily
+interpreted by memory and coherency-capable components.
+
+The AXI `AxCACHE` attributes are propagated through the crossbar without
+modification. These signals are not interpreted or used internally by the
+crossbar and are treated as sideband information.
+
+In particular, the crossbar does not implement any cache coherency mechanism
+and does not enforce any policy related to cacheability, bufferability, or
+allocation attributes conveyed by `AxCACHE`.
+
+
 ### AXI4-lite specificities
 
 AXI4-Lite is a simplified subset of AXI4 with the following characteristics:
