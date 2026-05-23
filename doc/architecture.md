@@ -31,14 +31,26 @@
 ```
 
 
-A crossbar is a piece of logic aiming to connect any master to any
-slave connected upon it. Its interconnect topology provides a low latency, high
-bandwidth switching logic for a non-blocking, conflict-free communication flow.
+A crossbar is a hardware interconnect designed to connect multiple master and slave agents together.
+It enables any master to communicate with any slave through a non-blocking switching fabric,
+providing high bandwidth and low latency data transfers.  The crossbar implements a fully connected
+topology where concurrent transactions can occur between independent master–slave pairs without
+interference, as long as they do not target the same destination resources.
 
-The IP can be divided in three parts:
-- the slave interface layer, receiving the requests to route
-- the interconnect layer, routing the requests
-- the master interface layer, driving the requests outside the core
+The IP is structured into three main layers:
+
+- Slave Interface Layer: This layer receives incoming AXI transactions from slave-side agents (i.e.
+  masters in the AXI terminology from the system perspective). It handles protocol adaptation,
+  buffering of outstanding requests, and prepares transactions for routing through the interconnect.
+
+- Interconnect Layer: This is the core switching fabric responsible for routing requests to the
+  appropriate destination based on address decoding, and routing responses back to the originating
+  master using transaction IDs. It ensures non-blocking behavior and fair arbitration between
+  competing requests.
+
+- Master Interface Layer: This layer drives outgoing AXI transactions toward master-side agents (i.e.
+  slaves in the system). It adapts the routed transactions to the external interface and manages
+  response forwarding.
 
 
 ```
@@ -63,166 +75,199 @@ The IP can be divided in three parts:
     └─────────────┴───┴──────────────────────────┴───┴─────────────┘
 ```
 
-Master and slave interfaces are mainly responsible to support the oustanding
-requests and prepare the AXI request to be transported through the switching
-logic. The interconnect is the collection of switches routing the requests and
-the the completions from/to the agent.
+
+The crossbar is designed as a transparent interconnect: it does not modify transaction contents
+(addresses, data, IDs, or sideband signals), but only routes them between endpoints. This modular
+architecture allows easy scalability in terms of number of masters/slaves, data width, and protocol
+configuration.
 
 
 ## Clock and Reset Network
 
 ### Clock
 
-The core uses and needs a reference clock for the internal switching logic. The
-higher the frequency is, the better will be the global bandwidth and latency
-of the system.
+The crossbar relies on a central clock (`aclk`) used by the internal switching fabric. The
+performance of the interconnect (latency and throughput) is directly tied to this clock frequency.
 
-Each interface can operate in its own clock domain, whatever the frequency and
-the phase regarding the other clocks. The core proposes a CDC stage for each
-interface to convert the clock to the interconnect clock domain. The CDC stage
-is implemented with a [DC-FIFO](https://github.com/dpretet/async_fifo).
+Each master and slave interface can operate in its own independent clock domain, with no constraint
+on frequency or phase relationship relative to the interconnect clock or other interfaces.
 
+To support this flexibility, optional Clock Domain Crossing (CDC) stages can be enabled on each
+interface. These stages safely bridge transactions between the interface clock domain and the
+interconnect clock domain.
+
+CDC is implemented using dual-clock FIFOs (DC-FIFO), ensuring reliable data transfer across
+asynchronous clock domains while preserving AXI protocol integrity.
+
+If an interface shares the same clock and phase as the interconnect (`aclk`), the CDC stage can be
+disabled to reduce latency and area.
 
 ### Reset
 
-The core fully supports both asynchronous and synchronous reset. The choice
-between these two options depends to the technology targeted. Most of the time,
-asynchronous reset policy is the prefered option. It is STRONGLY ADVICED TO
-NOT MIX THESE TWO RESET TYPES, and choose for instance asynchronous reset only
-for the core and ALL the interfaces. The available resets, named uniformly
-across the interfaces, are:
+The crossbar supports both asynchronous and synchronous reset schemes. However, **it is strongly
+recommended to use a single reset strategy consistently across the entire design**, including all
+connected interfaces.
 
-- `aresetn`: active low reset, asynchronously asserted, synchronously deasserted
-  to the clock, compliant with AMBA requirement.
-- `srst`: active high reset, asserted and deasserted synchronously to the clock.
+Two reset signals are available:
 
-If not used, `srst` needs to remain low; if not used, `aresetn` needs to
-remain high all the time.
+- **`aresetn`**: Active-low reset, asynchronously asserted and synchronously deasserted, compliant
+  with AMBA AXI recommendations.
+- **`srst`**: Active-high reset, fully synchronous to the clock.
 
-Each reset input needs to be driven when the core is under reset. If not,
-its behavior is not garanteed.
+If one reset type is unused:
+- `aresetn` must be held high permanently
+- `srst` must be held low permanently
 
-Asynchronous reset is the most common option, especially because it simplifies
-the efforts of the PnR and timing analysis steps.
+All reset inputs must be properly driven during reset phases. Leaving reset signals floating or
+inconsistently driven may lead to undefined behavior.
+
+Asynchronous reset is commonly preferred in ASIC designs, as it simplifies reset distribution and
+timing closure during place-and-route.
 
 Further details can be found in this
 [excellent document](http://www.sunburst-design.com/papers/CummingsSNUG2003Boston_Resets.pdf)
-from the excellent Clifford Cummings.
+from the GOAT: Clifford Cummings.
 
 
 ### Clock Domain Crossing
 
-The core provides a CDC stage for each master or slave interface if needed. The stage is
-activated with `MSTx_CDC` or `SLVx_CDC`. Internally, the switching fabric uses a specific
-clock (`aclk`) to route the requests and the completions from/to the agents. The master
-and slave interfaces must activate a CDC stage if they don't use the same clock than
-the fabric (same frequency & phase). If an agent uses the same clock than the fabric, the
-agent must also use the same reset to ensure a clean reset sequence.
+Each interface can independently enable a CDC stage using the parameters:
+- `MSTx_CDC` for master interfaces
+- `SLVx_CDC` for slave interfaces
+
+When enabled, transactions are buffered through a DC-FIFO to safely cross into the interconnect
+clock domain (`aclk`).
+
+When disabled, the interface is assumed to be synchronous with the interconnect clock, and a
+standard synchronous FIFO is used instead.
+
+To ensure correct behavior:
+- Interfaces sharing the same clock must also share the same reset
+- CDC must be enabled whenever there is any clock frequency or phase difference
 
 
-### Boot time
+### Boot Sequence
 
-In order to boot properly the interconnect infrastructure, the user must follow the following
-sequence:
-1. Drive low all the reset inputs
-2. Source all the clocks of the active interface
-3. Wait for several clock cycles, for each clock domain, to be sure the whole logic has been reset.
-   Some clock can be very slower than another domain, be sure to take it in account.
-5. Release the resets, first the masters', then the fabric and finally the slaves. This ensures
-   no RDC issue could occurs in the AXI system.
-6. Start to issue request in the core
+To guarantee a clean and deterministic startup of the crossbar, the following initialization
+sequence must be respected:
 
+1. Assert all reset signals across the design
+2. Start all clock sources for the interconnect and interfaces
+3. Wait for several clock cycles in each clock domain to ensure proper reset propagation  (take into
+   account slower clock domains)
+4. Deassert resets in the following order:
+   - First: master interfaces
+   - Then: interconnect fabric
+   - Finally: slave interfaces
+
+   This sequence minimizes risks of reset domain crossing (RDC) issues and ensures stable AXI
+   signaling.
+
+5. Begin issuing transactions only after all domains are fully operational
+
+Failure to follow this sequence may lead to metastability, incomplete reset of internal state
+machines, or protocol violations.
 
 ## AXI4 / AXI4-lite support
 
-The core supports both AXI4 and AXI4-lite protocol by a single parameter setup.
-For both protocols, the user can configure:
-- the address bus width
-- the data bus width
-- the ID bus width
-- the USER width, per channel
 
-The configurations apply to the whole infrastructure, including the agents.
-An agent connected to the core must support for instance `32` bits addressing if
-other ones do. All other sideband signals (APROT, ACACHE, AREGION, ...) are
-described and transported as the AMBA specification defines them. No modification
-is applied by the interconnect on any signal, including the ID fields. The
-interconnect is only a pass-thru infrastructure which transmits from one point
-to another the requests and their completions.
+The crossbar supports both **AXI4** and **AXI4-Lite** protocols through a unified and configurable
+architecture.
 
-A protocol support applies to the global architecture, thus the agents connected.
-The core doesn't support (yet) any protocol conversion. An AXI4-lite agent could
-be easily connected as a master agent by mapping the extra AXI4 fields to `0`.
-However, connecting it as a slave agent is more tricky and the user must ensure
-the ALEN remains to `0` and no extra information as carried for instance by ACACHE
-is needed.
+The selected protocol applies globally to the entire interconnect, including all connected master
+and slave agents. The crossbar does **not perform any protocol conversion**, therefore all agents
+must be configured consistently.
 
-Optionally, AMBA USER signals can be supported and transported (AUSER, WUSER,
-BUSER and RUSER). These bus fields of the AMBA channels can be activated
-individually, e.g. for address channel only and configured to any width. This
-applies for both AXI4 and AXI4-lite configuration.
+### Configurable Parameters
 
-The core proposes a top level for [AXI4](../rtl/axicb_crossbar_top.sv), and a
-top level for [AXI4-lite](../rtl/axicb_crossbar_lite_top.sv). Each supports up
-to 4 masters and 4 slaves. If the user needs less than 4 agents, it can tied
-to 0 the input signals of an interface, and leave unconnected the outputs. If
-need more, a wizard is proposed to configure the number of master and slave,
-and their associated parameters. Run `./flow.sh wizard` to launch the wizard's TUI.
+The following parameters can be configured:
+
+- Address width
+- Data width
+- ID width
+- USER signal width (per channel)
+
+These parameters are shared across the entire crossbar. All connected agents must comply with the
+same configuration (e.g., all agents must support the same address and data widths).
+
+All AXI sideband signals (`APROT`, `ACACHE`, `AREGION`, etc.) are transparently propagated through
+the interconnect without modification.
+
+The crossbar acts as a **pass-through fabric**, meaning:
+- No transformation is applied to transactions
+- IDs are not modified
+- No reordering optimization is performed beyond AXI requirements
 
 
-### Ordering rules
+### USER Signal Support
 
-The core supports outstanding requests, and so manages traffic queues per master,
-this traffic can be:
-- in-order if a set of transactions uses the same ID
-- out-of-order if a set of transactions uses different IDs
+Optional AXI USER signals can be enabled independently for each channel:
+- `AUSER`, `WUSER`, `BUSER`, `RUSER`
 
-The core doesn't manipulate IDs to enhance the quality-of-service or perform any optimization, so
-the user can be sure the read or write requests will be issued to the master interface(s) in the
-same order than received on a slave interface.
+Each USER field can be configured with a custom width.
 
-The core will transmit the completion in any order, depending of the slaves response time.
-However, the core ensures a stream of transactions using the same ID will be completed
-in-order as stated by AMBA AXI4 protocol, even if targeting different slaves completing
-transactions at different paces.
+If USER signals are disabled, the associated logic is not instantiated, reducing area and
+complexity.
 
-Masters traffic queues are totally uncorrelated into the core, stored in different pieces
-of logic without any link.
 
-Read and write traffics are totally uncorrelated, no ordering can be garanteed
-between the read and write channels.
+### Protocol Consistency
 
-The ordering rules mentioned above apply for device or memory regions.
+Since the crossbar does not perform protocol adaptation:
+- Mixing AXI4 and AXI4-Lite agents requires careful configuration
+- AXI4-Lite masters can be connected to an AXI4 system by tying unused signals to `0`
+- AXI4-Lite slaves require stricter constraints and must behave according to AXI4-Lite rules
+
+Improper protocol usage may lead to undefined behavior, which is not checked by the crossbar.
 
 ### AXI4-lite specificities
 
-AXI4-lite specifies the data bus width can be only `32` or `64` bits wide.
-However, the core doesn't perform any checks neither prevent to use another
-width. The user is responsible to configure his platform with values according
-the specification.
+AXI4-Lite is a simplified subset of AXI4 with the following characteristics:
 
-AXI4-lite doesn't request USER fields but the core allows to activate this
-feature support.
+- data bus width can be only `32` or `64` bits wide. However, the core
+  doesn't perform any checks neither prevent to use another width.
 
-AXI4-lite doesn't request IDs support, but the core supports them natively.
-The user can use them or not but they are all carried across the
-infrastructure.  This can be helpfull to mix AXI4-lite and AXI4 agents
-together. If not used, the user needs to tied them to `0` to ensure a correct
-ordering model and select a width equals to `1` bit to save area resources.
+- USER signals are optional and not required by the specification but the core allows to activate
+  this feature support.
 
-AXI4-lite doesn't support `xRESP` with value equals to `EXOKAY` but the core
-doesn't check that. The user is responsible to drive a completion with a
-correct value according the specification.
+-  IDs support is not required, but the core supports them natively. This can be helpfull to mix AXI4-lite and
+   AXI4 agents together. If not used, the user needs to tied them to `0` to ensure a correct
+   ordering model and select a width equals to `1` bit to save area resources.
 
-AXI4-lite supports WSTRB and the core too. It doesn't manipulate this field and
-the user is responsible to drive correctly this field according the
-specification.
+- Response type `EXOKAY` is not supported in AXI4-Lite. The crossbar does not enforce this
+  constraint, and it is the user's responsibility to ensure compliance
 
-All other fields specified by AXI4 but not in AXI4-lite and not mentioned in
-this section are not supported by the core when AXI4-lite mode is selected.
-They are not used neither carried across the infrastructure and the user can
-safely ignore them.
+All other AXI4 signals not defined in AXI4-Lite are ignored when operating in AXI4-Lite mode.
 
+### Configuration Wizard
+
+A default **4×4 (masters × slaves)** configuration is provided in the `rtl` directory:
+- AXI4: `axicb_crossbar_top.sv`
+- AXI4-Lite: `axicb_crossbar_lite_top.sv`
+
+For custom topologies, a configuration wizard is available.
+
+#### JSON-based configuration
+
+Users can define a custom configuration file based on existing examples:
+
+```bash
+./flow.sh wizard -c ./my_config.json
+```
+
+#### TUI-based configuration
+
+An interactive Text User Interface (TUI) is also available:
+
+```bash
+./flow.sh wizard --tui
+```
+
+The generated configuration includes:
+- JSON configuration file
+- Corresponding top-level RTL modules
+
+When generating an AXI4-Lite configuration, an AXI4 top-level module is also generated and
+instantiated internally.
 
 ## Outstanding Requests Support
 
@@ -242,33 +287,59 @@ buffering is managed with the [DC-FIFO](https://github.com/dpretet/async_fifo)
 instanciated for CDC purpose. If no CDC is required, a simple synchronous FIFO
 is used to buffer the requests.
 
+## Ordering rules
+
+The core supports outstanding requests, and so manages traffic queues per master,
+this traffic can be:
+- in-order if a set of transactions uses the same ID
+- out-of-order if a set of transactions uses different IDs
+
+The core doesn't manipulate IDs to enhance the quality-of-service or performing any optimization, so
+the user can be sure the read or write requests will be issued to the master interface(s) in the
+same order than received on a slave interface.
+
+The core will transmit the completion in any order, depending of the slaves response time.  The core
+ensures a stream of transactions using the same ID will be completed in-order as stated by AMBA AXI4
+protocol, even if targeting different slaves completing transactions at different paces.
+
+Masters traffic queues are totally uncorrelated into the core, stored in different pieces of logic
+without any link.
+
+Read and write traffics are totally uncorrelated, no ordering can be garanteed between the read and
+write channels.
+
+The ordering rules mentioned above apply for device or memory regions.
+
 
 ## Routing Accross The Switching Matrix
 
 To route a read/write request to a slave agent, and route back its completion
 to a master agent, the core uses the request's address and its ID.
 
-Each master is identified by an ID mask to route back completion to it. For
-instance if we suppose the ID field is 8 bit wide, the master agent connected
-to the slave interface 0 can be setup with the mask `0x10`. If the agent supports
-up to 16 outstanding requests, they may span between `0x10` and `0x1F`. The next
-agent could be identified with `0x20` and another one with `0x30`. The user must
-takes care the ID generated for a request doesn't conflict with an ID from
-another agent, thus the ID numbering rolls off. In the setup above, the agent 0
-can't issue ID bigger than `0x1F` which will mis-route completion back to it and
-route it to the agent 1. The core doesn't track such wrong configuration. The
-must use a mask greater than 0.
+Each master is identified by an ID mask used to route completions back to it. For
+instance, if we suppose the ID field is 8-bit wide, the master agent connected
+to slave interface 0 can be configured with the mask `0x10`. If the agent supports
+up to 16 outstanding requests, they may span from `0x10` to `0x1F`. The next
+agent could be identified with `0x20`, and another one with `0x30`.
 
-Each slave is assigned into an address map (start & end address) across the
+The user must ensure that the IDs generated for requests do not conflict with IDs
+from another agent, as the ID space is shared. In the setup above, agent 0 cannot
+issue IDs greater than `0x1F`, otherwise completions will be misrouted to agent 1.
+The core does not check for such misconfigurations. The mask must be greater than 0.
+
+Each slave is assigned an address range (start and end address) within the
 global memory map. To route a request, the switching logic decodes the address
-to select the slave agent targeted and so the master interface to source. For
-instance, slave agent 0 could be mapped over the addresses `0x000` up to
-`0x0FF`. Next slave agent between `0x100` and `0x1FF`. In case the request
-tries to target a memory space not mapped to a slave, the agent will receive a
-`DECERR` completion. The user must ensure the address mapping can be covered
-by the address bus width; the user needs to take care to configure correctly
-the mapping and avoid any address overlap between slaves which will lead to
-mis-routing. The core doesn't track such wrong configurations.
+to select the targeted slave agent, and therefore the corresponding master
+interface.
+
+For instance, slave agent 0 could be mapped over addresses `0x000` up to
+`0x0FF`, and the next slave agent between `0x100` and `0x1FF`. If a request
+targets an address not mapped to any slave, the agent will receive a `DECERR`
+completion.
+
+The user must ensure that the address mapping fits within the address bus width
+and that there is no overlap between slave address ranges, as this would lead
+to misrouting. The core does not check for such misconfigurations.
 
 
 ## Switching Logic Architecture
@@ -310,26 +381,26 @@ help timing closure.
 The figure below illustrates the switching logic dedicated to a slave interface.
 Each slave interface is connected to such switch which sends requests to master
 interface by decoding the address. Completion are routed back from the slave with
-a fair-share round robin arbiter to ensure a fair traffic share. This architecture
-doesn't ensure any ordering rule and the master is responsible to reorder its
-completion if needed by its internal core.
+a fair-share round robin arbiter to ensure a fair traffic share.
 
 ```
 
                                          From slave interface
 
 
-       AW Channel                W Channel          B channel         AR Channel        R Channel
+       AW Channel                W Channel         B channel         AR Channel        R Channel
 
-            │                        │                 ▲                  │                ▲
-            │                        │                 │                  │                │
-            ▼                        ▼                 │                  ▼                │
-    ┌──────────────┐   ┌────┐ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-    │decoder+router│──▶│FIFO│─│    router    │  │arbiter+switch│  │decoder+router│  │arbiter+switch│
-    └──────────────┘   └────┘ └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-       │        │                │        │        ▲        ▲        │        │        ▲        ▲
-       │        │                │        │        │        │        │        │        │        │
-       ▼        ▼                ▼        ▼        │        │        ▼        ▼        │        │
+           │                        │                 ▲                  │                ▲
+           │                        │                 │                  │                │
+           │                        │                 │                  │                │
+           ▼                        ▼          ┌──────────────┐          ▼         ┌──────────────┐
+   ┌──────────────┐   ┌────┐ ┌──────────────┐  │ID Scoreboard │  ┌──────────────┐  │ID Scoreboard │
+   │decoder+router│──▶│FIFO│─│    router    │  │   + switch   │  │decoder+router│  │   + switch   │
+   └──────────────┘   └────┘ └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+      │        │                │        │        ▲        ▲        │        │        ▲        ▲
+      │        │                │        │        │        │        │        │        │        │
+      ▼        ▼                ▼        ▼        │        │        ▼        ▼        │        │
+
 
                                         To master switches
 
@@ -365,7 +436,7 @@ completion are routed back to the requester by decoding the ID.
 ### Arbitration and Priority Management
 
 Both the master and slave switches use the same arbitration mode, a non-blocking
-round robin model. The behavior of this stage is the following, illustrated here
+round-robin model. The behavior of this stage is the following, illustrated here
 with four requesters. `req`, `mask` `grant` & `next mask` are 4 bits wide,
 agent 0 is mapped on LSB, agent 3 on MSB.
 
@@ -393,8 +464,8 @@ t1       1101   1110    0100     1000
 t2       1101   1000    1000     1111
 t3       1101   1111    0001     1110
 t4       1111   1110    0010     1100
-t++      1111   1100    0100     1000
-      ...
+t5       1111   1100    0100     1000
+t++   ...
 ```
 
 If a lonely request doesn't match a mask, it passes anyway and reboot the
@@ -430,15 +501,20 @@ t++      ...
 ### Shareability & Routing Tables
 
 Each master can be configured to use only specific routes across the crossbar
-infrastructure. This feature if used can help to save gate count as will
-restrict portion of the memory map to certain agents, for security reasons or
-avoid any accidental memory corruption. **By default a master can access to any
-slave**. The parameter `MSTx_ROUTES` of N bits enables or not a route. Bit `0`
-enable to route to the slave agent 0 (master interface 0), bit `1` to the slave
-agent 1 and so on. This setup physically isolates agents from each others and
-can't be overridden once the core is implemented. If a master agent tries to
-access a restricted zone of the memory map, its slave switch will handshake the
-request, will not transmit it and then complete the request with a `DECERR`.
+infrastructure. This feature, if used, can help reduce gate count, as it restricts
+portions of the memory map to certain agents, for security reasons or to avoid
+any accidental memory corruption. **By default, a master can access any
+slave**.
 
-This option can be use to define memory region shareable or not between master
-agents.
+The parameter `MSTx_ROUTES` of N bits enables or disables a route. Bit `0`
+enables routing to slave agent 0 (master interface 0), bit `1` to slave agent 1,
+and so on. This setup physically isolates agents from each other and cannot be
+overridden once the core is implemented.
+
+If a master agent tries to access a restricted region of the memory map, its
+slave switch will handshake the request, will not forward it, and will then
+complete the request with a `DECERR`.
+
+This option can be used to define whether memory regions are shared or isolated
+between master agents, allowing controlled access to common resources (e.g. shared
+memory) or strict partitioning when required for safety, security, or data integrity.
