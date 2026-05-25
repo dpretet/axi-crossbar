@@ -123,11 +123,10 @@ to integrate the core in your own development. The flow relies on:
 - [SVUT](https://github.com/dpretet/svut) to configure and execute Icarus
 
 
-## Development plan
+## Future Development
 
-Here is a brief summary on the next features to implement. Most of them are
-documented in issue section of this repository. If not feel free to open
-disucussion to plan their developments.
+Here is a brief summary on the next features to implement.
+Visit the issue tracker for further idea.
 
 Core features:
 - Read-only or write-only master to save gate count
@@ -140,14 +139,11 @@ Core features:
 
 AXI Goodies:
 - Interface datapath width conversion
-- AXI4-to-AXI4-lite converter
-    - split AXI4 to multiple AXI4-lite requests
-    - gather AXI4-lite completion into a single AXI completion
+- AXI4 <> AXI4-lite bridge
 - 4KB boundary crossing checking, supported by a splitting mechanism
 
 Simulation:
-- Support Verilator
-- Error injection in the core and tesbench
+- Create a CocoTB testbench
 - Implement statistics in testbench to track misrouting, address distribution,
   master granting, ...
 
