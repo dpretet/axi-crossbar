@@ -313,9 +313,9 @@ The core doesn't manipulate IDs to enhance the quality-of-service or performing 
 the user can be sure the read or write requests will be issued to the master interface(s) in the
 same order than received on a slave interface.
 
-The core will transmit the completion in any order, depending of the slaves response time.  The core
-ensures a stream of transactions using the same ID will be completed in-order as stated by AMBA AXI4
-protocol, even if targeting different slaves completing transactions at different paces.
+The core ensures a stream of transactions using the same ID will be completed in-order as stated by
+AMBA AXI4 protocol, even if targeting different slaves completing transactions at different paces.
+Otherwise, the core will transmit the completion in any order, depending of the slaves response time.
 
 Masters traffic queues are totally uncorrelated into the core, stored in different pieces of logic
 without any link.
@@ -331,6 +331,22 @@ The ordering rules mentioned above apply for device or memory regions.
 To route a read/write request to a slave agent, and route back its completion
 to a master agent, the core uses the request's address and its ID.
 
+### Requests Routing
+
+Each slave is assigned an address range (`SLVx_START_ADDR` and `SLVx_END_ADDR` address) within the
+global memory map. To route a request, the switching logic decodes the address to select the
+targeted slave agent, and therefore the corresponding master interface.
+
+For instance, slave agent 0 could be mapped over addresses `0x000` up to `0x0FF`, and the next slave
+agent between `0x100` and `0x1FF`. If a request targets an address not mapped to any slave, the
+agent will receive a `DECERR` completion.
+
+The user must ensure that the address mapping fits within the address bus width and that there is no
+overlap between slave address ranges, as this would lead to misrouting. The core does not check for
+such misconfigurations. Memory spaces can be contiguous or not.
+
+### Completions Routing
+
 Each master is identified by an ID mask used to route completions back to it. For
 instance, if we suppose the ID field is 8-bit wide, the master agent connected
 to slave interface 0 can be configured with the mask `0x10`. If the agent supports
@@ -341,21 +357,6 @@ The user must ensure that the IDs generated for requests do not conflict with ID
 from another agent, as the ID space is shared. In the setup above, agent 0 cannot
 issue IDs greater than `0x1F`, otherwise completions will be misrouted to agent 1.
 The core does not check for such misconfigurations. The mask must be greater than 0.
-
-Each slave is assigned an address range (start and end address) within the
-global memory map. To route a request, the switching logic decodes the address
-to select the targeted slave agent, and therefore the corresponding master
-interface.
-
-For instance, slave agent 0 could be mapped over addresses `0x000` up to
-`0x0FF`, and the next slave agent between `0x100` and `0x1FF`. If a request
-targets an address not mapped to any slave, the agent will receive a `DECERR`
-completion.
-
-The user must ensure that the address mapping fits within the address bus width
-and that there is no overlap between slave address ranges, as this would lead
-to misrouting. The core does not check for such misconfigurations.
-
 
 ## Switching Logic Architecture
 
